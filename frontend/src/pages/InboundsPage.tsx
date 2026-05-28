@@ -36,7 +36,6 @@ export function InboundsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold text-ink-primary">{t("inbounds.title")}</h2>
-          <p className="mt-1 text-sm text-ink-tertiary">{t("inbounds.description")}</p>
           {protocolFilter ? (
             <div className="mt-2 flex items-center gap-2 text-xs text-ink-tertiary">
               <span>{t("inbounds.filterProtocol", { protocol: protocolFilter })}</span>
@@ -46,7 +45,7 @@ export function InboundsPage() {
             </div>
           ) : null}
         </div>
-        <Button variant="white" onClick={() => setModal({ open: true, mode: "create", inbound: null })} className="rounded-full">
+        <Button variant="white" onClick={() => setModal({ open: true, mode: "create", inbound: null })}>
           <Plus size={16} />
           {t("inbounds.new")}
         </Button>

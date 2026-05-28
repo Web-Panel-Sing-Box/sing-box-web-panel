@@ -35,7 +35,7 @@ export function InboundRow({ inbound, onEdit }: { inbound: Inbound; onEdit: (inb
       )}
     >
       <ProtocolChip protocol={inbound.protocol} />
-      <span className="font-mono text-sm text-ink-secondary">:{inbound.port}</span>
+      <span className="font-mono text-sm text-ink-secondary">{inbound.port}</span>
       <span className="truncate text-sm text-ink-primary">{inbound.remark}</span>
       <TransportChip transmission={inbound.transmission} tls={inbound.tls} />
       <Link

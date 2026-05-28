@@ -35,10 +35,10 @@ export function LogViewer({ filter }: { filter: LogFilter }) {
   }, [filtered.length]);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-subtle bg-canvas">
+    <div className="flex min-h-0 flex-1 overflow-hidden rounded-xl border border-subtle bg-canvas">
       <div
         ref={scrollRef}
-        className="h-[calc(100vh-260px)] min-h-[420px] overflow-y-auto px-4 py-4 font-mono text-[12.5px] leading-relaxed"
+        className="min-h-0 w-full flex-1 overflow-y-auto px-4 py-4 font-mono text-[12.5px] leading-relaxed"
       >
         <AnimatePresence initial={false}>
           {filtered.map((l) => (

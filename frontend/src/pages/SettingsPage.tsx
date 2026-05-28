@@ -24,7 +24,7 @@ const LOG_LEVELS = [
 export function SettingsPage() {
   const { push } = useToast();
   const { language, setLanguage, t } = useI18n();
-  const [panelName, setPanelName] = useState("Sing Grok");
+  const [panelName, setPanelName] = useState("Sing box");
   const [twoFactor, setTwoFactor] = useState(false);
   const [binaryPath, setBinaryPath] = useState("/usr/local/bin/sing-box");
   const [logLevel, setLogLevel] = useState("info");
@@ -38,11 +38,8 @@ export function SettingsPage() {
   return (
     <div className="mx-auto flex max-w-[920px] flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-semibold text-ink-primary">{t("settings.title")}</h2>
-          <p className="mt-1 text-sm text-ink-tertiary">{t("settings.description")}</p>
-        </div>
-        <Button variant="primary" onClick={save}>
+        <h2 className="text-2xl font-semibold text-ink-primary">{t("settings.title")}</h2>
+        <Button variant="white" onClick={save}>
           {t("common.save")}
         </Button>
       </div>

@@ -55,9 +55,7 @@ export function RamCard() {
             <span>{t("dashboard.swap")}</span>
             <span className="truncate text-right font-mono">{formatBytes(metrics.swapUsedBytes)} / {formatBytes(metrics.swapTotalBytes)}</span>
           </div>
-          <div className="w-1/2 max-w-[180px]">
-            <Progress value={swap} height={4} />
-          </div>
+          <Progress value={swap} height={4} />
         </div>
       </div>
     </Card>

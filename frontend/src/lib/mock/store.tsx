@@ -29,7 +29,9 @@ type StoreActions = {
   updateInbound: (id: string, patch: Partial<Omit<Inbound, "id" | "createdAt" | "clientCount">>) => void;
   removeInbound: (id: string) => void;
   cloneInbound: (id: string) => void;
+  addClient: (input: { name: string; inboundId: string; totalQuota: number; expiry: string; startAfterFirstUse?: boolean }) => void;
   updateClient: (id: string, patch: Partial<Client>) => void;
+  removeClient: (id: string) => void;
   resetClientTraffic: (id: string) => void;
   setClientStatus: (id: string, status: ClientStatus) => void;
   setPaused: (v: boolean) => void;
@@ -118,8 +120,37 @@ export function MockStoreProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const addClient = useCallback<StoreActions["addClient"]>((input) => {
+    setClients((prev) => {
+      const id = `cl_${Math.random().toString(36).slice(2, 8)}`;
+      const subToken = Math.random().toString(36).slice(2, 10);
+      const client: Client = {
+        id,
+        name: input.name,
+        uuid: typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : "00000000-0000-4000-8000-000000000000",
+        inboundId: input.inboundId,
+        usedDown: 0,
+        usedUp: 0,
+        totalQuota: input.totalQuota,
+        expiry: input.expiry,
+        status: "active",
+        subscription: `https://panel.example/sub/${id}_${subToken}`,
+        startAfterFirstUse: input.startAfterFirstUse ?? false
+      };
+      return [client, ...prev];
+    });
+    setLogs((prev) => [
+      ...prev,
+      buildLog("info", `client ${input.name} provisioned on inbound ${input.inboundId}`)
+    ]);
+  }, []);
+
   const updateClient = useCallback<StoreActions["updateClient"]>((id, patch) => {
     setClients((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+  }, []);
+
+  const removeClient = useCallback((id: string) => {
+    setClients((prev) => prev.filter((c) => c.id !== id));
   }, []);
 
   const resetClientTraffic = useCallback((id: string) => {
@@ -151,7 +182,9 @@ export function MockStoreProvider({ children }: { children: React.ReactNode }) {
       updateInbound,
       removeInbound,
       cloneInbound,
+      addClient,
       updateClient,
+      removeClient,
       resetClientTraffic,
       setClientStatus,
       setPaused,
@@ -170,7 +203,9 @@ export function MockStoreProvider({ children }: { children: React.ReactNode }) {
       updateInbound,
       removeInbound,
       cloneInbound,
+      addClient,
       updateClient,
+      removeClient,
       resetClientTraffic,
       setClientStatus,
       appendLog,

@@ -1,4 +1,3 @@
-
 import { useMemo, useState } from "react";
 
 import { Card } from "@/components/ui/card";
@@ -17,6 +16,11 @@ type Props = {
   onSelect: (client: Client) => void;
 };
 
+// Name and Data Usage are clustered on the left; Inbound and Status are
+// clustered on the right. Expiry sits in the middle column with text-center
+// so its content visually floats away from both clusters.
+const GRID = "grid-cols-[1.4fr_220px_minmax(160px,1.6fr)_200px_140px] gap-x-3";
+
 export function ClientsTable({ filter, onSelect }: Props) {
   const { clients, inbounds } = useStore();
   const { t } = useI18n();
@@ -33,34 +37,36 @@ export function ClientsTable({ filter, onSelect }: Props) {
   }, [clients, filter]);
 
   return (
-    <Card padded={false} className="overflow-x-auto">
-      <div className="min-w-[920px]">
-        <div className="grid grid-cols-5 items-center gap-4 border-b border-subtle px-5 py-3 text-[11px] uppercase tracking-wider text-ink-tertiary">
-          <span>{t("clients.name")}</span>
-          <span>{t("clients.dataUsage")}</span>
-          <span>{t("clients.expiry")}</span>
-          <span>{t("clients.inbound")}</span>
-          <span>{t("common.status")}</span>
-        </div>
-        <div className="divide-y divide-subtle">
-          {rows.length === 0 ? (
-            <div className="px-5 py-10 text-center text-sm text-ink-tertiary">{t("clients.noMatch")}</div>
-          ) : null}
-          {rows.map((c) => {
-            const inbound = inboundMap.get(c.inboundId);
-            const total = c.usedDown + c.usedUp;
-            const pct = c.totalQuota > 0 ? (total / c.totalQuota) * 100 : 0;
-            return (
-              <Row
-                key={c.id}
-                client={c}
-                inboundLabel={inbound?.remark ?? "—"}
-                pct={pct}
-                total={total}
-                onClick={() => onSelect(c)}
-              />
-            );
-          })}
+    <Card padded={false} className="flex max-h-[calc(100dvh-170px)] flex-col overflow-hidden">
+      <div className="flex-1 overflow-auto">
+        <div className="min-w-[960px]">
+          <div className={cn("sticky top-0 z-10 grid items-center border-b border-subtle bg-surface px-5 py-3 text-[11px] uppercase tracking-wider text-ink-tertiary", GRID)}>
+            <span>{t("clients.name")}</span>
+            <span>{t("clients.dataUsage")}</span>
+            <span className="text-center">{t("clients.expiry")}</span>
+            <span className="text-right">{t("clients.inbound")}</span>
+            <span className="text-right">{t("common.status")}</span>
+          </div>
+          <div className="divide-y divide-subtle">
+            {rows.length === 0 ? (
+              <div className="px-5 py-10 text-center text-sm text-ink-tertiary">{t("clients.noMatch")}</div>
+            ) : null}
+            {rows.map((c) => {
+              const inbound = inboundMap.get(c.inboundId);
+              const total = c.usedDown + c.usedUp;
+              const pct = c.totalQuota > 0 ? (total / c.totalQuota) * 100 : 0;
+              return (
+                <Row
+                  key={c.id}
+                  client={c}
+                  inboundLabel={inbound?.remark ?? "—"}
+                  pct={pct}
+                  total={total}
+                  onClick={() => onSelect(c)}
+                />
+              );
+            })}
+          </div>
         </div>
       </div>
     </Card>
@@ -87,7 +93,7 @@ function Row({
       onClick={onClick}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      className={cn("grid w-full grid-cols-5 items-center gap-4 px-5 py-3 text-left transition-colors duration-200", hover && "bg-elevated")}
+      className={cn("grid w-full items-center px-5 py-3 text-left transition-colors duration-200", GRID, hover && "bg-elevated")}
     >
       <div className="min-w-0">
         <div className="truncate text-sm text-ink-primary">{client.name}</div>
@@ -100,9 +106,11 @@ function Row({
         </div>
         <Progress value={pct} />
       </div>
-      <span className="text-xs text-ink-secondary">{formatDate(client.expiry)}</span>
-      <span className="truncate text-xs text-ink-secondary">{inboundLabel}</span>
-      <StatusBadge status={client.status} />
+      <span className="text-center text-xs text-ink-secondary">{formatDate(client.expiry)}</span>
+      <span className="truncate text-right text-xs text-ink-secondary">{inboundLabel}</span>
+      <div className="flex justify-end">
+        <StatusBadge status={client.status} />
+      </div>
     </button>
   );
 }

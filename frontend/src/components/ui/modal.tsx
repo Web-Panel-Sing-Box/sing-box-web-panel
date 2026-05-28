@@ -72,7 +72,7 @@ type ModalHeaderProps = {
 
 export function ModalHeader({ title, subtitle, onClose }: ModalHeaderProps) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-subtle px-6 py-4">
+    <div className="flex items-start justify-between gap-4 px-6 pb-2 pt-5">
       <div>
         <h2 className="text-base font-semibold text-ink-primary">{title}</h2>
         {subtitle ? <p className="mt-0.5 text-xs text-ink-tertiary">{subtitle}</p> : null}
@@ -97,19 +97,17 @@ export function ModalBody({ children, className }: { children: ReactNode; classN
 
 export function ModalFooter({
   children,
-  accent = "violet",
   className
 }: {
   children: ReactNode;
+  /** @deprecated kept for backwards compatibility; ignored — footer is now borderless */
   accent?: "violet" | "cyan";
   className?: string;
 }) {
-  const border = accent === "violet" ? "border-t-violet/40" : "border-t-cyan/40";
   return (
     <div
       className={cn(
-        "flex items-center justify-end gap-2 border-t bg-elevated px-6 py-4",
-        border,
+        "flex items-center justify-end gap-2 bg-elevated px-6 pb-5 pt-2",
         className
       )}
     >

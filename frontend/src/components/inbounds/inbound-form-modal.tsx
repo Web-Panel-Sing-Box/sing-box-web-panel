@@ -1,11 +1,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Dices, RefreshCw } from "lucide-react";
+import { Copy, Dices, RefreshCw, Trash2 } from "lucide-react";
 
 import { Accordion } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { Input, Label, Textarea } from "@/components/ui/input";
+import { DateInput, Input, Label, NumberInput, Textarea } from "@/components/ui/input";
 import { Modal, ModalBody, ModalFooter, ModalHeader } from "@/components/ui/modal";
 import { Segmented } from "@/components/ui/tabs";
 import { Select } from "@/components/ui/select";
@@ -88,7 +88,7 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
   const [subscription, setSubscription] = useState("");
   const [totalFlowGb, setTotalFlowGb] = useState("100");
   const [expiry, setExpiry] = useState("");
-  const [startAfterFirstUse, setStartAfterFirstUse] = useState(true);
+  const [startAfterFirstUse, setStartAfterFirstUse] = useState(false);
 
   const [diceSpin, setDiceSpin] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -112,6 +112,7 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
     setPrivateKey("");
     setPublicKey("");
     setShortIds("");
+    setStartAfterFirstUse(false);
     setConfirmDelete(false);
     if (mode === "clone") {
       window.setTimeout(() => {
@@ -223,9 +224,9 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
   return (
     <>
     <Modal open={open} onClose={onClose} width="max-w-[760px]">
-      <ModalHeader title={title} subtitle={mode === "clone" ? t("inbounds.cloneHint") : t("inbounds.modalSubtitle")} onClose={onClose} />
+      <ModalHeader title={title} onClose={onClose} />
       <ModalBody className="space-y-3">
-        <Accordion title={t("inbounds.basics")} description={t("inbounds.basicsDesc")}>
+        <Accordion title={t("inbounds.basics")}>
           <div className="space-y-3">
             <div>
               <Label>{t("common.remark")}</Label>
@@ -281,7 +282,7 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
           </div>
         </Accordion>
 
-        <Accordion title={t("inbounds.transportSecurity")} description={t("inbounds.transportSecurityDesc")}>
+        <Accordion title={t("inbounds.transportSecurity")}>
           <div className="space-y-5">
             <div className="rounded-lg border border-subtle bg-canvas/60 p-3">
               <Toggle checked={sniffing} onChange={setSniffing} label={t("inbounds.enableSniffing")} description={t("inbounds.sniffingDesc")} />
@@ -375,7 +376,7 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
           </div>
         </Accordion>
 
-        <Accordion title={t("inbounds.userTemplate")} description={t("inbounds.userTemplateDesc")}>
+        <Accordion title={t("inbounds.userTemplate")}>
           <div className="space-y-3">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
@@ -408,15 +409,16 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <Label>{t("inbounds.totalFlow")}</Label>
-                <Input type="number" value={totalFlowGb} onChange={(e) => setTotalFlowGb(e.target.value)} mono />
+                <NumberInput value={totalFlowGb} onChange={setTotalFlowGb} min={0} mono placeholder="0" />
               </div>
               <div>
                 <Label>{t("inbounds.expiryDate")}</Label>
-                <Input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} />
+                <DateInput value={expiry} onChange={setExpiry} />
               </div>
             </div>
-            <div className="flex min-h-[64px] items-center justify-center rounded-lg border border-subtle bg-canvas/40 px-3">
+            <div className="flex min-h-[72px] items-center justify-center rounded-lg border border-subtle bg-canvas/40 px-3 py-2">
               <Toggle
+                size="lg"
                 checked={startAfterFirstUse}
                 onChange={setStartAfterFirstUse}
                 label={t("inbounds.startAfterFirstUse")}
@@ -426,15 +428,15 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
           </div>
         </Accordion>
       </ModalBody>
-      <ModalFooter accent="violet">
+      <ModalFooter>
         {mode === "edit" && inbound ? (
           <>
-            <Button variant="secondary" onClick={() => onClone?.(inbound)}>
-              {t("common.clone")}
-            </Button>
-            <Button variant="danger" onClick={() => setConfirmDelete(true)}>
-              {t("common.delete")}
-            </Button>
+            <IconActionButton title={t("common.clone")} onClick={() => onClone?.(inbound)}>
+              <Copy size={16} />
+            </IconActionButton>
+            <IconActionButton title={t("common.delete")} danger onClick={() => setConfirmDelete(true)}>
+              <Trash2 size={16} />
+            </IconActionButton>
             <div className="flex-1" />
           </>
         ) : null}
@@ -466,6 +468,30 @@ type CheckboxProps = {
   checked: boolean;
   onChange: (v: boolean) => void;
 };
+
+function IconActionButton({
+  title,
+  onClick,
+  danger,
+  children
+}: {
+  title: string;
+  onClick: () => void;
+  danger?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      aria-label={title}
+      onClick={onClick}
+      className={`grid size-9 place-items-center rounded-lg border border-subtle bg-canvas text-ink-secondary transition-colors duration-200 ${danger ? "hover:border-danger/40 hover:text-danger" : "hover:border-white/20 hover:text-ink-primary"}`}
+    >
+      {children}
+    </button>
+  );
+}
 
 function Checkbox(props: CheckboxProps) {
   const { label, checked, onChange } = props;

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Copy, QrCode, RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input, Label } from "@/components/ui/input";
+import { DateInput, Input, Label, NumberInput } from "@/components/ui/input";
 import { Modal, ModalBody, ModalFooter, ModalHeader } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { Toggle } from "@/components/ui/toggle";
@@ -29,10 +29,15 @@ export function ClientDetailModal({ client, onClose }: Props) {
   const [draft, setDraft] = useState<Client | null>(client);
   const [qrOpen, setQrOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [totalFlowGb, setTotalFlowGb] = useState("");
 
   useEffect(() => {
     setDraft(client);
     setCopied(false);
+    if (client) {
+      const gb = Math.round(client.totalQuota / GB);
+      setTotalFlowGb(gb > 0 ? String(gb) : "");
+    }
   }, [client]);
 
   if (!draft || !client) {
@@ -57,7 +62,8 @@ export function ClientDetailModal({ client, onClose }: Props) {
 
   function save() {
     if (!draft) return;
-    updateClient(draft.id, draft);
+    const parsedFlow = totalFlowGb === "" ? 0 : Number(totalFlowGb);
+    updateClient(draft.id, { ...draft, totalQuota: parsedFlow * GB });
     push(t("clients.updated"), "success");
     onClose();
   }
@@ -65,7 +71,7 @@ export function ClientDetailModal({ client, onClose }: Props) {
   return (
     <>
       <Modal open={!!client} onClose={onClose} width="max-w-[640px]">
-        <ModalHeader title={draft.name} subtitle={t("clients.modalSubtitle")} onClose={onClose} />
+        <ModalHeader title={draft.name} onClose={onClose} />
         <ModalBody className="space-y-3">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
@@ -106,19 +112,13 @@ export function ClientDetailModal({ client, onClose }: Props) {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label>{t("inbounds.totalFlow")}</Label>
-              <Input
-                type="number"
-                value={Math.round(draft.totalQuota / GB)}
-                onChange={(e) => update("totalQuota", Number(e.target.value) * GB)}
-                mono
-              />
+              <NumberInput value={totalFlowGb} onChange={setTotalFlowGb} min={0} mono placeholder="0" />
             </div>
             <div>
               <Label>{t("inbounds.expiryDate")}</Label>
-              <Input
-                type="date"
+              <DateInput
                 value={draft.expiry.slice(0, 10)}
-                onChange={(e) => update("expiry", new Date(e.target.value).toISOString())}
+                onChange={(v) => update("expiry", v ? new Date(v).toISOString() : draft.expiry)}
               />
             </div>
           </div>
@@ -144,7 +144,7 @@ export function ClientDetailModal({ client, onClose }: Props) {
             </div>
           </div>
         </ModalBody>
-        <ModalFooter accent="cyan">
+        <ModalFooter>
           <Button variant="secondary" onClick={() => setQrOpen(true)}>
             <QrCode size={14} />
             {t("clients.getQr")}

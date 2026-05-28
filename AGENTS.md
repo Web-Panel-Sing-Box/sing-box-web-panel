@@ -36,6 +36,14 @@ config/dev.yaml                       # development YAML config
 - Frontend style is true black, minimal, mono, and kinetic. Do not copy proprietary Grok or 3x-ui assets.
 - All `.context/` and `AGENTS.md` content must be written in English.
 
+## Frontend Conventions
+
+- Data lives in `frontend/src/lib/mock/store.tsx` (React context, in-memory). Real `/api/*` wiring runs through the Vite proxy in `vite.config.ts`; do not call `fetch` from components.
+- Sidebar is permanently collapsed to a 64 px icons-only rail on desktop (`lg:`) and slides in as a 260 px drawer on smaller widths — no hover-expand or pin.
+- Long tables (Clients, Inbounds) live inside a Card with `max-h-[calc(100dvh-NNNpx)] min-h-[…]`, an inner `flex-1 overflow-auto` wrapper, and a `sticky top-0 z-10 bg-surface` header. The page itself never gains a second scrollbar.
+- The Logs page wrapper is `flex h-[calc(100dvh-…)] flex-col`; the viewer is `flex-1 min-h-0` so the log surface fills the window without overflowing the page.
+- Modals render through `components/ui/modal.tsx`; they are flat (no header/footer dividers) and use the brand-green primary CTA. Toggles default to off unless the spec says otherwise.
+
 ## Config
 
 - Primary config is `config/dev.yaml` (YAML). Override secrets via environment variables at runtime.
