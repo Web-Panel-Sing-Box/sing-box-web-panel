@@ -1,6 +1,0 @@
-[submodule "backend"]
-	path = backend
-	url = https://github.com/Web-Panel-Sing-Box/sing-box-web-panel-backend.git
-[submodule "frontend"]
-	path = frontend
-	url = https://github.com/Web-Panel-Sing-Box/sing-box-web-panel-frontend.git
