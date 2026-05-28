@@ -24,7 +24,7 @@
 - Added Vitest, Testing Library, jsdom, and focused unit/component/integration tests.
 - Added Playwright smoke tests for Dashboard, Inbounds, Clients URL filtering, dropdown layering, and Russian language switching.
 - Added GitHub Actions CI on pushes to `main` and pull requests into `main`.
-- CI jobs cover backend compile/tests, frontend typecheck/tests/build/smoke, and shellcheck.
+- CI jobs cover backend vet/build, frontend typecheck/tests/build/smoke, and shellcheck.
 
 ## Verification Commands Run
 
@@ -32,8 +32,8 @@
 - `cd frontend && npm test`
 - `cd frontend && npm run build`
 - `cd frontend && PLAYWRIGHT_CHANNEL=chrome npm run test:smoke`
-- `python -m compileall backend/app`
-- `uv --cache-dir /private/tmp/uv-cache run --project backend --extra dev pytest`
+- `go vet ./...`
+- `go build ./cmd/`
 - `shellcheck scripts/install.sh scripts/sing-grok`
 
 ## Known Notes

@@ -1,7 +1,7 @@
 # Frontend Mock UI — ChatGPT-style Sing-Box Panel
 
 **Date:** 2026-05-28
-**Scope:** Pure visual mock build of the `frontend/` app, now structured as a **SPA + micro-backend** architecture. The frontend is a Vite-built React 18 single-page application with no real network calls — all data is driven by an in-memory mock store. The Python FastAPI backend in `backend/` is the planned micro-backend that the SPA will eventually call through the `/api` proxy.
+**Scope:** Pure visual mock build of the `frontend/` app, now structured as a **SPA + micro-backend** architecture. The frontend is a Vite-built React 18 single-page application with no real network calls — all data is driven by an in-memory mock store. The Go backend in `cmd/` and `internal/` is the planned micro-backend that the SPA will eventually call through the `/api` proxy.
 
 ---
 
@@ -72,7 +72,7 @@ Verification at the end of Phase 1:
 
 > Make the whole project SPA (Single Page Application) + micro-backend architecture. And rewrite from Next.js to plain React: Vite + React + TypeScript + Tailwind CSS + Framer Motion + Recharts.
 
-The Python FastAPI backend (`backend/`) is left untouched — it serves as the future micro-backend that the SPA will call through `/api/*`. The frontend lost its SSR/SSG layer and became a pure browser bundle.
+The Go backend is left untouched — it serves as the future micro-backend that the SPA will call through `/api/*`. The frontend lost its SSR/SSG layer and became a pure browser bundle.
 
 ### What was removed
 
@@ -182,15 +182,15 @@ GET / → HTTP/1.1 200 OK
 1. **Bundle size warning** — the production bundle is 760 kB (224 kB gzipped). This is dominated by Framer Motion + Recharts. Splitting via `manualChunks` is a follow-up; it does not affect the mock demo.
 2. **`baseUrl` removed from tsconfig.json** — TypeScript 5.5 flags it as deprecated. The `paths` alias still resolves correctly because Vite's `resolve.alias` handles the bundling side and TS resolves `paths` relative to the tsconfig directory.
 3. **PostCSS config extension** — switched from `.js` to `.cjs` so it can use `module.exports` even though `package.json` is now `"type": "module"`.
-4. **No backend changes** — `backend/` (FastAPI) was not touched. The SPA's `/api` proxy is wired to `127.0.0.1:8081` for the day we connect the real micro-backend.
+4. **No backend changes** — Go backend was not touched. The SPA's `/api` proxy is wired to `127.0.0.1:8080` for the day we connect the real micro-backend.
 5. **Visual parity** — every component, animation, mock fixture, and behavior from Phase 1 is preserved. The migration was structural only.
 
 ---
 
 ## 4. Architecture summary (current)
 
-- **Frontend (`frontend/`)** — Vite + React 18 + TypeScript SPA. Single bundle served from any static host (or proxied behind the FastAPI service in production). Routing is fully client-side via `react-router-dom`. State for the mock build lives in a single React Context (`MockStoreProvider`) driven by a 1-second ticker.
-- **Backend (`backend/`)** — Python 3.11 / FastAPI micro-backend (unchanged in this work). The SPA's dev server proxies `/api/*` to `127.0.0.1:8081`, matching the planned production topology.
+- **Frontend (`frontend/`)** — Vite + React 18 + TypeScript SPA. Single bundle served from any static host (or served by the Go backend in production). Routing is fully client-side via `react-router-dom`. State for the mock build lives in a single React Context (`MockStoreProvider`) driven by a 1-second ticker.
+- **Backend** — Go 1.26 / cleanenv / SQLite (unchanged in this work). The SPA's dev server proxies `/api/*` to `127.0.0.1:8080`, matching the planned production topology.
 
 ---
 

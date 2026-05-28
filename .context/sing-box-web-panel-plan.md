@@ -1,48 +1,61 @@
-# Sing-Box Grok Web Panel Implementation Plan
+# Sing-Box Web Panel Implementation Plan
 
 ## Summary
 
-Build a local-first control panel for `sing-box` with FastAPI, SQLite, Next.js, Tailwind, Framer Motion, and systemd/Bash automation. The panel is not tied to any external infrastructure and controls only the local `sing-box` process through `127.0.0.1`.
+Build a local-first control panel for `sing-box` with Go, SQLite, Vite+React SPA, Tailwind, Framer Motion, and systemd/Bash automation. The panel is not tied to any external infrastructure and controls only the local `sing-box` process through `127.0.0.1`.
 
-## Repository Bootstrap
+## Repository
 
-- Create a monorepo with `backend/`, `frontend/`, `scripts/`, `systemd/`, `.context/`, `README.md`, and `AGENTS.md`.
-- Initialize git on `main`, add `origin` as `https://github.com/Web-Panel-Sing-Box/sing-box-web-panel.git`, commit the scaffold, and push when GitHub credentials are available.
-- Keep `README.md` minimal until the implementation stabilizes.
+Monorepo with `cmd/`, `internal/`, `frontend/`, `config/`, `scripts/`, `systemd/`, `.context/`, `README.md`, and `AGENTS.md`.
 
-## Backend
+## Backend (Go)
 
-- Implement FastAPI with async SQLAlchemy and SQLite.
-- Tables: `admins`, `users`, `inbounds`, `traffic_ledger`, `settings`, `config_revisions`, `audit_logs`, `active_ips`, `subscriptions`.
-- Provide JWT cookie auth, Argon2id password hashing, login rate limiting, and audit logs.
-- Implement CRUD for users and inbounds, subscription links, QR generation, log reads, dashboard metrics, and core process actions.
-- Implement `LocalConfigGenerator` that reads SQLite, builds full `config.json`, validates with `sing-box check`, writes atomically, and records config revisions.
-- Implement `ProcessManager` adapters for systemd and direct subprocess mode.
-- Implement `TrafficBackgroundWorker` with live speed polling, per-user source adapters, quota enforcement, and batched SQLite writes.
+- Go 1.26.2 with `cleanenv` for YAML config + env var override.
+- SQLite via `modernc.org/sqlite` (pure Go, no CGo). WAL mode, `synchronous=NORMAL`, mmap, batched writes.
+- `log/slog` for structured logging, `github.com/fatih/color` for dev-mode pretty output.
+- Embedded `//go:embed` migrations with version tracking in `schema_migrations`. Applied automatically on startup via `sqlite.New()`.
+- Graceful shutdown via `signal.NotifyContext` (SIGINT/SIGTERM).
+- Tables: `admins`, `inbounds`, `users`, `traffic_ledger`, `settings`, `config_revisions`, `subscriptions`.
+- Future: JWT cookie auth, Argon2id password hashing, login rate limiting, audit logs.
+- Future: `LocalConfigGenerator` that reads SQLite, builds full `config.json`, validates with `sing-box check`, writes atomically, records revisions.
+- Future: `ProcessManager` adapters for systemd and direct subprocess mode.
+- Future: `TrafficBackgroundWorker` with live speed polling, per-user source adapters, quota enforcement, batched SQLite writes.
+- Future: CRUD for users and inbounds, subscription links, QR generation, dashboard metrics, log reads, core process actions.
 
 ## Frontend
 
-- Implement Next.js App Router UI with true black background, mono typography, restrained panels, neon cyan/lime accents, Recharts, Framer Motion, and lucide icons.
-- Screens: login, dashboard, metrics, clients table, inbounds list, core actions, logs, connection modal with QR and subscription links.
-- Fetch API through same-origin `/api/*` rewrites to local FastAPI.
+- Vite + React 18 + TypeScript SPA. Tailwind CSS, Framer Motion, Recharts, React Router DOM.
+- True black background (`#171717`), mono typography (Inter + JetBrains Mono), restrained panels, neon accents.
+- Screens: Dashboard, Inbounds, Clients, Settings, Logs.
+- Dev server proxies `/api/*` to `127.0.0.1:8080`.
+- Current state: fully functional **mock UI** with in-memory store. All data shapes defined, ready for real API integration.
 
-## Install and CLI
+## Config
 
-- `scripts/install.sh` detects OS/arch, installs prerequisites, downloads latest stable sing-box, creates local service user and runtime directories, builds backend/frontend, creates secrets, writes initial config, installs systemd units, and starts services.
-- `scripts/sing-grok` provides terminal menu: start, stop, restart/reload, reset admin password, change panel port, status, logs.
-- Systemd units run backend, frontend, and local sing-box under a dedicated `sing-grok` user.
+- Primary: `config/dev.yaml` (YAML). Secrets overridden via environment variables.
+- `SING_GROK_CONFIG_PATH` env var to point to a different config file.
+- `cleanenv.ReadConfig()` reads YAML first, then overrides from env vars.
+- Sections: runtime (GoMemLimit, GoGC), database (SQLite pragmas), http, frontend, auth, sing_box, metrics, logging, subscription.
+
+## Check Commands
+
+```
+go vet ./...
+go build ./cmd/
+cd frontend && npm run typecheck
+cd frontend && npm run build
+cd frontend && npm test
+```
 
 ## Security and Disk I/O
 
 - sing-box Clash/V2Ray APIs must bind only to `127.0.0.1`.
-- Generated secrets live in `/etc/sing-grok/*.env` with `0640` permissions.
+- Secrets must not be logged, committed to git, or hardcoded in YAML.
 - SQLite uses WAL, `synchronous=NORMAL`, `busy_timeout`, foreign keys, and batched traffic writes.
 - Shell commands must avoid interpolating untrusted user input.
 
-## Acceptance Checks
+## Acceptance Goals
 
-- Backend syntax and tests pass.
-- Frontend typecheck/build pass.
-- Shell scripts pass shellcheck.
 - Installer can deploy on Ubuntu/Debian VPS with one command.
 - Panel can create an inbound/client, generate a valid link/QR, validate and apply sing-box config, restart local core, stream logs, and enforce traffic limits.
+- Optimized for weak VDS (256–512 MB RAM, single vCPU).

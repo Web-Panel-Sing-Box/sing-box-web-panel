@@ -1,0 +1,68 @@
+env: "dev"
+
+runtime:
+  gomemlimit: "256MiB"
+  gogc: 50
+
+database:
+  path: "./storage/storage.db"
+  journal_mode: "wal"
+  synchronous: "normal"
+  cache_size_kb: 2000
+  mmap_size_mb: 32
+  busy_timeout_ms: 5000
+  temp_store: "memory"
+  foreign_keys: true
+
+http:
+  address: "127.0.0.1:8080"
+  read_timeout: "5s"
+  write_timeout: "10s"
+  idle_timeout: "120s"
+  shutdown_timeout: "10s"
+  max_header_bytes: 1048576
+  max_conns: 128
+
+frontend:
+  serve_mode: "disk"
+  disk_path: "./frontend/dist"
+  cache_ttl: "0h"
+
+auth:
+  jwt_secret: "dev-secret-change-me"
+  jwt_expiry: "24h"
+  admin_user: "admin"
+  admin_password: "admin"
+  argon2_memory_kb: 65536
+  argon2_iterations: 3
+  argon2_parallelism: 2
+  login_rate_limit: "5/m"
+  api_rate_limit: "100/s"
+
+sing_box:
+  binary_path: "sing-box"
+  config_path: "./runtime/config.json"
+  working_dir: "./runtime"
+  api_address: "127.0.0.1:9090"
+  api_secret: "dev-clash-secret"
+  check_timeout: "8s"
+  restart_delay: "2s"
+  max_restarts: 4
+
+metrics:
+  system_interval: "2s"
+  traffic_interval: "1s"
+  history_size: 60
+  batch_flush_interval: "5s"
+
+logging:
+  level: "debug"
+  format: "text"
+  file_path: ""
+  max_memory_lines: 200
+  max_file_size_mb: 10
+  max_file_backups: 2
+
+subscription:
+  public_url: ""
+  token_ttl: "720h"
