@@ -1,0 +1,411 @@
+
+import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { Dices, RefreshCw } from "lucide-react";
+
+import { Accordion } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Input, Label, Textarea } from "@/components/ui/input";
+import { Modal, ModalBody, ModalFooter, ModalHeader } from "@/components/ui/modal";
+import { Segmented } from "@/components/ui/tabs";
+import { Select } from "@/components/ui/select";
+import { Toggle } from "@/components/ui/toggle";
+import { useToast } from "@/components/ui/toast";
+import { useStore } from "@/lib/mock/store";
+import {
+  PROTOCOL_OPTIONS,
+  TRAFFIC_RESET_OPTIONS,
+  TRANSMISSION_OPTIONS,
+  type Protocol,
+  type TlsMode,
+  type Transmission
+} from "@/lib/mock/inbounds";
+
+type InboundFormModalProps = {
+  open: boolean;
+  onClose: () => void;
+};
+
+function randomPort() {
+  return Math.floor(10_000 + Math.random() * 50_000);
+}
+
+function randomHex(length: number) {
+  if (typeof crypto !== "undefined" && "getRandomValues" in crypto) {
+    const bytes = new Uint8Array(length / 2);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  let s = "";
+  for (let i = 0; i < length; i++) s += Math.floor(Math.random() * 16).toString(16);
+  return s;
+}
+
+function makeUuid() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  return "00000000-0000-4000-8000-000000000000";
+}
+
+export function InboundFormModal({ open, onClose }: InboundFormModalProps) {
+  const { addInbound } = useStore();
+  const { push } = useToast();
+
+  const [remark, setRemark] = useState("");
+  const [protocol, setProtocol] = useState<Protocol>("naive");
+  const [port, setPort] = useState<number | string>(() => randomPort());
+  const [trafficReset, setTrafficReset] = useState("never");
+  const [transmission, setTransmission] = useState<Transmission>("tcp");
+
+  const [sniffing, setSniffing] = useState(true);
+  const [snifHttp, setSnifHttp] = useState(true);
+  const [snifTls, setSnifTls] = useState(true);
+  const [snifQuic, setSnifQuic] = useState(false);
+  const [snifFakedns, setSnifFakedns] = useState(false);
+  const [metadataOnly, setMetadataOnly] = useState(false);
+  const [routeOnly, setRouteOnly] = useState(true);
+  const [ipsExcluded, setIpsExcluded] = useState("");
+  const [domainsExcluded, setDomainsExcluded] = useState("");
+
+  const [tls, setTls] = useState<TlsMode>("none");
+  const [dest, setDest] = useState("www.cloudflare.com:443");
+  const [sni, setSni] = useState("www.cloudflare.com");
+  const [shortIds, setShortIds] = useState("");
+  const [privateKey, setPrivateKey] = useState("");
+  const [publicKey, setPublicKey] = useState("");
+
+  const [userId, setUserId] = useState("user-001");
+  const [uuid, setUuid] = useState(makeUuid());
+  const [subscription, setSubscription] = useState("");
+  const [totalFlowGb, setTotalFlowGb] = useState("100");
+  const [expiry, setExpiry] = useState("");
+  const [startAfterFirstUse, setStartAfterFirstUse] = useState(true);
+
+  const [diceSpin, setDiceSpin] = useState(0);
+  const [saving, setSaving] = useState(false);
+
+  // Reset on close
+  useEffect(() => {
+    if (!open) return;
+    setRemark("");
+    setProtocol("naive");
+    setPort(randomPort());
+    setTrafficReset("never");
+    setTransmission("tcp");
+    setTls("none");
+    setUuid(makeUuid());
+    setUserId("user-001");
+    setSubscription("");
+    setTotalFlowGb("100");
+    setExpiry("");
+    setPrivateKey("");
+    setPublicKey("");
+    setShortIds("");
+  }, [open]);
+
+  const transportFields = useMemo(() => {
+    switch (transmission) {
+      case "ws":
+        return (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <Label>Path</Label>
+              <Input placeholder="/ws" mono />
+            </div>
+            <div>
+              <Label>Host</Label>
+              <Input placeholder="panel.example" mono />
+            </div>
+          </div>
+        );
+      case "grpc":
+        return (
+          <div>
+            <Label>Service name</Label>
+            <Input placeholder="grpc-svc" mono />
+          </div>
+        );
+      case "mkcp":
+        return (
+          <div>
+            <Label>Header type</Label>
+            <Select
+              value="none"
+              onChange={() => undefined}
+              options={[
+                { value: "none", label: "none" },
+                { value: "srtp", label: "srtp" },
+                { value: "wechat-video", label: "wechat-video" },
+                { value: "wireguard", label: "wireguard" }
+              ]}
+            />
+          </div>
+        );
+      case "xhttp":
+      case "httpupgrade":
+        return (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <Label>Path</Label>
+              <Input placeholder="/up" mono />
+            </div>
+            <div>
+              <Label>Host</Label>
+              <Input placeholder="panel.example" mono />
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  }, [transmission]);
+
+  async function handleSave() {
+    if (!remark.trim()) {
+      push("Remark is required", "error");
+      return;
+    }
+    setSaving(true);
+    await new Promise((r) => setTimeout(r, 650));
+    addInbound({
+      remark: remark.trim(),
+      protocol,
+      port: Number(port) || randomPort(),
+      transmission,
+      tls,
+      sni: tls === "none" ? undefined : sni,
+      dest: tls === "reality" ? dest : undefined
+    });
+    setSaving(false);
+    push("Connection created successfully");
+    onClose();
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} width="max-w-[760px]">
+      <ModalHeader title="New inbound connection" subtitle="Configure protocol, transport, security, and a starter client." onClose={onClose} />
+      <ModalBody className="space-y-3">
+        <Accordion title="Basics" description="Protocol, port, traffic reset, transport">
+          <div className="space-y-3">
+            <div>
+              <Label>Remark</Label>
+              <Input value={remark} onChange={(e) => setRemark(e.target.value)} placeholder="e.g. vadim-vless#0001" />
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <Label>Protocol</Label>
+                <Select value={protocol} options={PROTOCOL_OPTIONS} onChange={(v) => setProtocol(v)} />
+              </div>
+              <div>
+                <Label>Port</Label>
+                <Input
+                  type="number"
+                  value={port}
+                  onChange={(e) => setPort(e.target.value)}
+                  mono
+                  trailing={
+                    <motion.button
+                      type="button"
+                      animate={{ rotate: diceSpin }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                      onClick={() => {
+                        setDiceSpin((v) => v + 360);
+                        setPort(randomPort());
+                      }}
+                      className="grid size-7 place-items-center rounded-md text-ink-secondary transition-colors duration-150 hover:bg-hover hover:text-ink-primary"
+                      title="Randomize"
+                    >
+                      <Dices size={14} />
+                    </motion.button>
+                  }
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <Label>Traffic reset</Label>
+                <Select value={trafficReset} options={TRAFFIC_RESET_OPTIONS} onChange={setTrafficReset} />
+              </div>
+              <div>
+                <Label>Transmission</Label>
+                <Select value={transmission} options={TRANSMISSION_OPTIONS} onChange={(v) => setTransmission(v)} />
+              </div>
+            </div>
+            {transportFields ? <div className="rounded-lg border border-subtle bg-canvas/60 p-3">{transportFields}</div> : null}
+          </div>
+        </Accordion>
+
+        <Accordion title="Transport & security" description="Sniffing, TLS, Reality">
+          <div className="space-y-5">
+            <div className="rounded-lg border border-subtle bg-canvas/60 p-3">
+              <Toggle checked={sniffing} onChange={setSniffing} label="Enable sniffing" description="Protocol detection for routing decisions" />
+              {sniffing ? (
+                <div className="mt-4 space-y-3">
+                  <div className="flex flex-wrap gap-3 text-xs text-ink-secondary">
+                    <Checkbox label="HTTP" checked={snifHttp} onChange={setSnifHttp} />
+                    <Checkbox label="TLS" checked={snifTls} onChange={setSnifTls} />
+                    <Checkbox label="QUIC" checked={snifQuic} onChange={setSnifQuic} />
+                    <Checkbox label="FAKEDNS" checked={snifFakedns} onChange={setSnifFakedns} />
+                  </div>
+                  <div className="flex flex-wrap gap-6">
+                    <Toggle checked={metadataOnly} onChange={setMetadataOnly} label="Metadata only" />
+                    <Toggle checked={routeOnly} onChange={setRouteOnly} label="Route only" />
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                      <Label>IPs excluded</Label>
+                      <Textarea rows={2} value={ipsExcluded} onChange={(e) => setIpsExcluded(e.target.value)} mono placeholder="10.0.0.0/8" />
+                    </div>
+                    <div>
+                      <Label>Domains excluded</Label>
+                      <Textarea rows={2} value={domainsExcluded} onChange={(e) => setDomainsExcluded(e.target.value)} mono placeholder="local.lan" />
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <div>
+              <Label>TLS</Label>
+              <Segmented<TlsMode>
+                value={tls}
+                onChange={setTls}
+                options={[
+                  { value: "none", label: "None" },
+                  { value: "tls", label: "TLS" },
+                  { value: "reality", label: "Reality" }
+                ]}
+              />
+            </div>
+
+            {tls === "reality" ? (
+              <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label>Destination (dest)</Label>
+                    <Input value={dest} onChange={(e) => setDest(e.target.value)} mono />
+                  </div>
+                  <div>
+                    <Label>SNI</Label>
+                    <Input value={sni} onChange={(e) => setSni(e.target.value)} mono />
+                  </div>
+                </div>
+                <div>
+                  <Label>Short IDs</Label>
+                  <Textarea rows={2} value={shortIds} onChange={(e) => setShortIds(e.target.value)} mono placeholder="One short id per line" />
+                </div>
+                <div className="space-y-2 rounded-lg border border-subtle bg-canvas/60 p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-ink-secondary">X25519 keypair</span>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setPrivateKey(randomHex(64));
+                        setPublicKey(randomHex(64));
+                      }}
+                    >
+                      <RefreshCw size={14} />
+                      Generate keypair
+                    </Button>
+                  </div>
+                  <div>
+                    <Label>Private key</Label>
+                    <Input value={privateKey} mono readOnly placeholder="—" />
+                  </div>
+                  <div>
+                    <Label>Public key</Label>
+                    <Input value={publicKey} mono readOnly placeholder="—" />
+                  </div>
+                </div>
+              </div>
+            ) : tls === "tls" ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <Label>SNI</Label>
+                  <Input value={sni} onChange={(e) => setSni(e.target.value)} mono />
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </Accordion>
+
+        <Accordion title="User template" description="Initial client provisioned with this inbound">
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <Label>User ID</Label>
+                <Input value={userId} onChange={(e) => setUserId(e.target.value)} />
+              </div>
+              <div>
+                <Label>UUID</Label>
+                <Input
+                  value={uuid}
+                  mono
+                  readOnly
+                  trailing={
+                    <button
+                      type="button"
+                      onClick={() => setUuid(makeUuid())}
+                      className="grid size-7 place-items-center rounded-md text-ink-secondary transition-colors duration-150 hover:bg-hover hover:text-ink-primary"
+                      title="Regenerate"
+                    >
+                      <RefreshCw size={14} />
+                    </button>
+                  }
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Subscription</Label>
+              <Input value={subscription} onChange={(e) => setSubscription(e.target.value)} placeholder="https://panel.example/sub/your-key" mono />
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <Label>Total flow (GB)</Label>
+                <Input type="number" value={totalFlowGb} onChange={(e) => setTotalFlowGb(e.target.value)} mono />
+              </div>
+              <div>
+                <Label>Expiry date</Label>
+                <Input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} />
+              </div>
+            </div>
+            <Toggle
+              checked={startAfterFirstUse}
+              onChange={setStartAfterFirstUse}
+              label="Start after first use"
+              description="Quota timer begins on the first connection rather than at creation"
+            />
+          </div>
+        </Accordion>
+      </ModalBody>
+      <ModalFooter accent="violet">
+        <Button variant="danger" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button variant="primary" onClick={handleSave} loading={saving}>
+          Save
+        </Button>
+      </ModalFooter>
+    </Modal>
+  );
+}
+
+function Checkbox({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className="inline-flex items-center gap-2"
+    >
+      <span
+        className={`grid size-4 place-items-center rounded border ${checked ? "border-brand bg-brand text-white" : "border-white/15 bg-canvas"}`}
+      >
+        {checked ? (
+          <svg viewBox="0 0 12 12" width="10" height="10" fill="none">
+            <path d="m2 6 3 3 5-6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        ) : null}
+      </span>
+      <span className="text-xs text-ink-secondary">{label}</span>
+    </button>
+  );
+}
