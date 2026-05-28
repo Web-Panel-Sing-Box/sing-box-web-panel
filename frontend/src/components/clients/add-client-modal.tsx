@@ -104,13 +104,12 @@ export function AddClientModal({ open, onClose, defaultInboundId }: Props) {
             <DateInput value={expiry} onChange={setExpiry} />
           </div>
         </div>
-        <div className="flex min-h-[72px] items-center justify-center rounded-lg">
+        <div className="flex min-h-[72px] items-center justify-center rounded-lg rounded-lg border border-subtle bg-canvas/40 px-3 py-2">
           <Toggle
             size="lg"
             checked={startAfterFirstUse}
             onChange={setStartAfterFirstUse}
             label={t("inbounds.startAfterFirstUse")}
-            description={t("inbounds.startAfterFirstUseDesc")}
           />
         </div>
       </ModalBody>

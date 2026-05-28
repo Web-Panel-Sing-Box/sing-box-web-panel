@@ -284,7 +284,7 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
 
         <Accordion title={t("inbounds.transportSecurity")}>
           <div className="space-y-5">
-            <div className="rounded-lg border border-subtle bg-canvas/60 p-3">
+            <div className="">
               <Toggle checked={sniffing} onChange={setSniffing} label={t("inbounds.enableSniffing")} description={t("inbounds.sniffingDesc")} />
               {sniffing ? (
                 <div className="mt-4 space-y-3">
@@ -341,7 +341,7 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
                   <Label>{t("inbounds.shortIds")}</Label>
                   <Textarea rows={2} value={shortIds} onChange={(e) => setShortIds(e.target.value)} mono placeholder="One short id per line" />
                 </div>
-                <div className="space-y-2 rounded-lg border border-subtle bg-canvas/60 p-3">
+                <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-ink-secondary">{t("inbounds.keypair")}</span>
                     <Button
@@ -422,7 +422,6 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
                 checked={startAfterFirstUse}
                 onChange={setStartAfterFirstUse}
                 label={t("inbounds.startAfterFirstUse")}
-                description={t("inbounds.startAfterFirstUseDesc")}
               />
             </div>
           </div>
