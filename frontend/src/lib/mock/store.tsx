@@ -26,6 +26,7 @@ type StoreState = {
 type StoreActions = {
   toggleInbound: (id: string) => void;
   addInbound: (input: Omit<Inbound, "id" | "createdAt" | "clientCount" | "enabled">) => void;
+  updateInbound: (id: string, patch: Partial<Omit<Inbound, "id" | "createdAt" | "clientCount">>) => void;
   removeInbound: (id: string) => void;
   cloneInbound: (id: string) => void;
   updateClient: (id: string, patch: Partial<Client>) => void;
@@ -93,6 +94,10 @@ export function MockStoreProvider({ children }: { children: React.ReactNode }) {
     ]);
   }, []);
 
+  const updateInbound = useCallback<StoreActions["updateInbound"]>((id, patch) => {
+    setInbounds((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
+  }, []);
+
   const removeInbound = useCallback((id: string) => {
     setInbounds((prev) => prev.filter((i) => i.id !== id));
   }, []);
@@ -143,6 +148,7 @@ export function MockStoreProvider({ children }: { children: React.ReactNode }) {
       paused,
       toggleInbound,
       addInbound,
+      updateInbound,
       removeInbound,
       cloneInbound,
       updateClient,
@@ -161,6 +167,7 @@ export function MockStoreProvider({ children }: { children: React.ReactNode }) {
       paused,
       toggleInbound,
       addInbound,
+      updateInbound,
       removeInbound,
       cloneInbound,
       updateClient,

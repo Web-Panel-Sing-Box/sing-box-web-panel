@@ -14,19 +14,20 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 
 type NavItem = {
-  label: string;
+  labelKey: "nav.dashboard" | "nav.inbounds" | "nav.clients" | "nav.settings" | "nav.logs";
   href: string;
   icon: LucideIcon;
 };
 
 const NAV: NavItem[] = [
-  { label: "Dashboard", href: "/", icon: LayoutDashboard },
-  { label: "Inbounds", href: "/inbounds", icon: Network },
-  { label: "Clients", href: "/clients", icon: Users },
-  { label: "Settings", href: "/settings", icon: Settings },
-  { label: "Logs", href: "/logs", icon: ScrollText }
+  { labelKey: "nav.dashboard", href: "/", icon: LayoutDashboard },
+  { labelKey: "nav.inbounds", href: "/inbounds", icon: Network },
+  { labelKey: "nav.clients", href: "/clients", icon: Users },
+  { labelKey: "nav.settings", href: "/settings", icon: Settings },
+  { labelKey: "nav.logs", href: "/logs", icon: ScrollText }
 ];
 
 const COLLAPSED = 64;
@@ -148,6 +149,7 @@ function SidebarContents({
   onPinToggle: () => void;
   pinIcon?: "pin" | "close";
 }) {
+  const { t } = useI18n();
   return (
     <>
       <div className="flex h-14 items-center gap-3 px-4">
@@ -183,7 +185,8 @@ function SidebarContents({
                 <Link
                   to={item.href}
                   className={cn(
-                    "relative flex h-10 items-center gap-3 rounded-lg px-3 text-sm transition-colors duration-200",
+                    "relative flex h-10 items-center rounded-lg text-sm transition-colors duration-200",
+                    expanded ? "gap-3 px-3" : "justify-center px-0",
                     active ? "text-ink-primary" : "text-ink-secondary hover:bg-hover hover:text-ink-primary"
                   )}
                 >
@@ -194,7 +197,9 @@ function SidebarContents({
                       transition={{ type: "spring", stiffness: 500, damping: 40 }}
                     />
                   ) : null}
-                  <Icon size={16} className="shrink-0" />
+                  <span className="grid size-6 shrink-0 place-items-center">
+                    <Icon size={16} className="shrink-0" />
+                  </span>
                   <AnimatePresence>
                     {expanded ? (
                       <motion.span
@@ -204,7 +209,7 @@ function SidebarContents({
                         transition={{ duration: 0.12 }}
                         className="truncate"
                       >
-                        {item.label}
+                        {t(item.labelKey)}
                       </motion.span>
                     ) : null}
                   </AnimatePresence>
@@ -219,10 +224,15 @@ function SidebarContents({
         <button
           type="button"
           onClick={onPinToggle}
-          className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-ink-secondary transition-colors duration-200 hover:bg-hover hover:text-ink-primary"
-          title={pinIcon === "close" ? "Close" : pinned ? "Unpin sidebar" : "Pin sidebar"}
+          className={cn(
+            "flex h-10 w-full items-center rounded-lg text-sm text-ink-secondary transition-colors duration-200 hover:bg-hover hover:text-ink-primary",
+            expanded ? "gap-3 px-3" : "justify-center px-0"
+          )}
+          title={pinIcon === "close" ? t("nav.close") : pinned ? t("nav.unpin") : t("nav.pin")}
         >
-          {pinned ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+          <span className="grid size-6 shrink-0 place-items-center">
+            {pinned ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+          </span>
           <AnimatePresence>
             {expanded ? (
               <motion.span
@@ -231,7 +241,7 @@ function SidebarContents({
                 exit={{ opacity: 0, x: -4 }}
                 transition={{ duration: 0.12 }}
               >
-                {pinIcon === "close" ? "Close" : pinned ? "Unpin" : "Pin sidebar"}
+                {pinIcon === "close" ? t("nav.close") : pinned ? t("nav.unpin") : t("nav.pin")}
               </motion.span>
             ) : null}
           </AnimatePresence>

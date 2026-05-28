@@ -1,7 +1,7 @@
 
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 
-export type ToastVariant = "default" | "error";
+export type ToastVariant = "default" | "success" | "error";
 
 export type Toast = {
   id: string;

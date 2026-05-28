@@ -1,0 +1,396 @@
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState
+} from "react";
+
+export type Language = "en" | "ru";
+
+const STORAGE_KEY = "sing-grok:language";
+
+const en = {
+  "nav.dashboard": "Dashboard",
+  "nav.inbounds": "Inbounds",
+  "nav.clients": "Clients",
+  "nav.settings": "Settings",
+  "nav.logs": "Logs",
+  "nav.pin": "Pin sidebar",
+  "nav.unpin": "Unpin",
+  "nav.close": "Close",
+  "mobile.openMenu": "Open menu",
+
+  "common.save": "Save",
+  "common.cancel": "Cancel",
+  "common.delete": "Delete",
+  "common.clone": "Clone",
+  "common.active": "Active",
+  "common.stopped": "Stopped",
+  "common.disabled": "Disabled",
+  "common.expired": "Expired",
+  "common.enabled": "Enabled",
+  "common.status": "Status",
+  "common.protocol": "Protocol",
+  "common.port": "Port",
+  "common.remark": "Remark",
+  "common.clients": "Clients",
+  "common.transport": "Transport",
+  "common.confirm": "Confirm",
+  "common.keepRunning": "Keep running",
+
+  "core.stopQuestion": "Are you sure you want to stop the core?",
+  "core.stopBody": "The mock sing-box core will be marked as stopped until you start it again.",
+  "core.stopConfirm": "Stop core",
+  "core.started": "Core started",
+  "core.stopped": "Core stopped",
+  "core.clickToStop": "Click to stop",
+  "core.clickToStart": "Click to start",
+
+  "dashboard.uptime": "Uptime",
+  "dashboard.totalSent": "Total sent",
+  "dashboard.totalReceived": "Total received",
+  "dashboard.cpu": "CPU",
+  "dashboard.memory": "Memory",
+  "dashboard.ram": "RAM",
+  "dashboard.swap": "Swap",
+  "dashboard.disk": "Disk",
+  "dashboard.traffic": "Traffic",
+  "dashboard.trafficSubtitle": "Incoming · outgoing speed, last 60s",
+  "dashboard.incoming": "Incoming",
+  "dashboard.outgoing": "Outgoing",
+  "dashboard.today": "Today",
+  "dashboard.thisMonth": "This month",
+  "dashboard.coresUsage": "8 cores · {{value}} usage",
+  "dashboard.inboundsActive": "Inbounds active",
+  "dashboard.clientsTelemetry": "Clients telemetry",
+  "dashboard.totalUsers": "Total users",
+  "dashboard.onlineNow": "Online now:",
+  "dashboard.acrossProtocols": "across {{count}} protocols",
+  "dashboard.total": "{{count}} total",
+  "dashboard.realtime": "realtime",
+
+  "inbounds.title": "Inbounds",
+  "inbounds.description": "Listeners exposed by the local sing-box core",
+  "inbounds.new": "New configuration",
+  "inbounds.noMatch": "No inbounds match the current filter.",
+  "inbounds.filterProtocol": "Filtered by {{protocol}}",
+  "inbounds.clearFilter": "Clear filter",
+  "inbounds.clientCount": "{{count}} clients",
+  "inbounds.created": "Connection created successfully",
+  "inbounds.updated": "Inbound updated",
+  "inbounds.cloned": "Inbound cloned",
+  "inbounds.deleted": "Deleted {{remark}}",
+  "inbounds.toggled": "{{remark}} {{state}}",
+  "inbounds.remarkRequired": "Remark is required",
+  "inbounds.modalCreate": "New inbound connection",
+  "inbounds.modalEdit": "Edit inbound connection",
+  "inbounds.modalClone": "Clone inbound connection",
+  "inbounds.modalSubtitle": "Configure protocol, transport, security, and a starter client.",
+  "inbounds.cloneHint": "Change the remark before saving the cloned inbound.",
+  "inbounds.basics": "Basics",
+  "inbounds.basicsDesc": "Protocol, port, traffic reset, transport",
+  "inbounds.transportSecurity": "Transport & security",
+  "inbounds.transportSecurityDesc": "Sniffing, TLS, Reality",
+  "inbounds.userTemplate": "User template",
+  "inbounds.userTemplateDesc": "Initial client provisioned with this inbound",
+  "inbounds.trafficReset": "Traffic reset",
+  "inbounds.transmission": "Transmission",
+  "inbounds.enableSniffing": "Enable sniffing",
+  "inbounds.sniffingDesc": "Protocol detection for routing decisions",
+  "inbounds.metadataOnly": "Metadata only",
+  "inbounds.routeOnly": "Route only",
+  "inbounds.ipsExcluded": "IPs excluded",
+  "inbounds.domainsExcluded": "Domains excluded",
+  "inbounds.destination": "Destination (dest)",
+  "inbounds.shortIds": "Short IDs",
+  "inbounds.keypair": "X25519 keypair",
+  "inbounds.generateKeypair": "Generate keypair",
+  "inbounds.privateKey": "Private key",
+  "inbounds.publicKey": "Public key",
+  "inbounds.userId": "User ID",
+  "inbounds.subscription": "Subscription",
+  "inbounds.totalFlow": "Total flow (GB)",
+  "inbounds.expiryDate": "Expiry date",
+  "inbounds.startAfterFirstUse": "Start after first use",
+  "inbounds.startAfterFirstUseDesc": "Quota timer begins on the first connection rather than at creation",
+  "inbounds.deleteQuestion": "Delete this inbound?",
+  "inbounds.deleteBody": "{{remark}} will be removed from the mock list.",
+
+  "clients.title": "Clients",
+  "clients.description": "Manage user quotas, expiry, and subscription links",
+  "clients.add": "Add client",
+  "clients.addHint": "Use 'New configuration' on Inbounds to provision the first client",
+  "clients.search": "Search by name or UUID",
+  "clients.allInbounds": "All inbounds",
+  "clients.allStatuses": "All statuses",
+  "clients.name": "Name",
+  "clients.dataUsage": "Data usage",
+  "clients.expiry": "Expiry",
+  "clients.inbound": "Inbound",
+  "clients.noMatch": "No clients match the current filter.",
+  "clients.modalSubtitle": "Edit credentials, quota, and lifecycle",
+  "clients.userName": "User name",
+  "clients.updated": "Client updated",
+  "clients.linkCopied": "Link copied to clipboard",
+  "clients.getQr": "Get QR",
+  "clients.copyLink": "Copy link",
+  "clients.copied": "Copied!",
+
+  "settings.title": "Settings",
+  "settings.description": "All values below are local to this mock build",
+  "settings.saved": "Settings saved",
+  "settings.general": "General",
+  "settings.security": "Security",
+  "settings.singBox": "Sing-box",
+  "settings.subscriptions": "Subscriptions",
+  "settings.panelName": "Panel name",
+  "settings.panelNameHint": "Shown in the browser tab and login screen",
+  "settings.language": "Language",
+  "settings.languageHint": "UI language for new sessions",
+  "settings.adminUsername": "Admin username",
+  "settings.readOnly": "Read-only in this build",
+  "settings.twoFactor": "Two-factor auth",
+  "settings.twoFactorHint": "TOTP via authenticator app",
+  "settings.changePassword": "Change password",
+  "settings.changePasswordHint": "Mock-disabled in this build",
+  "settings.binaryPath": "Binary path",
+  "settings.binaryPathHint": "Path used by ProcessManager",
+  "settings.logLevel": "Log level",
+  "settings.logLevelHint": "Controls verbosity of sing-box stdout",
+  "settings.clashPort": "Clash API port",
+  "settings.v2rayPort": "V2Ray API port",
+  "settings.boundLocal": "Bound to 127.0.0.1",
+  "settings.publicBaseUrl": "Public base URL",
+  "settings.publicBaseUrlHint": "Origin used when generating client links",
+  "settings.tokenTtl": "Token TTL",
+  "settings.tokenTtlHint": "Lifetime of subscription tokens",
+
+  "logs.title": "Logs",
+  "logs.description": "Live stream of sing-box runtime output",
+  "logs.search": "Search logs",
+  "logs.allLevels": "All levels",
+  "logs.resume": "Resume",
+  "logs.pause": "Pause",
+  "logs.noMatch": "No log lines match the current filter."
+};
+
+const ru: Record<keyof typeof en, string> = {
+  "nav.dashboard": "Дашборд",
+  "nav.inbounds": "Инбаунды",
+  "nav.clients": "Клиенты",
+  "nav.settings": "Настройки",
+  "nav.logs": "Логи",
+  "nav.pin": "Закрепить сайдбар",
+  "nav.unpin": "Открепить",
+  "nav.close": "Закрыть",
+  "mobile.openMenu": "Открыть меню",
+
+  "common.save": "Сохранить",
+  "common.cancel": "Отмена",
+  "common.delete": "Удалить",
+  "common.clone": "Клонировать",
+  "common.active": "Активно",
+  "common.stopped": "Остановлено",
+  "common.disabled": "Отключено",
+  "common.expired": "Истекло",
+  "common.enabled": "Включено",
+  "common.status": "Статус",
+  "common.protocol": "Протокол",
+  "common.port": "Порт",
+  "common.remark": "Примечание",
+  "common.clients": "Клиенты",
+  "common.transport": "Транспорт",
+  "common.confirm": "Подтвердить",
+  "common.keepRunning": "Оставить включенным",
+
+  "core.stopQuestion": "Вы уверены, что хотите выключить ядро?",
+  "core.stopBody": "Моковое ядро sing-box будет отмечено как остановленное, пока вы не включите его снова.",
+  "core.stopConfirm": "Выключить ядро",
+  "core.started": "Ядро включено",
+  "core.stopped": "Ядро выключено",
+  "core.clickToStop": "Нажмите, чтобы выключить",
+  "core.clickToStart": "Нажмите, чтобы включить",
+
+  "dashboard.uptime": "Аптайм",
+  "dashboard.totalSent": "Всего отправлено",
+  "dashboard.totalReceived": "Всего получено",
+  "dashboard.cpu": "CPU",
+  "dashboard.memory": "Память",
+  "dashboard.ram": "RAM",
+  "dashboard.swap": "Swap",
+  "dashboard.disk": "Диск",
+  "dashboard.traffic": "Трафик",
+  "dashboard.trafficSubtitle": "Входящая · исходящая скорость за последние 60 секунд",
+  "dashboard.incoming": "Входящий",
+  "dashboard.outgoing": "Исходящий",
+  "dashboard.today": "Сегодня",
+  "dashboard.thisMonth": "За месяц",
+  "dashboard.coresUsage": "8 ядер · {{value}} занято",
+  "dashboard.inboundsActive": "Активные инбаунды",
+  "dashboard.clientsTelemetry": "Телеметрия клиентов",
+  "dashboard.totalUsers": "Всего пользователей",
+  "dashboard.onlineNow": "Онлайн сейчас:",
+  "dashboard.acrossProtocols": "по {{count}} протоколам",
+  "dashboard.total": "всего {{count}}",
+  "dashboard.realtime": "реальное время",
+
+  "inbounds.title": "Инбаунды",
+  "inbounds.description": "Прослушиватели локального ядра sing-box",
+  "inbounds.new": "Новая конфигурация",
+  "inbounds.noMatch": "Нет инбаундов под текущий фильтр.",
+  "inbounds.filterProtocol": "Фильтр по {{protocol}}",
+  "inbounds.clearFilter": "Сбросить фильтр",
+  "inbounds.clientCount": "{{count}} клиентов",
+  "inbounds.created": "Соединение успешно создано",
+  "inbounds.updated": "Инбаунд обновлен",
+  "inbounds.cloned": "Инбаунд клонирован",
+  "inbounds.deleted": "Удалено {{remark}}",
+  "inbounds.toggled": "{{remark}} {{state}}",
+  "inbounds.remarkRequired": "Нужно заполнить примечание",
+  "inbounds.modalCreate": "Новое входящее соединение",
+  "inbounds.modalEdit": "Редактирование инбаунда",
+  "inbounds.modalClone": "Клонирование инбаунда",
+  "inbounds.modalSubtitle": "Настройте протокол, транспорт, безопасность и стартового клиента.",
+  "inbounds.cloneHint": "Поменяйте примечание перед сохранением клона.",
+  "inbounds.basics": "Основное",
+  "inbounds.basicsDesc": "Протокол, порт, сброс трафика, транспорт",
+  "inbounds.transportSecurity": "Транспорт и безопасность",
+  "inbounds.transportSecurityDesc": "Sniffing, TLS, Reality",
+  "inbounds.userTemplate": "Шаблон пользователя",
+  "inbounds.userTemplateDesc": "Первый клиент, созданный вместе с инбаундом",
+  "inbounds.trafficReset": "Сброс трафика",
+  "inbounds.transmission": "Transmission",
+  "inbounds.enableSniffing": "Включить sniffing",
+  "inbounds.sniffingDesc": "Определение протоколов для маршрутизации",
+  "inbounds.metadataOnly": "Только metadata",
+  "inbounds.routeOnly": "Только route",
+  "inbounds.ipsExcluded": "Исключенные IP",
+  "inbounds.domainsExcluded": "Исключенные домены",
+  "inbounds.destination": "Назначение (dest)",
+  "inbounds.shortIds": "Short IDs",
+  "inbounds.keypair": "Пара X25519",
+  "inbounds.generateKeypair": "Сгенерировать ключи",
+  "inbounds.privateKey": "Private key",
+  "inbounds.publicKey": "Public key",
+  "inbounds.userId": "User ID",
+  "inbounds.subscription": "Подписка",
+  "inbounds.totalFlow": "Общий трафик (GB)",
+  "inbounds.expiryDate": "Дата истечения",
+  "inbounds.startAfterFirstUse": "Start after first use",
+  "inbounds.startAfterFirstUseDesc": "Срок начинает идти после первого подключения, а не при создании",
+  "inbounds.deleteQuestion": "Удалить этот инбаунд?",
+  "inbounds.deleteBody": "{{remark}} будет удален из мокового списка.",
+
+  "clients.title": "Клиенты",
+  "clients.description": "Управление квотами, сроками и ссылками подписки",
+  "clients.add": "Добавить клиента",
+  "clients.addHint": "Используйте 'Новая конфигурация' на странице инбаундов, чтобы создать первого клиента",
+  "clients.search": "Поиск по имени или UUID",
+  "clients.allInbounds": "Все инбаунды",
+  "clients.allStatuses": "Все статусы",
+  "clients.name": "Имя",
+  "clients.dataUsage": "Трафик",
+  "clients.expiry": "Истекает",
+  "clients.inbound": "Инбаунд",
+  "clients.noMatch": "Нет клиентов под текущий фильтр.",
+  "clients.modalSubtitle": "Редактирование данных, квоты и жизненного цикла",
+  "clients.userName": "Имя пользователя",
+  "clients.updated": "Клиент обновлен",
+  "clients.linkCopied": "Ссылка скопирована",
+  "clients.getQr": "Получить QR",
+  "clients.copyLink": "Скопировать ссылку",
+  "clients.copied": "Скопировано!",
+
+  "settings.title": "Настройки",
+  "settings.description": "Все значения ниже локальны для этого мокового билда",
+  "settings.saved": "Настройки сохранены",
+  "settings.general": "Общие",
+  "settings.security": "Безопасность",
+  "settings.singBox": "Sing-box",
+  "settings.subscriptions": "Подписки",
+  "settings.panelName": "Название панели",
+  "settings.panelNameHint": "Показывается во вкладке браузера и на экране входа",
+  "settings.language": "Язык",
+  "settings.languageHint": "Язык интерфейса для новых сессий",
+  "settings.adminUsername": "Имя администратора",
+  "settings.readOnly": "Только чтение в этом билде",
+  "settings.twoFactor": "Двухфакторная авторизация",
+  "settings.twoFactorHint": "TOTP через приложение-аутентификатор",
+  "settings.changePassword": "Сменить пароль",
+  "settings.changePasswordHint": "Отключено в моковом билде",
+  "settings.binaryPath": "Путь к бинарю",
+  "settings.binaryPathHint": "Путь, который использует ProcessManager",
+  "settings.logLevel": "Уровень логов",
+  "settings.logLevelHint": "Управляет подробностью stdout sing-box",
+  "settings.clashPort": "Порт Clash API",
+  "settings.v2rayPort": "Порт V2Ray API",
+  "settings.boundLocal": "Привязано к 127.0.0.1",
+  "settings.publicBaseUrl": "Публичный базовый URL",
+  "settings.publicBaseUrlHint": "Origin для генерации клиентских ссылок",
+  "settings.tokenTtl": "TTL токена",
+  "settings.tokenTtlHint": "Срок жизни токенов подписки",
+
+  "logs.title": "Логи",
+  "logs.description": "Живой поток вывода runtime sing-box",
+  "logs.search": "Поиск по логам",
+  "logs.allLevels": "Все уровни",
+  "logs.resume": "Возобновить",
+  "logs.pause": "Пауза",
+  "logs.noMatch": "Нет строк логов под текущий фильтр."
+};
+
+const dictionaries = { en, ru };
+
+type TranslationKey = keyof typeof en;
+type Params = Record<string, string | number>;
+
+type I18nContextValue = {
+  language: Language;
+  setLanguage: (language: Language) => void;
+  t: (key: TranslationKey, params?: Params) => string;
+};
+
+const I18nContext = createContext<I18nContextValue | null>(null);
+
+function isLanguage(value: string | null): value is Language {
+  return value === "en" || value === "ru";
+}
+
+function interpolate(template: string, params?: Params) {
+  if (!params) return template;
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key: string) => String(params[key] ?? ""));
+}
+
+export function I18nProvider({ children }: { children: React.ReactNode }) {
+  const [language, setLanguageState] = useState<Language>(() => {
+    if (typeof window === "undefined") return "en";
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    return isLanguage(stored) ? stored : "en";
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEY, language);
+    document.documentElement.lang = language;
+  }, [language]);
+
+  const setLanguage = useCallback((next: Language) => {
+    setLanguageState(next);
+  }, []);
+
+  const t = useCallback(
+    (key: TranslationKey, params?: Params) => interpolate(dictionaries[language][key] ?? en[key], params),
+    [language]
+  );
+
+  const value = useMemo(() => ({ language, setLanguage, t }), [language, setLanguage, t]);
+
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+}
+
+export function useI18n() {
+  const ctx = useContext(I18nContext);
+  if (!ctx) throw new Error("useI18n must be used inside <I18nProvider />");
+  return ctx;
+}

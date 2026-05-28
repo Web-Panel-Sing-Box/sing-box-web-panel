@@ -7,11 +7,11 @@ import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Toggle } from "@/components/ui/toggle";
 import { useToast } from "@/components/ui/toast";
+import { useI18n, type Language } from "@/lib/i18n";
 
-const LANGUAGE_OPTIONS = [
+const LANGUAGE_OPTIONS: { value: Language; label: string }[] = [
   { value: "en", label: "English" },
-  { value: "ru", label: "Russian" },
-  { value: "ja", label: "Japanese" }
+  { value: "ru", label: "Русский" }
 ];
 
 const LOG_LEVELS = [
@@ -23,68 +23,73 @@ const LOG_LEVELS = [
 
 export function SettingsPage() {
   const { push } = useToast();
+  const { language, setLanguage, t } = useI18n();
   const [panelName, setPanelName] = useState("Sing Grok");
-  const [language, setLanguage] = useState("en");
   const [twoFactor, setTwoFactor] = useState(false);
   const [binaryPath, setBinaryPath] = useState("/usr/local/bin/sing-box");
   const [logLevel, setLogLevel] = useState("info");
   const [publicHost, setPublicHost] = useState("panel.example");
   const [ttl, setTtl] = useState("72h");
 
-  const save = (section: string) => () => {
-    push(`${section} settings saved`);
+  const save = () => {
+    push(t("settings.saved"), "success");
   };
 
   return (
     <div className="mx-auto flex max-w-[920px] flex-col gap-6">
-      <div>
-        <h2 className="text-2xl font-semibold text-ink-primary">Settings</h2>
-        <p className="mt-1 text-sm text-ink-tertiary">All values below are local to this mock build</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-semibold text-ink-primary">{t("settings.title")}</h2>
+          <p className="mt-1 text-sm text-ink-tertiary">{t("settings.description")}</p>
+        </div>
+        <Button variant="primary" onClick={save}>
+          {t("common.save")}
+        </Button>
       </div>
 
-      <Section title="General" onSave={save("General")}>
-        <Row label="Panel name" hint="Shown in the browser tab and login screen">
+      <Section title={t("settings.general")}>
+        <Row label={t("settings.panelName")} hint={t("settings.panelNameHint")}>
           <Input value={panelName} onChange={(e) => setPanelName(e.target.value)} />
         </Row>
-        <Row label="Language" hint="UI language for new sessions">
-          <Select value={language} options={LANGUAGE_OPTIONS} onChange={setLanguage} />
+        <Row label={t("settings.language")} hint={t("settings.languageHint")}>
+          <Select<Language> value={language} options={LANGUAGE_OPTIONS} onChange={setLanguage} />
         </Row>
       </Section>
 
-      <Section title="Security" onSave={save("Security")}>
-        <Row label="Admin username" hint="Read-only in this build">
+      <Section title={t("settings.security")}>
+        <Row label={t("settings.adminUsername")} hint={t("settings.readOnly")}>
           <Input value="admin" readOnly mono />
         </Row>
-        <Row label="Two-factor auth" hint="TOTP via authenticator app">
+        <Row label={t("settings.twoFactor")} hint={t("settings.twoFactorHint")}>
           <Toggle checked={twoFactor} onChange={setTwoFactor} />
         </Row>
-        <Row label="Change password" hint="Mock-disabled in this build">
+        <Row label={t("settings.changePassword")} hint={t("settings.changePasswordHint")}>
           <Button disabled variant="secondary">
-            Change password
+            {t("settings.changePassword")}
           </Button>
         </Row>
       </Section>
 
-      <Section title="Sing-box" onSave={save("Sing-box")}>
-        <Row label="Binary path" hint="Path used by ProcessManager">
+      <Section title={t("settings.singBox")}>
+        <Row label={t("settings.binaryPath")} hint={t("settings.binaryPathHint")}>
           <Input value={binaryPath} onChange={(e) => setBinaryPath(e.target.value)} mono />
         </Row>
-        <Row label="Log level" hint="Controls verbosity of sing-box stdout">
+        <Row label={t("settings.logLevel")} hint={t("settings.logLevelHint")}>
           <Select value={logLevel} options={LOG_LEVELS} onChange={setLogLevel} />
         </Row>
-        <Row label="Clash API port" hint="Bound to 127.0.0.1">
+        <Row label={t("settings.clashPort")} hint={t("settings.boundLocal")}>
           <Input value="9090" readOnly mono />
         </Row>
-        <Row label="V2Ray API port" hint="Bound to 127.0.0.1">
+        <Row label={t("settings.v2rayPort")} hint={t("settings.boundLocal")}>
           <Input value="9091" readOnly mono />
         </Row>
       </Section>
 
-      <Section title="Subscriptions" onSave={save("Subscriptions")}>
-        <Row label="Public base URL" hint="Origin used when generating client links">
+      <Section title={t("settings.subscriptions")}>
+        <Row label={t("settings.publicBaseUrl")} hint={t("settings.publicBaseUrlHint")}>
           <Input value={publicHost} onChange={(e) => setPublicHost(e.target.value)} mono />
         </Row>
-        <Row label="Token TTL" hint="Lifetime of subscription tokens">
+        <Row label={t("settings.tokenTtl")} hint={t("settings.tokenTtlHint")}>
           <Input value={ttl} onChange={(e) => setTtl(e.target.value)} mono />
         </Row>
       </Section>
@@ -92,14 +97,11 @@ export function SettingsPage() {
   );
 }
 
-function Section({ title, onSave, children }: { title: string; onSave: () => void; children: React.ReactNode }) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <Button variant="primary" size="sm" onClick={onSave}>
-          Save
-        </Button>
       </CardHeader>
       <div className="space-y-4">{children}</div>
     </Card>

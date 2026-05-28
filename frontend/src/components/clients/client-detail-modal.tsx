@@ -10,6 +10,7 @@ import { Toggle } from "@/components/ui/toggle";
 import { useToast } from "@/components/ui/toast";
 import type { Client, ClientStatus } from "@/lib/mock/clients";
 import { useStore } from "@/lib/mock/store";
+import { useI18n } from "@/lib/i18n";
 
 import { QrModal } from "./qr-modal";
 
@@ -23,6 +24,7 @@ type Props = {
 export function ClientDetailModal({ client, onClose }: Props) {
   const { inbounds, updateClient } = useStore();
   const { push } = useToast();
+  const { t } = useI18n();
 
   const [draft, setDraft] = useState<Client | null>(client);
   const [qrOpen, setQrOpen] = useState(false);
@@ -49,25 +51,25 @@ export function ClientDetailModal({ client, onClose }: Props) {
       // ignore
     }
     setCopied(true);
-    push("Link copied to clipboard");
+    push(t("clients.linkCopied"), "success");
     window.setTimeout(() => setCopied(false), 1500);
   }
 
   function save() {
     if (!draft) return;
     updateClient(draft.id, draft);
-    push("Client updated");
+    push(t("clients.updated"), "success");
     onClose();
   }
 
   return (
     <>
       <Modal open={!!client} onClose={onClose} width="max-w-[640px]">
-        <ModalHeader title={draft.name} subtitle="Edit credentials, quota, and lifecycle" onClose={onClose} />
+        <ModalHeader title={draft.name} subtitle={t("clients.modalSubtitle")} onClose={onClose} />
         <ModalBody className="space-y-3">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <Label>User name</Label>
+              <Label>{t("clients.userName")}</Label>
               <Input value={draft.name} onChange={(e) => update("name", e.target.value)} />
             </div>
             <div>
@@ -90,7 +92,7 @@ export function ClientDetailModal({ client, onClose }: Props) {
             </div>
           </div>
           <div>
-            <Label>Inbound</Label>
+            <Label>{t("clients.inbound")}</Label>
             <Select
               value={draft.inboundId}
               options={inbounds.map((i) => ({ value: i.id, label: i.remark }))}
@@ -98,12 +100,12 @@ export function ClientDetailModal({ client, onClose }: Props) {
             />
           </div>
           <div>
-            <Label>Subscription</Label>
+            <Label>{t("inbounds.subscription")}</Label>
             <Input value={draft.subscription} mono onChange={(e) => update("subscription", e.target.value)} />
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <Label>Total flow (GB)</Label>
+              <Label>{t("inbounds.totalFlow")}</Label>
               <Input
                 type="number"
                 value={Math.round(draft.totalQuota / GB)}
@@ -112,7 +114,7 @@ export function ClientDetailModal({ client, onClose }: Props) {
               />
             </div>
             <div>
-              <Label>Expiry date</Label>
+              <Label>{t("inbounds.expiryDate")}</Label>
               <Input
                 type="date"
                 value={draft.expiry.slice(0, 10)}
@@ -122,22 +124,22 @@ export function ClientDetailModal({ client, onClose }: Props) {
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <Label>Status</Label>
+              <Label>{t("common.status")}</Label>
               <Select<ClientStatus>
                 value={draft.status}
                 options={[
-                  { value: "active", label: "Active" },
-                  { value: "disabled", label: "Disabled" },
-                  { value: "expired", label: "Expired" }
+                  { value: "active", label: t("common.active") },
+                  { value: "disabled", label: t("common.disabled") },
+                  { value: "expired", label: t("common.expired") }
                 ]}
                 onChange={(v) => update("status", v)}
               />
             </div>
-            <div className="flex items-end">
+            <div className="flex min-h-[66px] items-center justify-center rounded-lg border border-subtle bg-canvas/40 px-3">
               <Toggle
                 checked={draft.startAfterFirstUse}
                 onChange={(v) => update("startAfterFirstUse", v)}
-                label="Start after first use"
+                label={t("inbounds.startAfterFirstUse")}
               />
             </div>
           </div>
@@ -145,18 +147,18 @@ export function ClientDetailModal({ client, onClose }: Props) {
         <ModalFooter accent="cyan">
           <Button variant="secondary" onClick={() => setQrOpen(true)}>
             <QrCode size={14} />
-            Get QR
+            {t("clients.getQr")}
           </Button>
           <Button variant="secondary" onClick={copyLink}>
             <Copy size={14} />
-            {copied ? "Copied!" : "Copy link"}
+            {copied ? t("clients.copied") : t("clients.copyLink")}
           </Button>
           <div className="flex-1" />
           <Button variant="danger" onClick={onClose}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button variant="primary" onClick={save}>
-            Save
+            {t("common.save")}
           </Button>
         </ModalFooter>
       </Modal>

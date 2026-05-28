@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useStore } from "@/lib/mock/store";
 import { formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 
 import type { LogFilter } from "./log-filter-bar";
 
@@ -16,6 +17,7 @@ const levelColor: Record<"info" | "warn" | "error", string> = {
 
 export function LogViewer({ filter }: { filter: LogFilter }) {
   const { logs } = useStore();
+  const { t } = useI18n();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const filtered = useMemo(() => {
@@ -54,7 +56,7 @@ export function LogViewer({ filter }: { filter: LogFilter }) {
           ))}
         </AnimatePresence>
         {filtered.length === 0 ? (
-          <div className="py-10 text-center text-ink-tertiary">No log lines match the current filter.</div>
+          <div className="py-10 text-center text-ink-tertiary">{t("logs.noMatch")}</div>
         ) : null}
       </div>
     </div>

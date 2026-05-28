@@ -7,33 +7,36 @@ import { Card, CardHeader, CardLabel } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { formatBytes, formatPercent } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 
 export function CpuCard() {
   const { metrics } = useStore();
+  const { t } = useI18n();
   const value = metrics.cpu * 100;
   return (
     <Card>
       <CardHeader>
-        <CardLabel>CPU</CardLabel>
+        <CardLabel>{t("dashboard.cpu")}</CardLabel>
         <Cpu size={16} className="text-ink-tertiary" />
       </CardHeader>
       <div className="mb-4 text-3xl font-semibold text-ink-primary">
         <AnimatedNumber value={value} format={(n) => `${n.toFixed(1)}%`} />
       </div>
       <Progress value={value} />
-      <p className="mt-3 text-xs text-ink-tertiary">8 cores · {formatPercent(value)} usage</p>
+      <p className="mt-3 text-xs text-ink-tertiary">{t("dashboard.coresUsage", { value: formatPercent(value) })}</p>
     </Card>
   );
 }
 
 export function RamCard() {
   const { metrics } = useStore();
+  const { t } = useI18n();
   const ram = metrics.ram * 100;
   const swap = metrics.swap * 100;
   return (
     <Card>
       <CardHeader>
-        <CardLabel>Memory</CardLabel>
+        <CardLabel>{t("dashboard.memory")}</CardLabel>
         <Database size={16} className="text-ink-tertiary" />
       </CardHeader>
       <div className="mb-4 text-3xl font-semibold text-ink-primary">
@@ -41,18 +44,18 @@ export function RamCard() {
       </div>
       <div className="space-y-3">
         <div>
-          <div className="mb-1 flex justify-between text-xs text-ink-tertiary">
-            <span>RAM</span>
-            <span className="font-mono">{formatBytes(metrics.ramUsedBytes)} / {formatBytes(metrics.ramTotalBytes)}</span>
+          <div className="mb-1 grid grid-cols-[auto_minmax(0,1fr)] gap-3 text-xs text-ink-tertiary">
+            <span>{t("dashboard.ram")}</span>
+            <span className="truncate text-right font-mono">{formatBytes(metrics.ramUsedBytes)} / {formatBytes(metrics.ramTotalBytes)}</span>
           </div>
           <Progress value={ram} height={6} />
         </div>
         <div>
-          <div className="mb-1 flex justify-between text-xs text-ink-tertiary">
-            <span>Swap</span>
-            <span className="font-mono">{formatBytes(metrics.swapUsedBytes)} / {formatBytes(metrics.swapTotalBytes)}</span>
+          <div className="mb-1 grid grid-cols-[auto_minmax(0,1fr)] gap-3 text-xs text-ink-tertiary">
+            <span>{t("dashboard.swap")}</span>
+            <span className="truncate text-right font-mono">{formatBytes(metrics.swapUsedBytes)} / {formatBytes(metrics.swapTotalBytes)}</span>
           </div>
-          <div className="w-3/5">
+          <div className="w-1/2 max-w-[180px]">
             <Progress value={swap} height={4} />
           </div>
         </div>
@@ -63,11 +66,12 @@ export function RamCard() {
 
 export function DiskCard() {
   const { metrics } = useStore();
+  const { t } = useI18n();
   const total = metrics.diskSegments.reduce((acc, s) => acc + s.totalBytes, 0);
   return (
     <Card>
       <CardHeader>
-        <CardLabel>Disk</CardLabel>
+        <CardLabel>{t("dashboard.disk")}</CardLabel>
         <HardDrive size={16} className="text-ink-tertiary" />
       </CardHeader>
       <div className="mb-4 text-3xl font-semibold text-ink-primary">
@@ -85,12 +89,12 @@ export function DiskCard() {
           />
         ))}
       </div>
-      <ul className="grid grid-cols-2 gap-y-1 text-xs">
+      <ul className="grid grid-cols-1 gap-x-4 gap-y-1 text-xs sm:grid-cols-2">
         {metrics.diskSegments.map((seg) => (
-          <li key={seg.label} className="flex items-center gap-2 text-ink-tertiary">
+          <li key={seg.label} className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 text-ink-tertiary">
             <span className="size-1.5 rounded-full" style={{ background: seg.color }} />
             <span className="truncate">{seg.label}</span>
-            <span className="ml-auto font-mono text-ink-secondary">{formatBytes(seg.totalBytes, 0)}</span>
+            <span className="whitespace-nowrap font-mono text-ink-secondary">{formatBytes(seg.usedBytes, 0)} / {formatBytes(seg.totalBytes, 0)}</span>
           </li>
         ))}
       </ul>
@@ -100,20 +104,21 @@ export function DiskCard() {
 
 export function TrafficSplitCard() {
   const { metrics, history } = useStore();
+  const { t } = useI18n();
   const spark = history.slice(-20).map((p, i) => ({ i, v: p.down + p.up }));
   return (
     <Card>
       <CardHeader>
-        <CardLabel>Traffic</CardLabel>
+        <CardLabel>{t("dashboard.traffic")}</CardLabel>
         <Network size={16} className="text-ink-tertiary" />
       </CardHeader>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <div className="text-xs text-ink-tertiary">Today</div>
+          <div className="text-xs text-ink-tertiary">{t("dashboard.today")}</div>
           <div className="font-mono text-lg text-ink-primary">{formatBytes(metrics.todayBytes)}</div>
         </div>
         <div>
-          <div className="text-xs text-ink-tertiary">This month</div>
+          <div className="text-xs text-ink-tertiary">{t("dashboard.thisMonth")}</div>
           <div className="font-mono text-lg text-ink-primary">{formatBytes(metrics.monthBytes)}</div>
         </div>
       </div>

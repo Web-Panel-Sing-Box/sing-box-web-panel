@@ -1,5 +1,5 @@
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Dices, RefreshCw } from "lucide-react";
 
@@ -16,14 +16,21 @@ import {
   PROTOCOL_OPTIONS,
   TRAFFIC_RESET_OPTIONS,
   TRANSMISSION_OPTIONS,
+  type Inbound,
   type Protocol,
   type TlsMode,
   type Transmission
 } from "@/lib/mock/inbounds";
+import { useI18n } from "@/lib/i18n";
+
+export type InboundFormMode = "create" | "edit" | "clone";
 
 type InboundFormModalProps = {
   open: boolean;
+  mode?: InboundFormMode;
+  inbound?: Inbound | null;
   onClose: () => void;
+  onClone?: (inbound: Inbound) => void;
 };
 
 function randomPort() {
@@ -46,9 +53,12 @@ function makeUuid() {
   return "00000000-0000-4000-8000-000000000000";
 }
 
-export function InboundFormModal({ open, onClose }: InboundFormModalProps) {
-  const { addInbound } = useStore();
+export function InboundFormModal({ open, mode = "create", inbound, onClose, onClone }: InboundFormModalProps) {
+  const { addInbound, updateInbound, removeInbound } = useStore();
   const { push } = useToast();
+  const { t } = useI18n();
+  const remarkRef = useRef<HTMLInputElement>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const [remark, setRemark] = useState("");
   const [protocol, setProtocol] = useState<Protocol>("naive");
@@ -86,12 +96,14 @@ export function InboundFormModal({ open, onClose }: InboundFormModalProps) {
   // Reset on close
   useEffect(() => {
     if (!open) return;
-    setRemark("");
-    setProtocol("naive");
-    setPort(randomPort());
+    setRemark(mode === "clone" && inbound ? `${inbound.remark}-copy` : inbound?.remark ?? "");
+    setProtocol(inbound?.protocol ?? "naive");
+    setPort(mode === "clone" ? randomPort() : inbound?.port ?? randomPort());
     setTrafficReset("never");
-    setTransmission("tcp");
-    setTls("none");
+    setTransmission(inbound?.transmission ?? "tcp");
+    setTls(inbound?.tls ?? "none");
+    setSni(inbound?.sni ?? "www.cloudflare.com");
+    setDest(inbound?.dest ?? "www.cloudflare.com:443");
     setUuid(makeUuid());
     setUserId("user-001");
     setSubscription("");
@@ -100,7 +112,14 @@ export function InboundFormModal({ open, onClose }: InboundFormModalProps) {
     setPrivateKey("");
     setPublicKey("");
     setShortIds("");
-  }, [open]);
+    setConfirmDelete(false);
+    if (mode === "clone") {
+      window.setTimeout(() => {
+        remarkRef.current?.focus();
+        remarkRef.current?.select();
+      }, 50);
+    }
+  }, [open, mode, inbound]);
 
   const transportFields = useMemo(() => {
     switch (transmission) {
@@ -161,12 +180,12 @@ export function InboundFormModal({ open, onClose }: InboundFormModalProps) {
 
   async function handleSave() {
     if (!remark.trim()) {
-      push("Remark is required", "error");
+      push(t("inbounds.remarkRequired"), "error");
       return;
     }
     setSaving(true);
     await new Promise((r) => setTimeout(r, 650));
-    addInbound({
+    const payload = {
       remark: remark.trim(),
       protocol,
       port: Number(port) || randomPort(),
@@ -174,29 +193,57 @@ export function InboundFormModal({ open, onClose }: InboundFormModalProps) {
       tls,
       sni: tls === "none" ? undefined : sni,
       dest: tls === "reality" ? dest : undefined
-    });
+    };
+    if (mode === "edit" && inbound) {
+      updateInbound(inbound.id, payload);
+      push(t("inbounds.updated"), "success");
+    } else {
+      addInbound(payload);
+      push(mode === "clone" ? t("inbounds.cloned") : t("inbounds.created"), "success");
+    }
     setSaving(false);
-    push("Connection created successfully");
     onClose();
   }
 
+  function handleDelete() {
+    if (!inbound) return;
+    removeInbound(inbound.id);
+    push(t("inbounds.deleted", { remark: inbound.remark }), "success");
+    setConfirmDelete(false);
+    onClose();
+  }
+
+  const title =
+    mode === "edit"
+      ? t("inbounds.modalEdit")
+      : mode === "clone"
+        ? t("inbounds.modalClone")
+        : t("inbounds.modalCreate");
+
   return (
+    <>
     <Modal open={open} onClose={onClose} width="max-w-[760px]">
-      <ModalHeader title="New inbound connection" subtitle="Configure protocol, transport, security, and a starter client." onClose={onClose} />
+      <ModalHeader title={title} subtitle={mode === "clone" ? t("inbounds.cloneHint") : t("inbounds.modalSubtitle")} onClose={onClose} />
       <ModalBody className="space-y-3">
-        <Accordion title="Basics" description="Protocol, port, traffic reset, transport">
+        <Accordion title={t("inbounds.basics")} description={t("inbounds.basicsDesc")}>
           <div className="space-y-3">
             <div>
-              <Label>Remark</Label>
-              <Input value={remark} onChange={(e) => setRemark(e.target.value)} placeholder="e.g. vadim-vless#0001" />
+              <Label>{t("common.remark")}</Label>
+              <Input
+                ref={remarkRef}
+                value={remark}
+                onChange={(e) => setRemark(e.target.value)}
+                placeholder="e.g. vadim-vless#0001"
+                className={mode === "clone" ? "selection:bg-brand/40" : undefined}
+              />
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <Label>Protocol</Label>
+                <Label>{t("common.protocol")}</Label>
                 <Select value={protocol} options={PROTOCOL_OPTIONS} onChange={(v) => setProtocol(v)} />
               </div>
               <div>
-                <Label>Port</Label>
+                <Label>{t("common.port")}</Label>
                 <Input
                   type="number"
                   value={port}
@@ -222,11 +269,11 @@ export function InboundFormModal({ open, onClose }: InboundFormModalProps) {
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <Label>Traffic reset</Label>
+                <Label>{t("inbounds.trafficReset")}</Label>
                 <Select value={trafficReset} options={TRAFFIC_RESET_OPTIONS} onChange={setTrafficReset} />
               </div>
               <div>
-                <Label>Transmission</Label>
+                <Label>{t("inbounds.transmission")}</Label>
                 <Select value={transmission} options={TRANSMISSION_OPTIONS} onChange={(v) => setTransmission(v)} />
               </div>
             </div>
@@ -234,10 +281,10 @@ export function InboundFormModal({ open, onClose }: InboundFormModalProps) {
           </div>
         </Accordion>
 
-        <Accordion title="Transport & security" description="Sniffing, TLS, Reality">
+        <Accordion title={t("inbounds.transportSecurity")} description={t("inbounds.transportSecurityDesc")}>
           <div className="space-y-5">
             <div className="rounded-lg border border-subtle bg-canvas/60 p-3">
-              <Toggle checked={sniffing} onChange={setSniffing} label="Enable sniffing" description="Protocol detection for routing decisions" />
+              <Toggle checked={sniffing} onChange={setSniffing} label={t("inbounds.enableSniffing")} description={t("inbounds.sniffingDesc")} />
               {sniffing ? (
                 <div className="mt-4 space-y-3">
                   <div className="flex flex-wrap gap-3 text-xs text-ink-secondary">
@@ -247,16 +294,16 @@ export function InboundFormModal({ open, onClose }: InboundFormModalProps) {
                     <Checkbox label="FAKEDNS" checked={snifFakedns} onChange={setSnifFakedns} />
                   </div>
                   <div className="flex flex-wrap gap-6">
-                    <Toggle checked={metadataOnly} onChange={setMetadataOnly} label="Metadata only" />
-                    <Toggle checked={routeOnly} onChange={setRouteOnly} label="Route only" />
+                    <Toggle checked={metadataOnly} onChange={setMetadataOnly} label={t("inbounds.metadataOnly")} />
+                    <Toggle checked={routeOnly} onChange={setRouteOnly} label={t("inbounds.routeOnly")} />
                   </div>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
-                      <Label>IPs excluded</Label>
+                      <Label>{t("inbounds.ipsExcluded")}</Label>
                       <Textarea rows={2} value={ipsExcluded} onChange={(e) => setIpsExcluded(e.target.value)} mono placeholder="10.0.0.0/8" />
                     </div>
                     <div>
-                      <Label>Domains excluded</Label>
+                      <Label>{t("inbounds.domainsExcluded")}</Label>
                       <Textarea rows={2} value={domainsExcluded} onChange={(e) => setDomainsExcluded(e.target.value)} mono placeholder="local.lan" />
                     </div>
                   </div>
@@ -281,7 +328,7 @@ export function InboundFormModal({ open, onClose }: InboundFormModalProps) {
               <div className="grid grid-cols-1 gap-3">
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
-                    <Label>Destination (dest)</Label>
+                    <Label>{t("inbounds.destination")}</Label>
                     <Input value={dest} onChange={(e) => setDest(e.target.value)} mono />
                   </div>
                   <div>
@@ -290,12 +337,12 @@ export function InboundFormModal({ open, onClose }: InboundFormModalProps) {
                   </div>
                 </div>
                 <div>
-                  <Label>Short IDs</Label>
+                  <Label>{t("inbounds.shortIds")}</Label>
                   <Textarea rows={2} value={shortIds} onChange={(e) => setShortIds(e.target.value)} mono placeholder="One short id per line" />
                 </div>
                 <div className="space-y-2 rounded-lg border border-subtle bg-canvas/60 p-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-ink-secondary">X25519 keypair</span>
+                    <span className="text-xs text-ink-secondary">{t("inbounds.keypair")}</span>
                     <Button
                       size="sm"
                       onClick={() => {
@@ -304,15 +351,15 @@ export function InboundFormModal({ open, onClose }: InboundFormModalProps) {
                       }}
                     >
                       <RefreshCw size={14} />
-                      Generate keypair
+                      {t("inbounds.generateKeypair")}
                     </Button>
                   </div>
                   <div>
-                    <Label>Private key</Label>
+                    <Label>{t("inbounds.privateKey")}</Label>
                     <Input value={privateKey} mono readOnly placeholder="—" />
                   </div>
                   <div>
-                    <Label>Public key</Label>
+                    <Label>{t("inbounds.publicKey")}</Label>
                     <Input value={publicKey} mono readOnly placeholder="—" />
                   </div>
                 </div>
@@ -328,11 +375,11 @@ export function InboundFormModal({ open, onClose }: InboundFormModalProps) {
           </div>
         </Accordion>
 
-        <Accordion title="User template" description="Initial client provisioned with this inbound">
+        <Accordion title={t("inbounds.userTemplate")} description={t("inbounds.userTemplateDesc")}>
           <div className="space-y-3">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <Label>User ID</Label>
+                <Label>{t("inbounds.userId")}</Label>
                 <Input value={userId} onChange={(e) => setUserId(e.target.value)} />
               </div>
               <div>
@@ -355,41 +402,74 @@ export function InboundFormModal({ open, onClose }: InboundFormModalProps) {
               </div>
             </div>
             <div>
-              <Label>Subscription</Label>
+              <Label>{t("inbounds.subscription")}</Label>
               <Input value={subscription} onChange={(e) => setSubscription(e.target.value)} placeholder="https://panel.example/sub/your-key" mono />
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <Label>Total flow (GB)</Label>
+                <Label>{t("inbounds.totalFlow")}</Label>
                 <Input type="number" value={totalFlowGb} onChange={(e) => setTotalFlowGb(e.target.value)} mono />
               </div>
               <div>
-                <Label>Expiry date</Label>
+                <Label>{t("inbounds.expiryDate")}</Label>
                 <Input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} />
               </div>
             </div>
-            <Toggle
-              checked={startAfterFirstUse}
-              onChange={setStartAfterFirstUse}
-              label="Start after first use"
-              description="Quota timer begins on the first connection rather than at creation"
-            />
+            <div className="flex min-h-[64px] items-center justify-center rounded-lg border border-subtle bg-canvas/40 px-3">
+              <Toggle
+                checked={startAfterFirstUse}
+                onChange={setStartAfterFirstUse}
+                label={t("inbounds.startAfterFirstUse")}
+                description={t("inbounds.startAfterFirstUseDesc")}
+              />
+            </div>
           </div>
         </Accordion>
       </ModalBody>
       <ModalFooter accent="violet">
+        {mode === "edit" && inbound ? (
+          <>
+            <Button variant="secondary" onClick={() => onClone?.(inbound)}>
+              {t("common.clone")}
+            </Button>
+            <Button variant="danger" onClick={() => setConfirmDelete(true)}>
+              {t("common.delete")}
+            </Button>
+            <div className="flex-1" />
+          </>
+        ) : null}
         <Button variant="danger" onClick={onClose}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button variant="primary" onClick={handleSave} loading={saving}>
-          Save
+          {t("common.save")}
         </Button>
       </ModalFooter>
     </Modal>
+    <Modal open={confirmDelete} onClose={() => setConfirmDelete(false)} width="max-w-[420px]">
+      <ModalHeader title={t("inbounds.deleteQuestion")} subtitle={inbound ? t("inbounds.deleteBody", { remark: inbound.remark }) : undefined} onClose={() => setConfirmDelete(false)} />
+      <ModalFooter>
+        <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
+          {t("common.cancel")}
+        </Button>
+        <Button variant="danger" onClick={handleDelete}>
+          {t("common.delete")}
+        </Button>
+      </ModalFooter>
+    </Modal>
+    </>
   );
 }
 
-function Checkbox({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+type CheckboxProps = {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+};
+
+function Checkbox(props: CheckboxProps) {
+  const { label, checked, onChange } = props;
+
   return (
     <button
       type="button"

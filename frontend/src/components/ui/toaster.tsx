@@ -27,10 +27,14 @@ function ToasterViewport() {
             transition={{ duration: 0.2, ease: "easeOut" }}
             className={cn(
               "pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-xl border border-subtle bg-elevated px-4 py-3 text-sm text-ink-primary shadow-pop",
+              t.variant === "success" && "border-l-4 border-l-success",
               t.variant === "error" && "border-l-4 border-l-danger"
             )}
           >
-            <span className="flex-1">{t.message}</span>
+            <span className="flex-1">
+              {t.message}
+              {t.variant === "success" ? <span className="ml-2 font-medium text-success">✓</span> : null}
+            </span>
           </motion.div>
         ))}
       </AnimatePresence>

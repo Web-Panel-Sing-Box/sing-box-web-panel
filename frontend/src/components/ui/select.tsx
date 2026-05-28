@@ -1,5 +1,6 @@
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, ChevronDown } from "lucide-react";
 
@@ -30,12 +31,15 @@ export function Select<T extends string>({
   disabled
 }: SelectProps<T>) {
   const [open, setOpen] = useState(false);
+  const [menuRect, setMenuRect] = useState({ left: 0, top: 0, width: 0 });
   const ref = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
     function onClick(e: MouseEvent) {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (!ref.current?.contains(target) && !menuRef.current?.contains(target)) setOpen(false);
     }
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
@@ -48,12 +52,85 @@ export function Select<T extends string>({
     };
   }, [open]);
 
+  useLayoutEffect(() => {
+    if (!open || !ref.current) return;
+    const update = () => {
+      const rect = ref.current?.getBoundingClientRect();
+      if (!rect) return;
+      setMenuRect({
+        left: rect.left,
+        top: rect.bottom + 6,
+        width: rect.width
+      });
+    };
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [open]);
+
   const selected = options.find((o) => o.value === value);
+  const menu =
+    typeof document === "undefined"
+      ? null
+      : createPortal(
+          <AnimatePresence>
+            {open ? (
+              <motion.div
+                ref={menuRef}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                variants={dropdownVariants}
+                role="listbox"
+                className="fixed z-[120] overflow-hidden rounded-lg border border-subtle bg-elevated shadow-pop"
+                style={{ left: menuRect.left, top: menuRect.top, width: menuRect.width }}
+              >
+                <ul className="max-h-72 overflow-y-auto py-1">
+                  {options.map((opt) => {
+                    const active = opt.value === value;
+                    return (
+                      <li key={opt.value}>
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={active}
+                          onClick={() => {
+                            onChange(opt.value);
+                            setOpen(false);
+                          }}
+                          className={cn(
+                            "flex w-full items-start justify-between gap-3 px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-hover",
+                            active ? "text-ink-primary" : "text-ink-secondary"
+                          )}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-ink-primary">{opt.label}</div>
+                            {opt.description ? (
+                              <div className="truncate text-xs text-ink-tertiary">{opt.description}</div>
+                            ) : null}
+                          </div>
+                          {active ? <Check size={14} className="mt-1 text-brand" /> : null}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>,
+          document.body
+        );
 
   return (
     <div ref={ref} className={cn("relative", className)}>
       <button
         type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}
         className={cn(
@@ -70,47 +147,7 @@ export function Select<T extends string>({
           className={cn("shrink-0 text-ink-secondary transition-transform duration-150", open && "rotate-180")}
         />
       </button>
-
-      <AnimatePresence>
-        {open ? (
-          <motion.div
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            variants={dropdownVariants}
-            className="absolute left-0 right-0 top-[calc(100%+6px)] z-30 overflow-hidden rounded-lg border border-subtle bg-elevated shadow-pop"
-          >
-            <ul className="max-h-72 overflow-y-auto py-1">
-              {options.map((opt) => {
-                const active = opt.value === value;
-                return (
-                  <li key={opt.value}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onChange(opt.value);
-                        setOpen(false);
-                      }}
-                      className={cn(
-                        "flex w-full items-start justify-between gap-3 px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-hover",
-                        active ? "text-ink-primary" : "text-ink-secondary"
-                      )}
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-ink-primary">{opt.label}</div>
-                        {opt.description ? (
-                          <div className="truncate text-xs text-ink-tertiary">{opt.description}</div>
-                        ) : null}
-                      </div>
-                      {active ? <Check size={14} className="mt-1 text-brand" /> : null}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      {menu}
     </div>
   );
 }

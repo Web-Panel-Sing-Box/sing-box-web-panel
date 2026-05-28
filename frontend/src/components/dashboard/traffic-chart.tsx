@@ -2,8 +2,9 @@
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { useStore } from "@/lib/mock/store";
-import { Card, CardHeader, CardLabel, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatSpeed } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 
 function fmtAxis(value: number) {
   if (value >= 1024 ** 3) return `${(value / 1024 ** 3).toFixed(1)}G`;
@@ -17,7 +18,7 @@ function fmtTime(t: number) {
   return d.toLocaleTimeString("en-US", { hour12: false, minute: "2-digit", second: "2-digit" });
 }
 
-function ChartTooltip({ active, payload }: any) {
+function ChartTooltip({ active, payload, incoming, outgoing }: any) {
   if (!active || !payload?.length) return null;
   const down = payload.find((p: any) => p.dataKey === "down")?.value ?? 0;
   const up = payload.find((p: any) => p.dataKey === "up")?.value ?? 0;
@@ -28,12 +29,12 @@ function ChartTooltip({ active, payload }: any) {
       </div>
       <div className="flex items-center gap-2 text-xs">
         <span className="size-2 rounded-full" style={{ background: "#22d3ee" }} />
-        <span className="text-canvas/70">Incoming</span>
+        <span className="text-canvas/70">{incoming}</span>
         <span className="ml-auto font-mono text-canvas">{formatSpeed(down)}</span>
       </div>
       <div className="mt-1 flex items-center gap-2 text-xs">
         <span className="size-2 rounded-full" style={{ background: "#a78bfa" }} />
-        <span className="text-canvas/70">Outgoing</span>
+        <span className="text-canvas/70">{outgoing}</span>
         <span className="ml-auto font-mono text-canvas">{formatSpeed(up)}</span>
       </div>
     </div>
@@ -42,21 +43,22 @@ function ChartTooltip({ active, payload }: any) {
 
 export function TrafficChart() {
   const { history } = useStore();
+  const { t } = useI18n();
   return (
     <Card>
       <CardHeader>
         <div>
-          <CardTitle>Traffic</CardTitle>
-          <p className="mt-0.5 text-xs text-ink-tertiary">Incoming · outgoing speed, last 60s</p>
+          <CardTitle>{t("dashboard.traffic")}</CardTitle>
+          <p className="mt-0.5 text-xs text-ink-tertiary">{t("dashboard.trafficSubtitle")}</p>
         </div>
         <div className="flex items-center gap-4 text-xs text-ink-secondary">
           <span className="flex items-center gap-2">
             <span className="size-2 rounded-full" style={{ background: "#22d3ee" }} />
-            Incoming
+            {t("dashboard.incoming")}
           </span>
           <span className="flex items-center gap-2">
             <span className="size-2 rounded-full" style={{ background: "#a78bfa" }} />
-            Outgoing
+            {t("dashboard.outgoing")}
           </span>
         </div>
       </CardHeader>
@@ -92,7 +94,10 @@ export function TrafficChart() {
               tickFormatter={fmtAxis}
               width={48}
             />
-            <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#ffffff44", strokeWidth: 1 }} />
+            <Tooltip
+              content={<ChartTooltip incoming={t("dashboard.incoming")} outgoing={t("dashboard.outgoing")} />}
+              cursor={{ stroke: "#ffffff44", strokeWidth: 1 }}
+            />
             <Area
               type="monotone"
               dataKey="down"

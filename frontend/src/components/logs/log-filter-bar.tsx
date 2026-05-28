@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/mock/store";
+import { useI18n } from "@/lib/i18n";
 
 type LogFilter = {
   query: string;
@@ -18,12 +19,13 @@ type Props = {
 
 export function LogFilterBar({ value, onChange }: Props) {
   const { paused, setPaused } = useStore();
+  const { t } = useI18n();
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_180px_auto]">
       <Input
         value={value.query}
         onChange={(e) => onChange({ ...value, query: e.target.value })}
-        placeholder="Search logs"
+        placeholder={t("logs.search")}
         mono
         trailing={<Search size={14} />}
       />
@@ -31,7 +33,7 @@ export function LogFilterBar({ value, onChange }: Props) {
         value={value.level}
         onChange={(v) => onChange({ ...value, level: v })}
         options={[
-          { value: "all", label: "All levels" },
+          { value: "all", label: t("logs.allLevels") },
           { value: "info", label: "Info" },
           { value: "warn", label: "Warn" },
           { value: "error", label: "Error" }
@@ -39,7 +41,7 @@ export function LogFilterBar({ value, onChange }: Props) {
       />
       <Button variant="secondary" onClick={() => setPaused(!paused)}>
         {paused ? <Play size={14} /> : <Pause size={14} />}
-        {paused ? "Resume" : "Pause"}
+        {paused ? t("logs.resume") : t("logs.pause")}
       </Button>
     </div>
   );

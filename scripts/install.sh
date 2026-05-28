@@ -139,7 +139,12 @@ install_app() {
   cd "${APP_HOME}/frontend"
   sudo -u "${APP_USER}" npm install
   sudo -u "${APP_USER}" npm run build
-  sudo -u "${APP_USER}" env $(grep -v '^#' "${CONFIG_DIR}/backend.env" | xargs) \
+  local env_args=()
+  while IFS= read -r line; do
+    [[ -z "${line}" || "${line}" == \#* ]] && continue
+    env_args+=("${line}")
+  done < "${CONFIG_DIR}/backend.env"
+  sudo -u "${APP_USER}" env "${env_args[@]}" \
     "${APP_HOME}/backend/.venv/bin/python" -m app.cli reset-admin \
     --username admin \
     --password "$(cat "${CONFIG_DIR}/initial-admin-password")"
