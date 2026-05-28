@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+CONFIG_DIR="${CONFIG_DIR:-/etc/sing-grok}"
+APP_HOME="${APP_HOME:-/opt/sing-grok}"
+BACKEND_ENV="${CONFIG_DIR}/backend.env"
+WEB_ENV="${CONFIG_DIR}/web.env"
+
+run_admin() {
+  set -a
+  # shellcheck disable=SC1090
+  source "${BACKEND_ENV}"
+  set +a
+  "${APP_HOME}/backend/.venv/bin/python" -m app.cli "$@"
+}
+
+start_services() {
+  systemctl start sing-grok-api.service sing-grok-web.service sing-grok-singbox.service
+}
+
+stop_services() {
+  systemctl stop sing-grok-web.service sing-grok-api.service sing-grok-singbox.service
+}
+
+restart_services() {
+  systemctl restart sing-grok-singbox.service sing-grok-api.service sing-grok-web.service
+}
+
+reset_admin_password() {
+  local password
+  read -rsp "New admin password: " password
+  echo
+  run_admin reset-admin --username admin --password "${password}"
+}
+
+change_panel_port() {
+  local port
+  read -rp "New panel port: " port
+  if ! [[ "${port}" =~ ^[0-9]+$ ]] || (( port < 1 || port > 65535 )); then
+    echo "Invalid port"
+    return 1
+  fi
+  if grep -q '^PORT=' "${WEB_ENV}"; then
+    sed -i.bak "s/^PORT=.*/PORT=${port}/" "${WEB_ENV}"
+  else
+    echo "PORT=${port}" >>"${WEB_ENV}"
+  fi
+  systemctl restart sing-grok-web.service
+}
+
+show_logs() {
+  journalctl -u sing-grok-api.service -u sing-grok-web.service -u sing-grok-singbox.service -n 120 --no-pager
+}
+
+show_menu() {
+  cat <<'MENU'
+1. Start
+2. Stop
+3. Restart / Reload
+4. Reset admin password
+5. Change panel port
+6. Status
+7. Logs
+0. Exit
+MENU
+}
+
+main() {
+  while true; do
+    show_menu
+    read -rp "> " choice
+    case "${choice}" in
+      1) start_services ;;
+      2) stop_services ;;
+      3) restart_services ;;
+      4) reset_admin_password ;;
+      5) change_panel_port ;;
+      6) systemctl status sing-grok-api.service sing-grok-web.service sing-grok-singbox.service --no-pager ;;
+      7) show_logs ;;
+      0) exit 0 ;;
+      *) echo "Unknown option" ;;
+    esac
+  done
+}
+
+main "$@"
