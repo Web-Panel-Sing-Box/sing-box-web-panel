@@ -1,5 +1,12 @@
 import { expect, test } from "@playwright/test";
 
+// Seed an authenticated session so the auth guard lets these routes render.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("sing-grok:auth", "1");
+  });
+});
+
 test("dashboard core confirmation and removed quick links", async ({ page }) => {
   await page.goto("/");
 

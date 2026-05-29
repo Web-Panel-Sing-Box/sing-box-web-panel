@@ -1,12 +1,15 @@
 
 import { useState } from "react";
 
+import { TwoFactorSetupModal } from "@/components/auth/two-factor-setup-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Toggle } from "@/components/ui/toggle";
 import { useToast } from "@/components/ui/toast";
+import { useDisclosure } from "@/hooks/useDisclosure";
+import { useAuth } from "@/lib/auth";
 import { useI18n, type Language } from "@/lib/i18n";
 
 const LANGUAGE_OPTIONS: { value: Language; label: string }[] = [
@@ -24,8 +27,9 @@ const LOG_LEVELS = [
 export function SettingsPage() {
   const { push } = useToast();
   const { language, setLanguage, t } = useI18n();
+  const { twoFactorEnabled, setTwoFactorEnabled } = useAuth();
+  const twoFactorSetup = useDisclosure();
   const [panelName, setPanelName] = useState("Sing box");
-  const [twoFactor, setTwoFactor] = useState(false);
   const [binaryPath, setBinaryPath] = useState("/usr/local/bin/sing-box");
   const [logLevel, setLogLevel] = useState("info");
   const [publicHost, setPublicHost] = useState("panel.example");
@@ -33,6 +37,15 @@ export function SettingsPage() {
 
   const save = () => {
     push(t("settings.saved"), "success");
+  };
+
+  const handleTwoFactorToggle = (next: boolean) => {
+    if (next) {
+      twoFactorSetup.open();
+      return;
+    }
+    setTwoFactorEnabled(false);
+    push(t("settings.twoFactorDisabled"), "success");
   };
 
   return (
@@ -58,7 +71,7 @@ export function SettingsPage() {
           <Input value="admin" readOnly mono />
         </Row>
         <Row label={t("settings.twoFactor")} hint={t("settings.twoFactorHint")}>
-          <Toggle checked={twoFactor} onChange={setTwoFactor} />
+          <Toggle checked={twoFactorEnabled} onChange={handleTwoFactorToggle} />
         </Row>
         <Row label={t("settings.changePassword")} hint={t("settings.changePasswordHint")}>
           <Button disabled variant="secondary">
@@ -90,6 +103,12 @@ export function SettingsPage() {
           <Input value={ttl} onChange={(e) => setTtl(e.target.value)} mono />
         </Row>
       </Section>
+
+      <TwoFactorSetupModal
+        open={twoFactorSetup.isOpen}
+        onClose={twoFactorSetup.close}
+        onConfirmed={() => setTwoFactorEnabled(true)}
+      />
     </div>
   );
 }

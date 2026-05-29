@@ -1,8 +1,9 @@
 import { useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, m } from "framer-motion";
 import {
   LayoutDashboard,
+  LogOut,
   Network,
   ScrollText,
   Settings,
@@ -20,6 +21,7 @@ function GithubMark({ size = 16 }: { size?: number }) {
 }
 
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 
 type NavLabel = "nav.dashboard" | "nav.inbounds" | "nav.clients" | "nav.settings" | "nav.logs";
@@ -98,6 +100,15 @@ function SidebarContents({
   onClose?: () => void;
 }) {
   const { t } = useI18n();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    onClose?.();
+    logout();
+    navigate("/login", { replace: true });
+  };
+
   return (
     <>
       <div className={cn("flex h-14 items-center", expanded ? "gap-3 px-4" : "justify-center")}>
@@ -159,7 +170,7 @@ function SidebarContents({
         </ul>
       </nav>
 
-      <div className="px-2 py-3">
+      <div className="flex flex-col gap-1 px-2 py-3">
         <a
           href="https://github.com/Web-Panel-Sing-Box/sing-box-web-panel"
           target="_blank"
@@ -177,6 +188,21 @@ function SidebarContents({
           </span>
           {expanded ? <span className="truncate">GitHub</span> : null}
         </a>
+        <button
+          type="button"
+          onClick={handleLogout}
+          title={t("nav.logout")}
+          aria-label={t("nav.logout")}
+          className={cn(
+            "flex h-10 items-center rounded-lg text-sm text-ink-secondary transition-colors duration-200 hover:bg-hover hover:text-danger",
+            expanded ? "gap-3 px-3" : "justify-center px-0"
+          )}
+        >
+          <span className="grid size-6 shrink-0 place-items-center">
+            <LogOut size={16} />
+          </span>
+          {expanded ? <span className="truncate">{t("nav.logout")}</span> : null}
+        </button>
       </div>
     </>
   );

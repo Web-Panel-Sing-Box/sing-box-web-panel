@@ -5,6 +5,7 @@ import { LazyMotion, domMax } from "framer-motion";
 import { MemoryRouter } from "react-router-dom";
 
 import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from "@/lib/auth";
 import { I18nProvider } from "@/lib/i18n";
 import { MockStoreProvider } from "@/lib/mock/store";
 
@@ -22,9 +23,11 @@ export function renderWithProviders(
     <I18nProvider>
       <LazyMotion features={domMax} strict>
         <Toaster>
-          <MemoryRouter initialEntries={[route]}>
-            <Suspense fallback={null}>{body}</Suspense>
-          </MemoryRouter>
+          <AuthProvider>
+            <MemoryRouter initialEntries={[route]}>
+              <Suspense fallback={null}>{body}</Suspense>
+            </MemoryRouter>
+          </AuthProvider>
         </Toaster>
       </LazyMotion>
     </I18nProvider>,

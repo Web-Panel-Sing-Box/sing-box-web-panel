@@ -1,11 +1,16 @@
-import { lazy } from "react";
+import { lazy, Suspense } from "react";
 import { LazyMotion, domMax } from "framer-motion";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
+import { RequireAuth } from "@/components/auth/require-auth";
 import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from "@/lib/auth";
 import { I18nProvider } from "@/lib/i18n";
 import { PanelLayout } from "@/pages/PanelLayout";
 
+const LoginPage = lazy(() =>
+  import("@/pages/LoginPage").then((m) => ({ default: m.LoginPage }))
+);
 const DashboardPage = lazy(() =>
   import("@/pages/DashboardPage").then((m) => ({ default: m.DashboardPage }))
 );
@@ -27,17 +32,24 @@ export function App() {
     <I18nProvider>
       <LazyMotion features={domMax} strict>
         <Toaster>
-          <BrowserRouter>
-            <Routes>
-              <Route element={<PanelLayout />}>
-                <Route index element={<DashboardPage />} />
-                <Route path="inbounds" element={<InboundsPage />} />
-                <Route path="clients" element={<ClientsPage />} />
-                <Route path="settings" element={<SettingsPage />} />
-                <Route path="logs" element={<LogsPage />} />
-              </Route>
-            </Routes>
-          </BrowserRouter>
+          <AuthProvider>
+            <BrowserRouter>
+              <Suspense fallback={<div className="min-h-screen w-full bg-surface" />}>
+                <Routes>
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route element={<RequireAuth />}>
+                    <Route element={<PanelLayout />}>
+                      <Route index element={<DashboardPage />} />
+                      <Route path="inbounds" element={<InboundsPage />} />
+                      <Route path="clients" element={<ClientsPage />} />
+                      <Route path="settings" element={<SettingsPage />} />
+                      <Route path="logs" element={<LogsPage />} />
+                    </Route>
+                  </Route>
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </AuthProvider>
         </Toaster>
       </LazyMotion>
     </I18nProvider>

@@ -310,6 +310,7 @@ These are not performance rules but they affect rendering correctness. They are 
 - **Logs.** Wrapper is `flex h-[calc(100dvh-…)] flex-col`; the viewer is `flex-1 min-h-0`.
 - **Modals.** Render through `components/ui/modal.tsx`. Flat (no header/footer dividers). Brand-green primary CTA.
 - **Toggles.** Default to off unless the spec says otherwise.
+- **Copy — titles only, no filler.** Do not pad the UI with explanatory subtitles, captions, or helper paragraphs. Page / section / modal headers are a bare title; do **not** add a descriptive line beneath them. Forms identify fields with a `Label` *or* an input `placeholder` (+ `aria-label`) — never a prose sentence telling the user what to type. `ModalHeader`'s `subtitle` prop stays unused unless the user explicitly asks for it. Default to the leanest text that is still unambiguous; every removed string is one less thing to translate in both `en` and `ru`.
 - **Style tone.** True black, minimal, mono, kinetic. No Grok / 3x-ui copies.
 
 ---
