@@ -14,21 +14,52 @@ Monorepo with `cmd/`, `internal/`, `frontend/`, `config/`, `scripts/`, `systemd/
 - SQLite via `modernc.org/sqlite` (pure Go, no CGo). WAL mode, `synchronous=NORMAL`, mmap, batched writes.
 - `log/slog` for structured logging, `github.com/fatih/color` for dev-mode pretty output.
 - Embedded `//go:embed` migrations with version tracking in `schema_migrations`. Applied automatically on startup via `sqlite.New()`.
-- Graceful shutdown via `signal.NotifyContext` (SIGINT/SIGTERM).
-- Tables: `admins`, `inbounds`, `users`, `traffic_ledger`, `settings`, `config_revisions`, `subscriptions`.
-- Future: JWT cookie auth, Argon2id password hashing, login rate limiting, audit logs.
-- Future: `LocalConfigGenerator` that reads SQLite, builds full `config.json`, validates with `sing-box check`, writes atomically, records revisions.
-- Future: `ProcessManager` adapters for systemd and direct subprocess mode.
-- Future: `TrafficBackgroundWorker` with live speed polling, per-user source adapters, quota enforcement, batched SQLite writes.
-- Future: CRUD for users and inbounds, subscription links, QR generation, dashboard metrics, log reads, core process actions.
+- Graceful shutdown via `signal.NotifyContext` (SIGINT/SIGTERM) with HTTP `ShutdownTimeout`.
+- Tables: `admins`, `admin_recovery_codes`, `inbounds`, `users`, `user_inbounds`, `traffic_ledger`, `settings`, `config_revisions`, `subscriptions`.
+
+### Implemented
+
+- **Auth**: JWT cookie auth (HS256), Argon2id password hashing (PHC format), TOTP 2FA (SHA1, 6 digits, 30s), recovery codes (Argon2id-hashed, one-time use).
+- **Bootstrap**: first admin auto-created from config if `admins` table is empty.
+- **HTTP server**: with swagger, cors, auth, and request logging middleware.
+- **API endpoints**: login, login/recovery, me, logout, totp/setup, totp/confirm, totp/disable, change-password, health, root.
+- **Swagger UI**: served at `/swagger/`, spec generated via `swaggo/swag` annotations.
+
+### Domain Models
+
+- `Admin` — username, password_hash, totp_secret, is_totp_enabled, totp_confirmed_at
+- `RecoveryCode` — admin_id, code_hash, is_used, used_at
+- `Inbound` — remark, protocol (vless/hysteria2/naive), port, enabled, config_json (protocol-specific)
+- `User` — name, traffic counters, quota, expiry, status
+- `TrafficEntry`, `Setting`, `ConfigRevision`, `Subscription`
+
+### Future
+
+- `LocalConfigGenerator` that reads SQLite, builds full `config.json`, validates with `sing-box check`, writes atomically, records revisions.
+- `ProcessManager` adapters for systemd and direct subprocess mode.
+- `TrafficBackgroundWorker` with live speed polling, per-user source adapters, quota enforcement, batched SQLite writes.
+- CRUD for users and inbounds, subscription links, QR generation, dashboard metrics, log reads, core process actions.
 
 ## Frontend
 
-- Vite + React 18 + TypeScript SPA. Tailwind CSS, Framer Motion, Recharts, React Router DOM.
+- Vite + React 19 + TypeScript SPA. Tailwind CSS, Framer Motion, Recharts, React Router DOM.
 - True black background (`#171717`), mono typography (Inter + JetBrains Mono), restrained panels, neon accents.
 - Screens: Dashboard, Inbounds, Clients, Settings, Logs.
 - Dev server proxies `/api/*` to `127.0.0.1:8080`.
 - Current state: fully functional **mock UI** with in-memory store. All data shapes defined, ready for real API integration.
+
+## Tests
+
+- Located in `tests/` mirroring `internal/` structure.
+- External test packages (`package foo_test`).
+- Tests for all implemented packages: Argon2, JWT, TOTP, AuthService (with mocks), CORS middleware, Auth middleware, Logger middleware, Health handler, Auth handler.
+- Run: `go test ./tests/...`
+
+## CI/CD
+
+- GitHub Actions: Go build, vet, test (`go build ./...`, `go vet ./...`, `go test ./tests/...`).
+- Frontend: typecheck, unit tests, build, Playwright smoke tests.
+- Shell scripts: shellcheck lint.
 
 ## Config
 
@@ -40,11 +71,13 @@ Monorepo with `cmd/`, `internal/`, `frontend/`, `config/`, `scripts/`, `systemd/
 ## Check Commands
 
 ```
+go build ./...
 go vet ./...
-go build ./cmd/
-cd frontend && npm run typecheck
-cd frontend && npm run build
-cd frontend && npm test
+go test ./tests/...
+swag init -g cmd/main.go -o docs --parseDependency --parseInternal
+cd frontend && pnpm typecheck
+cd frontend && pnpm build
+cd frontend && pnpm test
 ```
 
 ## Security and Disk I/O
@@ -53,6 +86,7 @@ cd frontend && npm test
 - Secrets must not be logged, committed to git, or hardcoded in YAML.
 - SQLite uses WAL, `synchronous=NORMAL`, `busy_timeout`, foreign keys, and batched traffic writes.
 - Shell commands must avoid interpolating untrusted user input.
+- Recovery codes and passwords are Argon2id-hashed. TOTP secrets stored in DB (future: AES-encrypted).
 
 ## Acceptance Goals
 

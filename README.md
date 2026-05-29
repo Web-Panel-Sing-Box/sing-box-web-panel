@@ -1,4 +1,4 @@
-# Sing Grok Web Panel
+# Singbox Web Panel
 
 Status: Planning and early scaffold.
 

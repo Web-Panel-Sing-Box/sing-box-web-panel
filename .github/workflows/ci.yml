@@ -11,50 +11,67 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+
+      - uses: actions/setup-go@v5
         with:
-          python-version: "3.11"
-      - name: Install backend dependencies
-        run: python -m pip install -e "backend[dev]"
-      - name: Compile backend
-        run: python -m compileall backend/app
-      - name: Run backend tests
-        working-directory: backend
-        run: pytest
+          go-version: "1.26"
+          cache: true
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./tests/...
 
   frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
       - name: Install frontend dependencies
         working-directory: frontend
-        run: npm ci
+        run: pnpm install --frozen-lockfile
+
       - name: Typecheck
         working-directory: frontend
-        run: npm run typecheck
+        run: pnpm typecheck
+
       - name: Unit and integration tests
         working-directory: frontend
-        run: npm test
+        run: pnpm test
+
       - name: Build
         working-directory: frontend
-        run: npm run build
+        run: pnpm build
+
       - name: Install Playwright browser
         working-directory: frontend
-        run: npx playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium
+
       - name: Smoke tests
         working-directory: frontend
-        run: npm run test:smoke
+        run: pnpm test:smoke
 
   shell:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Install shellcheck
         run: sudo apt-get update && sudo apt-get install -y shellcheck
+
       - name: Lint shell scripts
         run: shellcheck scripts/install.sh scripts/sing-grok

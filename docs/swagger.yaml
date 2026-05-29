@@ -1,0 +1,335 @@
+basePath: /api
+definitions:
+  internal_transport_handler.changePasswordRequest:
+    properties:
+      current_password:
+        example: oldpass
+        type: string
+      new_password:
+        example: newpass
+        type: string
+    type: object
+  internal_transport_handler.confirmTOTPRequest:
+    properties:
+      code:
+        example: "123456"
+        type: string
+    type: object
+  internal_transport_handler.disableTOTPRequest:
+    properties:
+      code:
+        example: "123456"
+        type: string
+    type: object
+  internal_transport_handler.loginRecoveryRequest:
+    properties:
+      code:
+        example: 1234-5678
+        type: string
+      username:
+        example: admin
+        type: string
+    type: object
+  internal_transport_handler.loginRequest:
+    properties:
+      password:
+        example: admin
+        type: string
+      totp_code:
+        example: "123456"
+        type: string
+      username:
+        example: admin
+        type: string
+    type: object
+  internal_transport_handler.meResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_totp_enabled:
+        type: boolean
+      totp_confirmed_at:
+        type: string
+      username:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Local-first web panel for managing a sing-box process.
+  title: SingGrok API
+  version: 0.1.0
+paths:
+  /:
+    get:
+      description: Returns panel name and version.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Root endpoint
+      tags:
+      - health
+  /auth/change-password:
+    post:
+      consumes:
+      - application/json
+      description: Changes the password for the currently authenticated admin.
+      parameters:
+      - description: Password change payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_transport_handler.changePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Change admin password
+      tags:
+      - auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Logs in with username and password. If 2FA is enabled and no TOTP
+        code is provided, returns 403 with requires_totp.
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_transport_handler.loginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: requires_totp
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Authenticate admin
+      tags:
+      - auth
+  /auth/login/recovery:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates using a one-time recovery code (bypasses TOTP).
+      parameters:
+      - description: Recovery login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_transport_handler.loginRecoveryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login with recovery code
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      description: Clears the auth token cookie.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Logout
+      tags:
+      - auth
+  /auth/me:
+    get:
+      description: Returns the authenticated admin's profile without secrets.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_transport_handler.meResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get current admin profile
+      tags:
+      - auth
+  /auth/totp/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Verifies the TOTP code and enables 2FA. Returns 8 one-time recovery
+        codes.
+      parameters:
+      - description: TOTP code
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_transport_handler.confirmTOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Confirm TOTP setup
+      tags:
+      - auth
+  /auth/totp/disable:
+    post:
+      consumes:
+      - application/json
+      description: Disables 2FA. Requires a valid TOTP code or recovery code.
+      parameters:
+      - description: TOTP or recovery code
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_transport_handler.disableTOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Disable TOTP
+      tags:
+      - auth
+  /auth/totp/setup:
+    post:
+      description: Generates a TOTP secret and returns a QR code URI for the admin
+        to scan.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Initiate TOTP setup
+      tags:
+      - auth
+  /health:
+    get:
+      description: Returns server health status.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - health
+securityDefinitions:
+  BearerAuth:
+    description: Enter "Bearer " followed by the JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

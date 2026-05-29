@@ -11,19 +11,48 @@ This repository implements a local-first web panel for `sing-box`. Keep changes 
 ## Project Layout
 
 ```
-cmd/main.go                           # entrypoint: config load, DB init, signals, graceful shutdown
+cmd/main.go                              # entrypoint: config load, DB init, wiring, HTTP server, graceful shutdown
+docs/                                    # generated Swagger 2.0 spec (docs.go, swagger.json, swagger.yaml)
 internal/
-  config/config.go                    # Config struct, MustLoad() via cleanenv
-  lib/sl/slog.go                      # shared slog helpers (Error attr, SetupPrettySlog)
+  config/config.go                       # Config struct, MustLoad() via cleanenv
+  domain/                                # domain models (Admin, RecoveryCode, etc.)
+    admin.go
+  lib/
+    auth/
+      argon2.go                          # Argon2id hashing (PHC format)
+      jwt.go                             # JWT create/validate + TOTP-pending tokens
+      totp.go                            # TOTP secret generation, validation, recovery codes
+    sl/slog.go                           # shared slog helpers (Error attr, SetupPrettySlog)
   repo/
-    storage.go                        # sentinel errors (ErrNotFound, ErrExist)
+    storage.go                           # sentinel errors (ErrNotFound, ErrExist)
     migrator/
-      migrator.go                     # embed-based migration runner
-      migrations/*.sql                # versioned SQL migration files
+      migrator.go                        # embed-based migration runner
+      migrations/*.sql                   # versioned SQL migration files
     sqlite/
-      sqlite.go                       # OpenDB with pragmas + migration call
-frontend/                             # Vite SPA (see frontend/package.json)
-config/dev.yaml                       # development YAML config
+      sqlite.go                          # OpenDB with pragmas + migration call
+      admin_repo.go                      # AdminRepository impl
+      recovery_repo.go                   # RecoveryCodeRepository impl
+  services/
+    auth/
+      auth.go                            # AuthService: Login, SetupTOTP, ConfirmTOTP, ChangePassword, etc.
+      errors.go                          # domain errors (ErrInvalidCredentials, etc.)
+      otp_adapter.go                     # TOTPProvider adapter for TOTPManager
+      time.go                            # timeNow = time.Now (testability)
+  transport/
+    handler/
+      auth_handler.go                    # /api/auth/* HTTP handlers
+      health_handler.go                  # GET /, GET /health
+    middleware/
+      auth.go                            # JWT auth middleware (cookie + Bearer)
+      cors.go                            # CORS middleware (OPTIONS preflight, origin validation)
+      logger.go                          # structured request logging (method, path, status, duration)
+frontend/                                # Vite SPA (see frontend/package.json)
+tests/                                   # mirrored project structure, external test packages
+  lib/auth/                              # Argon2, JWT, TOTP unit tests
+  services/auth/                         # AuthService tests with mocks
+  transport/middleware/                  # CORS, Logger, Auth middleware tests
+  transport/handler/                     # Health, Auth handler tests
+config/dev.yaml                          # development YAML config
 ```
 
 ## Development Rules
@@ -35,6 +64,33 @@ config/dev.yaml                       # development YAML config
 - Keep SQLite writes batched for traffic updates. Avoid per-poll disk writes from background workers.
 - Frontend style is true black, minimal, mono, and kinetic. Do not copy proprietary Grok or 3x-ui assets.
 - All `.context/` and `AGENTS.md` content must be written in English.
+- Tests live in `tests/` mirroring the `internal/` structure. Use external test packages (`package foo_test`).
+
+## API Endpoints
+
+| Method | Path | Auth | Purpose |
+|--------|------|:----:|---------|
+| GET | `/` | — | Panel name and version |
+| GET | `/health` | — | Health check |
+| GET | `/swagger/*` | — | Swagger UI |
+| POST | `/api/auth/login` | — | Login (username + password, optional TOTP) |
+| POST | `/api/auth/login/recovery` | — | Login via recovery code |
+| GET | `/api/auth/me` | JWT | Current admin profile |
+| POST | `/api/auth/logout` | — | Clear cookie |
+| POST | `/api/auth/totp/setup` | JWT | Generate TOTP secret + QR URI |
+| POST | `/api/auth/totp/confirm` | JWT | Confirm TOTP, get recovery codes |
+| POST | `/api/auth/totp/disable` | JWT | Disable TOTP (requires code) |
+| POST | `/api/auth/change-password` | JWT | Change password |
+
+## Middleware Stack (outer to inner)
+
+```
+Logger → CORS → Auth → Mux
+```
+
+- **Logger**: logs method, path, status, size, duration. 4xx→WARN, 5xx→ERROR.
+- **CORS**: handles OPTIONS preflight (204), validates Origin on non-OPTIONS cross-domain requests. Same-origin always allowed. Allowed origins: localhost:3000, 127.0.0.1:3000.
+- **Auth**: public paths skip auth (`/`, `/health`, `/swagger/*`, `/api/auth/login*`, `/api/auth/logout`). Protected paths require JWT via `Authorization: Bearer <token>` header or `token` cookie.
 
 ## Frontend Conventions
 
@@ -54,6 +110,15 @@ config/dev.yaml                       # development YAML config
 - Sourcemaps are off in regular prod builds. Use `pnpm build:analyze` (sets `ANALYZE=true`) to get sourcemaps **and** `dist/stats.html` from `rollup-plugin-visualizer`. Save snapshots in `frontend/perf-snapshots/`.
 - Test setup (`frontend/src/test/test-utils.tsx`) wraps subjects in `LazyMotion` + `Suspense`. Mirror this if you write a new render helper, or `m.*` and lazy modals will fail.
 
+## Auth Implementation
+
+- **Passwords**: Argon2id with per-password salt, stored as PHC string in `admins.password_hash`.
+- **JWT**: HS256, configurable expiry (default 24h). Claims: `sub` (adminID), `iat`, `exp`.
+- **TOTP**: SHA1, 6 digits, 30s period. Secret stored base32 in `admins.totp_secret`. Three states: not set up (empty secret), pending confirmation (secret set, not confirmed), active (confirmed).
+- **TOTP pending tokens**: short-lived (5 min) JWT with `totp_pending: true` claim. Cannot be used to access protected endpoints.
+- **Recovery codes**: 8 per admin, format `XXXX-XXXX`, hashed with Argon2id. One-time use. Regenerated on TOTP confirmation.
+- **Bootstrap**: if `admins` table is empty on startup, an admin is created from `auth.admin_user` / `auth.admin_password` config values.
+
 ## Config
 
 - Primary config is `config/dev.yaml` (YAML). Override secrets via environment variables at runtime.
@@ -72,13 +137,14 @@ config/dev.yaml                       # development YAML config
 ## Graceful Shutdown
 
 - `signal.NotifyContext` catches `SIGINT` and `SIGTERM`.
-- On signal: database is closed, resources released, then process exits.
-- Future HTTP server shutdown will use `cfg.HTTP.ShutdownTimeout`.
+- On signal: HTTP server shuts down with `ShutdownTimeout`, database is closed, then process exits.
 
 ## Checks
 
+- Backend build: `go build ./...`
 - Backend vet: `go vet ./...`
-- Backend build: `go build ./cmd/`
+- Backend tests: `go test ./tests/...`
+- Swagger gen: `swag init -g cmd/main.go -o docs --parseDependency --parseInternal`
 - Frontend typecheck: `cd frontend && pnpm typecheck`
 - Frontend build: `cd frontend && pnpm build`
 - Frontend bundle analysis: `cd frontend && pnpm build:analyze` (writes `dist/stats.html`)
@@ -90,7 +156,16 @@ config/dev.yaml                       # development YAML config
 - Never stage unrelated user changes.
 - Prefer explicit paths for `git add`.
 - Keep generated runtime data, secrets, databases, logs, and build outputs out of git.
+- The `docs/` folder (Swagger) is committed because `docs.go` compiles into the binary.
 
 ## Dependencies
 
-Direct (in go.mod): `github.com/ilyakaznacheev/cleanenv`, `modernc.org/sqlite`, `github.com/fatih/color`.
+Direct (in go.mod):
+- `github.com/ilyakaznacheev/cleanenv` — config
+- `modernc.org/sqlite` — pure-Go SQLite
+- `github.com/fatih/color` — dev-mode colored output
+- `golang.org/x/crypto` — Argon2id
+- `github.com/golang-jwt/jwt/v5` — JWT
+- `github.com/pquerna/otp` — TOTP
+- `github.com/swaggo/http-swagger/v2` — Swagger UI
+- `github.com/swaggo/swag` — Swagger spec generation
