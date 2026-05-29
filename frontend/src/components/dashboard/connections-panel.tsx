@@ -3,7 +3,7 @@ import type { MouseEventHandler } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Network, Users } from "lucide-react";
 
-import { useStore } from "@/lib/mock/store";
+import { useClients, useInbounds, useMetrics } from "@/lib/mock/store";
 import { Card, CardHeader, CardLabel } from "@/components/ui/card";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { StatusDot } from "@/components/ui/status-dot";
@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 
 export function InboundsActiveCard() {
-  const { inbounds } = useStore();
+  const inbounds = useInbounds();
   const navigate = useNavigate();
   const { t } = useI18n();
   const active = inbounds.filter((i) => i.enabled);
@@ -52,7 +52,8 @@ export function InboundsActiveCard() {
 }
 
 export function ClientsTelemetryCard() {
-  const { clients, metrics } = useStore();
+  const clients = useClients();
+  const { metrics } = useMetrics();
   const navigate = useNavigate();
   const { t } = useI18n();
   return (

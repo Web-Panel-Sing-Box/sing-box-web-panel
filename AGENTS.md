@@ -5,7 +5,7 @@ This repository implements a local-first web panel for `sing-box`. Keep changes 
 ## Stack
 
 - **Backend** — Go 1.26, `cleanenv` (YAML config + env override), `modernc.org/sqlite` (pure-Go SQLite driver), `log/slog` (structured logging), `github.com/fatih/color` (dev-mode colored output).
-- **Frontend** — Vite + React 18 + TypeScript SPA. Tailwind CSS, Framer Motion, Recharts, React Router DOM. Lives in `frontend/`.
+- **Frontend** — Vite 8 + React 19 + TypeScript (strict) SPA. Tailwind CSS 4, Framer Motion 12 (via LazyMotion), Recharts 3, React Router DOM 7. Lives in `frontend/`.
 - **Database** — single-file SQLite with WAL mode, embedded `//go:embed` migrations in `internal/repo/migrator/`, idempotent versioned SQL files.
 
 ## Project Layout
@@ -44,6 +44,16 @@ config/dev.yaml                       # development YAML config
 - The Logs page wrapper is `flex h-[calc(100dvh-…)] flex-col`; the viewer is `flex-1 min-h-0` so the log surface fills the window without overflowing the page.
 - Modals render through `components/ui/modal.tsx`; they are flat (no header/footer dividers) and use the brand-green primary CTA. Toggles default to off unless the spec says otherwise.
 
+## Frontend Performance Rules
+
+- The mock store in `frontend/src/lib/mock/store.tsx` is split into six narrow contexts. Consume only what you need via `useMetrics()` / `useInbounds()` / `useClients()` / `useLogs()` / `useRuntime()` / `useStoreActions()`. Do **not** reintroduce a single `useStore()` that bundles ticking metrics with rarely-changing slices — it caused cascading re-renders across every page.
+- Framer Motion is wrapped in `<LazyMotion features={domMax} strict>` at the App root. Import `{ m }` (not `{ motion }`) and use `<m.div>` etc. `strict` will throw at runtime if `motion.*` slips back in. `domMax` is required because `tabs.tsx` uses `layoutId` (shared layout animation).
+- Routes are lazy-loaded in `App.tsx` (`React.lazy` + a single `<Suspense>` in `PanelLayout.tsx`). Heavy modals (`inbound-form-modal`, `add-client-modal`, `client-detail-modal`) are also lazy with a `prefetch on hover/focus` of their trigger button. Recharts stays eager on the dashboard — `ResponsiveContainer` mis-sizes when mounted under Suspense.
+- Reusable hooks live in `frontend/src/hooks/` (`useDisclosure`, `useCopyToClipboard`, `useLogFilter`, `useClientFilter`, `useInboundForm`). Reach for these before recreating local state machines in components.
+- Random helpers (`randomPort`, `randomHex`, `makeUuid`) live in `frontend/src/lib/random.ts`. Don't inline crypto-based randomness in components.
+- Sourcemaps are off in regular prod builds. Use `pnpm build:analyze` (sets `ANALYZE=true`) to get sourcemaps **and** `dist/stats.html` from `rollup-plugin-visualizer`. Save snapshots in `frontend/perf-snapshots/`.
+- Test setup (`frontend/src/test/test-utils.tsx`) wraps subjects in `LazyMotion` + `Suspense`. Mirror this if you write a new render helper, or `m.*` and lazy modals will fail.
+
 ## Config
 
 - Primary config is `config/dev.yaml` (YAML). Override secrets via environment variables at runtime.
@@ -69,9 +79,11 @@ config/dev.yaml                       # development YAML config
 
 - Backend vet: `go vet ./...`
 - Backend build: `go build ./cmd/`
-- Frontend typecheck: `cd frontend && npm run typecheck`
-- Frontend build: `cd frontend && npm run build`
-- Frontend tests: `cd frontend && npm test`
+- Frontend typecheck: `cd frontend && pnpm typecheck`
+- Frontend build: `cd frontend && pnpm build`
+- Frontend bundle analysis: `cd frontend && pnpm build:analyze` (writes `dist/stats.html`)
+- Frontend tests: `cd frontend && pnpm test`
+- Note: this repo uses `pnpm`. `pnpm install` from the `frontend/` folder may need `--ignore-workspace` because the root `pnpm-workspace.yaml` does not declare packages.
 
 ## Git Safety
 

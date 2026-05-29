@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import {
   LayoutDashboard,
   Network,
@@ -62,7 +62,7 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
       <AnimatePresence>
         {mobileOpen ? (
           <>
-            <motion.div
+            <m.div
               key="backdrop"
               className="fixed inset-0 z-40 bg-black/60 lg:hidden"
               initial={{ opacity: 0 }}
@@ -71,7 +71,7 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
               transition={{ duration: 0.18 }}
               onClick={onCloseMobile}
             />
-            <motion.aside
+            <m.aside
               key="drawer"
               className="fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-subtle bg-canvas lg:hidden"
               initial={{ x: -260 }}
@@ -80,7 +80,7 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
               transition={{ duration: 0.22, ease: "easeOut" }}
             >
               <SidebarContents expanded pathname={pathname} onClose={onCloseMobile} />
-            </motion.aside>
+            </m.aside>
           </>
         ) : null}
       </AnimatePresence>
@@ -142,7 +142,7 @@ function SidebarContents({
                   )}
                 >
                   {active ? (
-                    <motion.span
+                    <m.span
                       layoutId="sidebar-active-pill"
                       className="absolute inset-0 -z-10 rounded-lg bg-surface"
                       transition={{ type: "spring", stiffness: 500, damping: 40 }}

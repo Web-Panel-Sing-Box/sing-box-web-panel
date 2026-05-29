@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 
@@ -62,7 +62,7 @@ export function Toggle({
           checked ? "bg-brand" : "bg-[#3a3a3a]"
         )}
       >
-        <motion.span
+        <m.span
           className={cn("absolute left-0.5 rounded-full bg-white shadow-sm", knobSize[size])}
           animate={{ x: checked ? knobTravel[size] : 0 }}
           transition={{ type: "spring", stiffness: 700, damping: 40 }}

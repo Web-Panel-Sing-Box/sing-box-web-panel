@@ -1,7 +1,7 @@
 
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { useStore } from "@/lib/mock/store";
+import { useMetrics } from "@/lib/mock/store";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatSpeed } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
@@ -42,7 +42,7 @@ function ChartTooltip({ active, payload, incoming, outgoing }: any) {
 }
 
 export function TrafficChart() {
-  const { history } = useStore();
+  const { history } = useMetrics();
   const { t } = useI18n();
   return (
     <Card>

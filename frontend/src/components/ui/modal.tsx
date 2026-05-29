@@ -1,7 +1,7 @@
 
 import { useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { X } from "lucide-react";
 
 import { backdropVariants, modalVariants } from "@/lib/motion";
@@ -35,7 +35,7 @@ export function Modal({ open, onClose, children, className, width = "max-w-[720p
   return createPortal(
     <AnimatePresence>
       {open ? (
-        <motion.div
+        <m.div
           variants={backdropVariants}
           initial="initial"
           animate="animate"
@@ -43,7 +43,7 @@ export function Modal({ open, onClose, children, className, width = "max-w-[720p
           className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 px-4 py-10 backdrop-blur-[8px] sm:items-center"
           onClick={onClose}
         >
-          <motion.div
+          <m.div
             variants={modalVariants}
             initial="initial"
             animate="animate"
@@ -56,8 +56,8 @@ export function Modal({ open, onClose, children, className, width = "max-w-[720p
             )}
           >
             {children}
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       ) : null}
     </AnimatePresence>,
     document.body

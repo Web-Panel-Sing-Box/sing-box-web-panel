@@ -4,14 +4,11 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import type { ClientStatus } from "@/lib/mock/clients";
-import { useStore } from "@/lib/mock/store";
+import { useInbounds } from "@/lib/mock/store";
 import { useI18n } from "@/lib/i18n";
+import type { ClientFilterState } from "@/hooks/useClientFilter";
 
-type FilterState = {
-  query: string;
-  inboundId: string;
-  status: ClientStatus | "all";
-};
+type FilterState = ClientFilterState;
 
 type ClientFilterBarProps = {
   value: FilterState;
@@ -19,7 +16,7 @@ type ClientFilterBarProps = {
 };
 
 export function ClientFilterBar({ value, onChange }: ClientFilterBarProps) {
-  const { inbounds } = useStore();
+  const inbounds = useInbounds();
   const { t } = useI18n();
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_220px_180px]">

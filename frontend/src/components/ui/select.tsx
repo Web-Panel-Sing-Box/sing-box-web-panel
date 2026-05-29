@@ -1,7 +1,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { Check, ChevronDown } from "lucide-react";
 
 import { dropdownVariants } from "@/lib/motion";
@@ -79,7 +79,7 @@ export function Select<T extends string>({
       : createPortal(
           <AnimatePresence>
             {open ? (
-              <motion.div
+              <m.div
                 ref={menuRef}
                 initial="initial"
                 animate="animate"
@@ -119,7 +119,7 @@ export function Select<T extends string>({
                     );
                   })}
                 </ul>
-              </motion.div>
+              </m.div>
             ) : null}
           </AnimatePresence>,
           document.body

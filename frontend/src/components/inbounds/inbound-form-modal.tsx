@@ -1,6 +1,6 @@
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { useMemo } from "react";
+import { m } from "framer-motion";
 import { Copy, Dices, RefreshCw, Trash2 } from "lucide-react";
 
 import { Accordion } from "@/components/ui/accordion";
@@ -10,20 +10,17 @@ import { Modal, ModalBody, ModalFooter, ModalHeader } from "@/components/ui/moda
 import { Segmented } from "@/components/ui/tabs";
 import { Select } from "@/components/ui/select";
 import { Toggle } from "@/components/ui/toggle";
-import { useToast } from "@/components/ui/toast";
-import { useStore } from "@/lib/mock/store";
+import { useInboundForm, type InboundFormMode } from "@/hooks/useInboundForm";
 import {
   PROTOCOL_OPTIONS,
   TRAFFIC_RESET_OPTIONS,
   TRANSMISSION_OPTIONS,
   type Inbound,
-  type Protocol,
-  type TlsMode,
-  type Transmission
+  type TlsMode
 } from "@/lib/mock/inbounds";
 import { useI18n } from "@/lib/i18n";
 
-export type InboundFormMode = "create" | "edit" | "clone";
+export type { InboundFormMode } from "@/hooks/useInboundForm";
 
 type InboundFormModalProps = {
   open: boolean;
@@ -33,97 +30,12 @@ type InboundFormModalProps = {
   onClone?: (inbound: Inbound) => void;
 };
 
-function randomPort() {
-  return Math.floor(10_000 + Math.random() * 50_000);
-}
-
-function randomHex(length: number) {
-  if (typeof crypto !== "undefined" && "getRandomValues" in crypto) {
-    const bytes = new Uint8Array(length / 2);
-    crypto.getRandomValues(bytes);
-    return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
-  }
-  let s = "";
-  for (let i = 0; i < length; i++) s += Math.floor(Math.random() * 16).toString(16);
-  return s;
-}
-
-function makeUuid() {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
-  return "00000000-0000-4000-8000-000000000000";
-}
-
 export function InboundFormModal({ open, mode = "create", inbound, onClose, onClone }: InboundFormModalProps) {
-  const { addInbound, updateInbound, removeInbound } = useStore();
-  const { push } = useToast();
   const { t } = useI18n();
-  const remarkRef = useRef<HTMLInputElement>(null);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-
-  const [remark, setRemark] = useState("");
-  const [protocol, setProtocol] = useState<Protocol>("naive");
-  const [port, setPort] = useState<number | string>(() => randomPort());
-  const [trafficReset, setTrafficReset] = useState("never");
-  const [transmission, setTransmission] = useState<Transmission>("tcp");
-
-  const [sniffing, setSniffing] = useState(true);
-  const [snifHttp, setSnifHttp] = useState(true);
-  const [snifTls, setSnifTls] = useState(true);
-  const [snifQuic, setSnifQuic] = useState(false);
-  const [snifFakedns, setSnifFakedns] = useState(false);
-  const [metadataOnly, setMetadataOnly] = useState(false);
-  const [routeOnly, setRouteOnly] = useState(true);
-  const [ipsExcluded, setIpsExcluded] = useState("");
-  const [domainsExcluded, setDomainsExcluded] = useState("");
-
-  const [tls, setTls] = useState<TlsMode>("none");
-  const [dest, setDest] = useState("www.cloudflare.com:443");
-  const [sni, setSni] = useState("www.cloudflare.com");
-  const [shortIds, setShortIds] = useState("");
-  const [privateKey, setPrivateKey] = useState("");
-  const [publicKey, setPublicKey] = useState("");
-
-  const [userId, setUserId] = useState("user-001");
-  const [uuid, setUuid] = useState(makeUuid());
-  const [subscription, setSubscription] = useState("");
-  const [totalFlowGb, setTotalFlowGb] = useState("100");
-  const [expiry, setExpiry] = useState("");
-  const [startAfterFirstUse, setStartAfterFirstUse] = useState(false);
-
-  const [diceSpin, setDiceSpin] = useState(0);
-  const [saving, setSaving] = useState(false);
-
-  // Reset on close
-  useEffect(() => {
-    if (!open) return;
-    setRemark(mode === "clone" && inbound ? `${inbound.remark}-copy` : inbound?.remark ?? "");
-    setProtocol(inbound?.protocol ?? "naive");
-    setPort(mode === "clone" ? randomPort() : inbound?.port ?? randomPort());
-    setTrafficReset("never");
-    setTransmission(inbound?.transmission ?? "tcp");
-    setTls(inbound?.tls ?? "none");
-    setSni(inbound?.sni ?? "www.cloudflare.com");
-    setDest(inbound?.dest ?? "www.cloudflare.com:443");
-    setUuid(makeUuid());
-    setUserId("user-001");
-    setSubscription("");
-    setTotalFlowGb("100");
-    setExpiry("");
-    setPrivateKey("");
-    setPublicKey("");
-    setShortIds("");
-    setStartAfterFirstUse(false);
-    setConfirmDelete(false);
-    if (mode === "clone") {
-      window.setTimeout(() => {
-        remarkRef.current?.focus();
-        remarkRef.current?.select();
-      }, 50);
-    }
-  }, [open, mode, inbound]);
+  const f = useInboundForm({ open, mode, inbound, onClose });
 
   const transportFields = useMemo(() => {
-    switch (transmission) {
+    switch (f.transmission) {
       case "ws":
         return (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -177,42 +89,7 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
       default:
         return null;
     }
-  }, [transmission]);
-
-  async function handleSave() {
-    if (!remark.trim()) {
-      push(t("inbounds.remarkRequired"), "error");
-      return;
-    }
-    setSaving(true);
-    await new Promise((r) => setTimeout(r, 650));
-    const payload = {
-      remark: remark.trim(),
-      protocol,
-      port: Number(port) || randomPort(),
-      transmission,
-      tls,
-      sni: tls === "none" ? undefined : sni,
-      dest: tls === "reality" ? dest : undefined
-    };
-    if (mode === "edit" && inbound) {
-      updateInbound(inbound.id, payload);
-      push(t("inbounds.updated"), "success");
-    } else {
-      addInbound(payload);
-      push(mode === "clone" ? t("inbounds.cloned") : t("inbounds.created"), "success");
-    }
-    setSaving(false);
-    onClose();
-  }
-
-  function handleDelete() {
-    if (!inbound) return;
-    removeInbound(inbound.id);
-    push(t("inbounds.deleted", { remark: inbound.remark }), "success");
-    setConfirmDelete(false);
-    onClose();
-  }
+  }, [f.transmission]);
 
   const title =
     mode === "edit"
@@ -231,9 +108,9 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
             <div>
               <Label>{t("common.remark")}</Label>
               <Input
-                ref={remarkRef}
-                value={remark}
-                onChange={(e) => setRemark(e.target.value)}
+                ref={f.remarkRef}
+                value={f.remark}
+                onChange={(e) => f.setRemark(e.target.value)}
                 placeholder="e.g. vadim-vless#0001"
                 className={mode === "clone" ? "selection:bg-brand/40" : undefined}
               />
@@ -241,29 +118,26 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <Label>{t("common.protocol")}</Label>
-                <Select value={protocol} options={PROTOCOL_OPTIONS} onChange={(v) => setProtocol(v)} />
+                <Select value={f.protocol} options={PROTOCOL_OPTIONS} onChange={f.setProtocol} />
               </div>
               <div>
                 <Label>{t("common.port")}</Label>
                 <Input
                   type="number"
-                  value={port}
-                  onChange={(e) => setPort(e.target.value)}
+                  value={f.port}
+                  onChange={(e) => f.setPort(e.target.value)}
                   mono
                   trailing={
-                    <motion.button
+                    <m.button
                       type="button"
-                      animate={{ rotate: diceSpin }}
+                      animate={{ rotate: f.diceSpin }}
                       transition={{ duration: 0.4, ease: "easeOut" }}
-                      onClick={() => {
-                        setDiceSpin((v) => v + 360);
-                        setPort(randomPort());
-                      }}
+                      onClick={f.randomizePort}
                       className="grid size-7 place-items-center rounded-md text-ink-secondary transition-colors duration-150 hover:bg-hover hover:text-ink-primary"
                       title="Randomize"
                     >
                       <Dices size={14} />
-                    </motion.button>
+                    </m.button>
                   }
                 />
               </div>
@@ -271,11 +145,11 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <Label>{t("inbounds.trafficReset")}</Label>
-                <Select value={trafficReset} options={TRAFFIC_RESET_OPTIONS} onChange={setTrafficReset} />
+                <Select value={f.trafficReset} options={TRAFFIC_RESET_OPTIONS} onChange={f.setTrafficReset} />
               </div>
               <div>
                 <Label>{t("inbounds.transmission")}</Label>
-                <Select value={transmission} options={TRANSMISSION_OPTIONS} onChange={(v) => setTransmission(v)} />
+                <Select value={f.transmission} options={TRANSMISSION_OPTIONS} onChange={f.setTransmission} />
               </div>
             </div>
             {transportFields ? <div className="rounded-lg border border-subtle bg-canvas/60 p-3">{transportFields}</div> : null}
@@ -285,27 +159,27 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
         <Accordion title={t("inbounds.transportSecurity")}>
           <div className="space-y-5">
             <div className="">
-              <Toggle checked={sniffing} onChange={setSniffing} label={t("inbounds.enableSniffing")} description={t("inbounds.sniffingDesc")} />
-              {sniffing ? (
+              <Toggle checked={f.sniffing} onChange={f.setSniffing} label={t("inbounds.enableSniffing")} description={t("inbounds.sniffingDesc")} />
+              {f.sniffing ? (
                 <div className="mt-4 space-y-3">
                   <div className="flex flex-wrap gap-3 text-xs text-ink-secondary">
-                    <Checkbox label="HTTP" checked={snifHttp} onChange={setSnifHttp} />
-                    <Checkbox label="TLS" checked={snifTls} onChange={setSnifTls} />
-                    <Checkbox label="QUIC" checked={snifQuic} onChange={setSnifQuic} />
-                    <Checkbox label="FAKEDNS" checked={snifFakedns} onChange={setSnifFakedns} />
+                    <Checkbox label="HTTP" checked={f.snifHttp} onChange={f.setSnifHttp} />
+                    <Checkbox label="TLS" checked={f.snifTls} onChange={f.setSnifTls} />
+                    <Checkbox label="QUIC" checked={f.snifQuic} onChange={f.setSnifQuic} />
+                    <Checkbox label="FAKEDNS" checked={f.snifFakedns} onChange={f.setSnifFakedns} />
                   </div>
                   <div className="flex flex-wrap gap-6">
-                    <Toggle checked={metadataOnly} onChange={setMetadataOnly} label={t("inbounds.metadataOnly")} />
-                    <Toggle checked={routeOnly} onChange={setRouteOnly} label={t("inbounds.routeOnly")} />
+                    <Toggle checked={f.metadataOnly} onChange={f.setMetadataOnly} label={t("inbounds.metadataOnly")} />
+                    <Toggle checked={f.routeOnly} onChange={f.setRouteOnly} label={t("inbounds.routeOnly")} />
                   </div>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
                       <Label>{t("inbounds.ipsExcluded")}</Label>
-                      <Textarea rows={2} value={ipsExcluded} onChange={(e) => setIpsExcluded(e.target.value)} mono placeholder="10.0.0.0/8" />
+                      <Textarea rows={2} value={f.ipsExcluded} onChange={(e) => f.setIpsExcluded(e.target.value)} mono placeholder="10.0.0.0/8" />
                     </div>
                     <div>
                       <Label>{t("inbounds.domainsExcluded")}</Label>
-                      <Textarea rows={2} value={domainsExcluded} onChange={(e) => setDomainsExcluded(e.target.value)} mono placeholder="local.lan" />
+                      <Textarea rows={2} value={f.domainsExcluded} onChange={(e) => f.setDomainsExcluded(e.target.value)} mono placeholder="local.lan" />
                     </div>
                   </div>
                 </div>
@@ -315,8 +189,8 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
             <div>
               <Label>TLS</Label>
               <Segmented<TlsMode>
-                value={tls}
-                onChange={setTls}
+                value={f.tls}
+                onChange={f.setTls}
                 options={[
                   { value: "none", label: "None" },
                   { value: "tls", label: "TLS" },
@@ -325,51 +199,45 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
               />
             </div>
 
-            {tls === "reality" ? (
+            {f.tls === "reality" ? (
               <div className="grid grid-cols-1 gap-3">
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <Label>{t("inbounds.destination")}</Label>
-                    <Input value={dest} onChange={(e) => setDest(e.target.value)} mono />
+                    <Input value={f.dest} onChange={(e) => f.setDest(e.target.value)} mono />
                   </div>
                   <div>
                     <Label>SNI</Label>
-                    <Input value={sni} onChange={(e) => setSni(e.target.value)} mono />
+                    <Input value={f.sni} onChange={(e) => f.setSni(e.target.value)} mono />
                   </div>
                 </div>
                 <div>
                   <Label>{t("inbounds.shortIds")}</Label>
-                  <Textarea rows={2} value={shortIds} onChange={(e) => setShortIds(e.target.value)} mono placeholder="One short id per line" />
+                  <Textarea rows={2} value={f.shortIds} onChange={(e) => f.setShortIds(e.target.value)} mono placeholder="One short id per line" />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-ink-secondary">{t("inbounds.keypair")}</span>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setPrivateKey(randomHex(64));
-                        setPublicKey(randomHex(64));
-                      }}
-                    >
+                    <Button size="sm" onClick={f.generateKeypair}>
                       <RefreshCw size={14} />
                       {t("inbounds.generateKeypair")}
                     </Button>
                   </div>
                   <div>
                     <Label>{t("inbounds.privateKey")}</Label>
-                    <Input value={privateKey} mono readOnly placeholder="—" />
+                    <Input value={f.privateKey} mono readOnly placeholder="—" />
                   </div>
                   <div>
                     <Label>{t("inbounds.publicKey")}</Label>
-                    <Input value={publicKey} mono readOnly placeholder="—" />
+                    <Input value={f.publicKey} mono readOnly placeholder="—" />
                   </div>
                 </div>
               </div>
-            ) : tls === "tls" ? (
+            ) : f.tls === "tls" ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <Label>SNI</Label>
-                  <Input value={sni} onChange={(e) => setSni(e.target.value)} mono />
+                  <Input value={f.sni} onChange={(e) => f.setSni(e.target.value)} mono />
                 </div>
               </div>
             ) : null}
@@ -381,18 +249,18 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <Label>{t("inbounds.userId")}</Label>
-                <Input value={userId} onChange={(e) => setUserId(e.target.value)} />
+                <Input value={f.userId} onChange={(e) => f.setUserId(e.target.value)} />
               </div>
               <div>
                 <Label>UUID</Label>
                 <Input
-                  value={uuid}
+                  value={f.uuid}
                   mono
                   readOnly
                   trailing={
                     <button
                       type="button"
-                      onClick={() => setUuid(makeUuid())}
+                      onClick={f.regenerateUuid}
                       className="grid size-7 place-items-center rounded-md text-ink-secondary transition-colors duration-150 hover:bg-hover hover:text-ink-primary"
                       title="Regenerate"
                     >
@@ -404,23 +272,23 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
             </div>
             <div>
               <Label>{t("inbounds.subscription")}</Label>
-              <Input value={subscription} onChange={(e) => setSubscription(e.target.value)} placeholder="https://panel.example/sub/your-key" mono />
+              <Input value={f.subscription} onChange={(e) => f.setSubscription(e.target.value)} placeholder="https://panel.example/sub/your-key" mono />
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <Label>{t("inbounds.totalFlow")}</Label>
-                <NumberInput value={totalFlowGb} onChange={setTotalFlowGb} min={0} mono placeholder="0" />
+                <NumberInput value={f.totalFlowGb} onChange={f.setTotalFlowGb} min={0} mono placeholder="0" />
               </div>
               <div>
                 <Label>{t("inbounds.expiryDate")}</Label>
-                <DateInput value={expiry} onChange={setExpiry} />
+                <DateInput value={f.expiry} onChange={f.setExpiry} />
               </div>
             </div>
             <div className="flex min-h-[72px] items-center justify-center rounded-lg border border-subtle bg-canvas/40 px-3 py-2">
               <Toggle
                 size="lg"
-                checked={startAfterFirstUse}
-                onChange={setStartAfterFirstUse}
+                checked={f.startAfterFirstUse}
+                onChange={f.setStartAfterFirstUse}
                 label={t("inbounds.startAfterFirstUse")}
               />
             </div>
@@ -433,7 +301,7 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
             <IconActionButton title={t("common.clone")} onClick={() => onClone?.(inbound)}>
               <Copy size={16} />
             </IconActionButton>
-            <IconActionButton title={t("common.delete")} danger onClick={() => setConfirmDelete(true)}>
+            <IconActionButton title={t("common.delete")} danger onClick={f.openConfirmDelete}>
               <Trash2 size={16} />
             </IconActionButton>
             <div className="flex-1" />
@@ -442,18 +310,18 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
         <Button variant="danger" onClick={onClose}>
           {t("common.cancel")}
         </Button>
-        <Button variant="primary" onClick={handleSave} loading={saving}>
+        <Button variant="primary" onClick={f.handleSave} loading={f.saving}>
           {t("common.save")}
         </Button>
       </ModalFooter>
     </Modal>
-    <Modal open={confirmDelete} onClose={() => setConfirmDelete(false)} width="max-w-[420px]">
-      <ModalHeader title={t("inbounds.deleteQuestion")} subtitle={inbound ? t("inbounds.deleteBody", { remark: inbound.remark }) : undefined} onClose={() => setConfirmDelete(false)} />
+    <Modal open={f.confirmDelete} onClose={f.closeConfirmDelete} width="max-w-[420px]">
+      <ModalHeader title={t("inbounds.deleteQuestion")} subtitle={inbound ? t("inbounds.deleteBody", { remark: inbound.remark }) : undefined} onClose={f.closeConfirmDelete} />
       <ModalFooter>
-        <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
+        <Button variant="secondary" onClick={f.closeConfirmDelete}>
           {t("common.cancel")}
         </Button>
-        <Button variant="danger" onClick={handleDelete}>
+        <Button variant="danger" onClick={f.handleDelete}>
           {t("common.delete")}
         </Button>
       </ModalFooter>

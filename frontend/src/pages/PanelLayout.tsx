@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { Menu } from "lucide-react";
 
@@ -6,6 +6,15 @@ import { Sidebar } from "@/components/shell/sidebar";
 import { PageTransition } from "@/components/shell/page-transition";
 import { MockStoreProvider } from "@/lib/mock/store";
 import { useI18n } from "@/lib/i18n";
+
+function RouteFallback() {
+  return (
+    <div className="mx-auto flex max-w-[1320px] animate-pulse flex-col gap-6">
+      <div className="h-7 w-40 rounded-md bg-elevated/60" />
+      <div className="h-[420px] rounded-2xl border border-subtle bg-canvas/40" />
+    </div>
+  );
+}
 
 export function PanelLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -25,7 +34,9 @@ export function PanelLayout() {
           </button>
           <main className="flex-1 px-4 pb-6 pt-16 sm:px-6 lg:px-8 lg:py-8">
             <PageTransition>
-              <Outlet />
+              <Suspense fallback={<RouteFallback />}>
+                <Outlet />
+              </Suspense>
             </PageTransition>
           </main>
         </div>

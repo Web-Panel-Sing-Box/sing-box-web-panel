@@ -1,25 +1,36 @@
-import type { ReactNode } from "react";
+import { memo, useCallback, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import { Toggle } from "@/components/ui/toggle";
 import { StatusDot } from "@/components/ui/status-dot";
 import { cn } from "@/lib/utils";
 import type { Inbound, Protocol, TlsMode, Transmission } from "@/lib/mock/inbounds";
-import { useStore } from "@/lib/mock/store";
+import { useStoreActions } from "@/lib/mock/store";
 import { useToast } from "@/components/ui/toast";
 import { useI18n } from "@/lib/i18n";
 
 const ROW_GRID =
   "grid-cols-[minmax(96px,1fr)_minmax(90px,0.8fr)_minmax(180px,1.5fr)_minmax(150px,1.2fr)_minmax(100px,0.8fr)_minmax(90px,0.7fr)_minmax(110px,0.8fr)]";
 
-export function InboundRow({ inbound, onEdit }: { inbound: Inbound; onEdit: (inbound: Inbound) => void }) {
-  const { toggleInbound } = useStore();
+function InboundRowImpl({ inbound, onEdit }: { inbound: Inbound; onEdit: (inbound: Inbound) => void }) {
+  const { toggleInbound } = useStoreActions();
   const { push } = useToast();
   const { t } = useI18n();
 
-  function open() {
+  const open = useCallback(() => {
     onEdit(inbound);
-  }
+  }, [onEdit, inbound]);
+
+  const onToggle = useCallback(
+    (v: boolean) => {
+      toggleInbound(inbound.id);
+      push(
+        t("inbounds.toggled", { remark: inbound.remark, state: v ? t("common.enabled") : t("common.disabled") }),
+        "success"
+      );
+    },
+    [toggleInbound, inbound.id, inbound.remark, push, t]
+  );
 
   return (
     <div
@@ -46,13 +57,7 @@ export function InboundRow({ inbound, onEdit }: { inbound: Inbound; onEdit: (inb
         {t("inbounds.clientCount", { count: inbound.clientCount })}
       </Link>
       <div onClick={(event) => event.stopPropagation()} className="flex justify-center">
-        <Toggle
-          checked={inbound.enabled}
-          onChange={(v) => {
-            toggleInbound(inbound.id);
-            push(t("inbounds.toggled", { remark: inbound.remark, state: v ? t("common.enabled") : t("common.disabled") }), "success");
-          }}
-        />
+        <Toggle checked={inbound.enabled} onChange={onToggle} />
       </div>
       <span
         className={cn(
@@ -74,6 +79,8 @@ export function InboundHeader({ children }: { children: ReactNode }) {
     </div>
   );
 }
+
+export const InboundRow = memo(InboundRowImpl);
 
 export function ProtocolChip({ protocol }: { protocol: Inbound["protocol"] }) {
   const palette: Record<Protocol, string> = {

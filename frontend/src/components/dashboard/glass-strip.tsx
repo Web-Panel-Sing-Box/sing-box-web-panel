@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 
-import { useStore } from "@/lib/mock/store";
+import { useMetrics, useStoreActions } from "@/lib/mock/store";
 import { StatusDot } from "@/components/ui/status-dot";
 import { formatBytes, formatUptime } from "@/lib/format";
 import { Modal, ModalBody, ModalFooter, ModalHeader } from "@/components/ui/modal";
@@ -10,7 +10,8 @@ import { useToast } from "@/components/ui/toast";
 import { useI18n } from "@/lib/i18n";
 
 export function GlassStrip() {
-  const { metrics, setCoreRunning } = useStore();
+  const { metrics } = useMetrics();
+  const { setCoreRunning } = useStoreActions();
   const { push } = useToast();
   const { t } = useI18n();
   const [confirmStop, setConfirmStop] = useState(false);

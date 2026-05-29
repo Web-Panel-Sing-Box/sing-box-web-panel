@@ -1,6 +1,6 @@
 
 import { useState, type ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 
 import { accordionVariants } from "@/lib/motion";
@@ -37,7 +37,7 @@ export function Accordion({ title, description, defaultOpen = true, children, cl
       </button>
       <AnimatePresence initial={false}>
         {open ? (
-          <motion.div
+          <m.div
             initial="initial"
             animate="animate"
             exit="exit"
@@ -45,7 +45,7 @@ export function Accordion({ title, description, defaultOpen = true, children, cl
             className="overflow-hidden"
           >
             <div className="border-t border-subtle px-4 py-4">{children}</div>
-          </motion.div>
+          </m.div>
         ) : null}
       </AnimatePresence>
     </div>

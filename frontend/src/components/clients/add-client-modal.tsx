@@ -6,7 +6,7 @@ import { Modal, ModalBody, ModalFooter, ModalHeader } from "@/components/ui/moda
 import { Select } from "@/components/ui/select";
 import { Toggle } from "@/components/ui/toggle";
 import { useToast } from "@/components/ui/toast";
-import { useStore } from "@/lib/mock/store";
+import { useInbounds, useStoreActions } from "@/lib/mock/store";
 import { useI18n } from "@/lib/i18n";
 
 const GB = 1024 ** 3;
@@ -25,7 +25,8 @@ type Props = {
 };
 
 export function AddClientModal({ open, onClose, defaultInboundId }: Props) {
-  const { inbounds, addClient } = useStore();
+  const inbounds = useInbounds();
+  const { addClient } = useStoreActions();
   const { push } = useToast();
   const { t } = useI18n();
 

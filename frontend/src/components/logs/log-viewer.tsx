@@ -1,8 +1,9 @@
 
-import { useEffect, useMemo, useRef } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useRef } from "react";
+import { AnimatePresence, m } from "framer-motion";
 
-import { useStore } from "@/lib/mock/store";
+import { useLogs } from "@/lib/mock/store";
+import { useLogFilter } from "@/hooks/useLogFilter";
 import { formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
@@ -16,18 +17,11 @@ const levelColor: Record<"info" | "warn" | "error", string> = {
 };
 
 export function LogViewer({ filter }: { filter: LogFilter }) {
-  const { logs } = useStore();
+  const logs = useLogs();
   const { t } = useI18n();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const filtered = useMemo(() => {
-    const q = filter.query.trim().toLowerCase();
-    return logs.filter((l) => {
-      if (filter.level !== "all" && l.level !== filter.level) return false;
-      if (!q) return true;
-      return l.message.toLowerCase().includes(q);
-    });
-  }, [logs, filter]);
+  const filtered = useLogFilter(logs, filter);
 
   useEffect(() => {
     if (!scrollRef.current) return;
@@ -42,7 +36,7 @@ export function LogViewer({ filter }: { filter: LogFilter }) {
       >
         <AnimatePresence initial={false}>
           {filtered.map((l) => (
-            <motion.div
+            <m.div
               key={l.id}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -52,7 +46,7 @@ export function LogViewer({ filter }: { filter: LogFilter }) {
               <span className="shrink-0 text-ink-tertiary">{formatTime(l.t)}</span>
               <span className={cn("w-12 shrink-0 uppercase", levelColor[l.level])}>{l.level}</span>
               <span className={cn(l.level === "error" ? "text-danger" : "text-ink-primary/85")}>{l.message}</span>
-            </motion.div>
+            </m.div>
           ))}
         </AnimatePresence>
         {filtered.length === 0 ? (

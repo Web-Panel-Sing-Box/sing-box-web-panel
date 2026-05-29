@@ -1,15 +1,22 @@
 
-import { useMemo } from "react";
-import { useState } from "react";
+import { Suspense, lazy, useCallback, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { InboundsList } from "@/components/inbounds/inbounds-list";
-import { InboundFormModal, type InboundFormMode } from "@/components/inbounds/inbound-form-modal";
-import { useStore } from "@/lib/mock/store";
+import type { InboundFormMode } from "@/components/inbounds/inbound-form-modal";
+import { useInbounds } from "@/lib/mock/store";
 import type { Inbound, Protocol } from "@/lib/mock/inbounds";
 import { useI18n } from "@/lib/i18n";
+
+const InboundFormModal = lazy(() =>
+  import("@/components/inbounds/inbound-form-modal").then((m) => ({ default: m.InboundFormModal }))
+);
+
+const prefetchInboundForm = () => {
+  void import("@/components/inbounds/inbound-form-modal");
+};
 
 type ModalState = {
   open: boolean;
@@ -21,7 +28,7 @@ const PROTOCOLS: Protocol[] = ["vless", "naive", "hysteria2"];
 
 export function InboundsPage() {
   const [searchParams] = useSearchParams();
-  const { inbounds } = useStore();
+  const inbounds = useInbounds();
   const { t } = useI18n();
   const [modal, setModal] = useState<ModalState>({ open: false, mode: "create", inbound: null });
   const protocol = searchParams.get("protocol");
@@ -30,6 +37,11 @@ export function InboundsPage() {
     () => (protocolFilter ? inbounds.filter((inbound) => inbound.protocol === protocolFilter) : inbounds),
     [inbounds, protocolFilter]
   );
+
+  const openCreate = useCallback(() => setModal({ open: true, mode: "create", inbound: null }), []);
+  const openEdit = useCallback((inbound: Inbound) => setModal({ open: true, mode: "edit", inbound }), []);
+  const closeModal = useCallback(() => setModal((prev) => ({ ...prev, open: false })), []);
+  const openClone = useCallback((inbound: Inbound) => setModal({ open: true, mode: "clone", inbound }), []);
 
   return (
     <div className="mx-auto flex max-w-[1240px] flex-col gap-6">
@@ -45,21 +57,30 @@ export function InboundsPage() {
             </div>
           ) : null}
         </div>
-        <Button variant="white" onClick={() => setModal({ open: true, mode: "create", inbound: null })}>
+        <Button
+          variant="white"
+          onClick={openCreate}
+          onMouseEnter={prefetchInboundForm}
+          onFocus={prefetchInboundForm}
+        >
           <Plus size={16} />
           {t("inbounds.new")}
         </Button>
       </div>
 
-      <InboundsList inbounds={filtered} onEdit={(inbound) => setModal({ open: true, mode: "edit", inbound })} />
+      <InboundsList inbounds={filtered} onEdit={openEdit} />
 
-      <InboundFormModal
-        open={modal.open}
-        mode={modal.mode}
-        inbound={modal.inbound}
-        onClose={() => setModal((prev) => ({ ...prev, open: false }))}
-        onClone={(inbound) => setModal({ open: true, mode: "clone", inbound })}
-      />
+      {modal.open ? (
+        <Suspense fallback={null}>
+          <InboundFormModal
+            open={modal.open}
+            mode={modal.mode}
+            inbound={modal.inbound}
+            onClose={closeModal}
+            onClone={openClone}
+          />
+        </Suspense>
+      ) : null}
     </div>
   );
 }

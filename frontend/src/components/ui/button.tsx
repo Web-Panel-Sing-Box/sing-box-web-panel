@@ -1,6 +1,6 @@
 
 import { forwardRef, type ReactNode } from "react";
-import { motion, type HTMLMotionProps } from "framer-motion";
+import { m, type HTMLMotionProps } from "framer-motion";
 import { Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -36,7 +36,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   ref
 ) {
   return (
-    <motion.button
+    <m.button
       ref={ref}
       whileTap={{ scale: 0.98 }}
       transition={{ type: "tween", duration: 0.08, ease: "easeOut" }}
@@ -46,6 +46,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     >
       {loading ? <Loader2 className="size-4 animate-spin" /> : null}
       {children}
-    </motion.button>
+    </m.button>
   );
 });

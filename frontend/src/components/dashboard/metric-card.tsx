@@ -1,16 +1,19 @@
 
+import { useMemo } from "react";
 import { Cpu, Database, HardDrive, Network } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 
-import { useStore } from "@/lib/mock/store";
+import { useMetrics } from "@/lib/mock/store";
 import { Card, CardHeader, CardLabel } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { formatBytes, formatPercent } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
 
+const formatPercentValue = (n: number) => `${n.toFixed(1)}%`;
+
 export function CpuCard() {
-  const { metrics } = useStore();
+  const { metrics } = useMetrics();
   const { t } = useI18n();
   const value = metrics.cpu * 100;
   return (
@@ -20,7 +23,7 @@ export function CpuCard() {
         <Cpu size={16} className="text-ink-tertiary" />
       </CardHeader>
       <div className="mb-4 text-3xl font-semibold text-ink-primary">
-        <AnimatedNumber value={value} format={(n) => `${n.toFixed(1)}%`} />
+        <AnimatedNumber value={value} format={formatPercentValue} />
       </div>
       <Progress value={value} />
       <p className="mt-3 text-xs text-ink-tertiary">{t("dashboard.coresUsage", { value: formatPercent(value) })}</p>
@@ -29,7 +32,7 @@ export function CpuCard() {
 }
 
 export function RamCard() {
-  const { metrics } = useStore();
+  const { metrics } = useMetrics();
   const { t } = useI18n();
   const ram = metrics.ram * 100;
   const swap = metrics.swap * 100;
@@ -40,7 +43,7 @@ export function RamCard() {
         <Database size={16} className="text-ink-tertiary" />
       </CardHeader>
       <div className="mb-4 text-3xl font-semibold text-ink-primary">
-        <AnimatedNumber value={ram} format={(n) => `${n.toFixed(1)}%`} />
+        <AnimatedNumber value={ram} format={formatPercentValue} />
       </div>
       <div className="space-y-3">
         <div>
@@ -63,7 +66,7 @@ export function RamCard() {
 }
 
 export function DiskCard() {
-  const { metrics } = useStore();
+  const { metrics } = useMetrics();
   const { t } = useI18n();
   const total = metrics.diskSegments.reduce((acc, s) => acc + s.totalBytes, 0);
   return (
@@ -75,7 +78,7 @@ export function DiskCard() {
       <div className="mb-4 text-3xl font-semibold text-ink-primary">
         <AnimatedNumber
           value={(metrics.diskSegments.reduce((acc, s) => acc + s.usedBytes, 0) / total) * 100}
-          format={(n) => `${n.toFixed(1)}%`}
+          format={formatPercentValue}
         />
       </div>
       <div className="mb-3 flex h-2 w-full overflow-hidden rounded-full bg-white/10">
@@ -101,9 +104,12 @@ export function DiskCard() {
 }
 
 export function TrafficSplitCard() {
-  const { metrics, history } = useStore();
+  const { metrics, history } = useMetrics();
   const { t } = useI18n();
-  const spark = history.slice(-20).map((p, i) => ({ i, v: p.down + p.up }));
+  const spark = useMemo(
+    () => history.slice(-20).map((p, i) => ({ i, v: p.down + p.up })),
+    [history]
+  );
   return (
     <Card>
       <CardHeader>

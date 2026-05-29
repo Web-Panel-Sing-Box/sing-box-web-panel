@@ -1,5 +1,5 @@
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 
@@ -35,7 +35,7 @@ export function Segmented<T extends string>({
             )}
           >
             {active ? (
-              <motion.span
+              <m.span
                 layoutId={layoutId}
                 className="absolute inset-0 -z-10 rounded-full bg-elevated shadow-card"
                 transition={{ type: "spring", stiffness: 500, damping: 38 }}

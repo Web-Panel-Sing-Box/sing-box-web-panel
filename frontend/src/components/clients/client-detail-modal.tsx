@@ -9,7 +9,7 @@ import { Select } from "@/components/ui/select";
 import { Toggle } from "@/components/ui/toggle";
 import { useToast } from "@/components/ui/toast";
 import type { Client, ClientStatus } from "@/lib/mock/clients";
-import { useStore } from "@/lib/mock/store";
+import { useInbounds, useStoreActions } from "@/lib/mock/store";
 import { useI18n } from "@/lib/i18n";
 
 import { QrModal } from "./qr-modal";
@@ -22,7 +22,8 @@ type Props = {
 };
 
 export function ClientDetailModal({ client, onClose }: Props) {
-  const { inbounds, updateClient } = useStore();
+  const inbounds = useInbounds();
+  const { updateClient } = useStoreActions();
   const { push } = useToast();
   const { t } = useI18n();
 

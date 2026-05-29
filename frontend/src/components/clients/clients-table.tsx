@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { StatusDot } from "@/components/ui/status-dot";
 import { formatBytes, formatDate, truncateMiddle } from "@/lib/format";
-import { useStore } from "@/lib/mock/store";
+import { useClients, useInbounds } from "@/lib/mock/store";
+import { useClientFilter } from "@/hooks/useClientFilter";
 import type { Client } from "@/lib/mock/clients";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
@@ -22,19 +23,12 @@ type Props = {
 const GRID = "grid-cols-[1.4fr_220px_minmax(160px,1.6fr)_200px_140px] gap-x-3";
 
 export function ClientsTable({ filter, onSelect }: Props) {
-  const { clients, inbounds } = useStore();
+  const clients = useClients();
+  const inbounds = useInbounds();
   const { t } = useI18n();
   const inboundMap = useMemo(() => new Map(inbounds.map((i) => [i.id, i])), [inbounds]);
 
-  const rows = useMemo(() => {
-    const q = filter.query.trim().toLowerCase();
-    return clients.filter((c) => {
-      if (filter.inboundId !== "all" && c.inboundId !== filter.inboundId) return false;
-      if (filter.status !== "all" && c.status !== filter.status) return false;
-      if (!q) return true;
-      return c.name.toLowerCase().includes(q) || c.uuid.toLowerCase().includes(q);
-    });
-  }, [clients, filter]);
+  const rows = useClientFilter(clients, filter);
 
   return (
     <Card padded={false} className="flex max-h-[calc(100dvh-170px)] flex-col overflow-hidden">
@@ -62,7 +56,7 @@ export function ClientsTable({ filter, onSelect }: Props) {
                   inboundLabel={inbound?.remark ?? "—"}
                   pct={pct}
                   total={total}
-                  onClick={() => onSelect(c)}
+                  onSelect={onSelect}
                 />
               );
             })}
@@ -73,26 +67,29 @@ export function ClientsTable({ filter, onSelect }: Props) {
   );
 }
 
-function Row({
+const Row = memo(function Row({
   client,
   inboundLabel,
   pct,
   total,
-  onClick
+  onSelect
 }: {
   client: Client;
   inboundLabel: string;
   pct: number;
   total: number;
-  onClick: () => void;
+  onSelect: (client: Client) => void;
 }) {
   const [hover, setHover] = useState(false);
+  const handleClick = useCallback(() => onSelect(client), [onSelect, client]);
+  const handleEnter = useCallback(() => setHover(true), []);
+  const handleLeave = useCallback(() => setHover(false), []);
   return (
     <button
       type="button"
-      onClick={onClick}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      onClick={handleClick}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
       className={cn("grid w-full items-center px-5 py-3 text-left transition-colors duration-200", GRID, hover && "bg-elevated")}
     >
       <div className="min-w-0">
@@ -113,7 +110,7 @@ function Row({
       </div>
     </button>
   );
-}
+});
 
 function StatusBadge({ status }: { status: Client["status"] }) {
   const { t } = useI18n();

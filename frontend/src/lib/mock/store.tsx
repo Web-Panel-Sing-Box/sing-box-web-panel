@@ -14,12 +14,12 @@ import { SEED_INBOUNDS, type Inbound } from "./inbounds";
 import { buildLog, nextLog, seedLogs, type LogEntry, type LogLevel } from "./logs";
 import { initialMetrics, seedTrafficHistory, tickMetrics, type Metrics, type TrafficPoint } from "./metrics";
 
-type StoreState = {
+type MetricsSlice = {
   metrics: Metrics;
   history: TrafficPoint[];
-  inbounds: Inbound[];
-  clients: Client[];
-  logs: LogEntry[];
+};
+
+type RuntimeSlice = {
   paused: boolean;
 };
 
@@ -39,7 +39,12 @@ type StoreActions = {
   setCoreRunning: (v: boolean) => void;
 };
 
-const StoreContext = createContext<(StoreState & StoreActions) | null>(null);
+const MetricsContext = createContext<MetricsSlice | null>(null);
+const InboundsContext = createContext<Inbound[] | null>(null);
+const ClientsContext = createContext<Client[] | null>(null);
+const LogsContext = createContext<LogEntry[] | null>(null);
+const RuntimeContext = createContext<RuntimeSlice | null>(null);
+const ActionsContext = createContext<StoreActions | null>(null);
 
 export function MockStoreProvider({ children }: { children: React.ReactNode }) {
   const [metrics, setMetrics] = useState<Metrics>(() => initialMetrics());
@@ -50,11 +55,22 @@ export function MockStoreProvider({ children }: { children: React.ReactNode }) {
   const [paused, setPaused] = useState(false);
   const tickCount = useRef(0);
 
+  const inboundsRef = useRef(inbounds);
+  inboundsRef.current = inbounds;
+  const clientsCountRef = useRef(clients.length);
+  clientsCountRef.current = clients.length;
+
   useEffect(() => {
     if (paused) return;
     const id = window.setInterval(() => {
       tickCount.current += 1;
-      setMetrics((prev) => tickMetrics({ ...prev, inboundsActive: inbounds.filter((i) => i.enabled).length, totalUsers: clients.length }));
+      setMetrics((prev) =>
+        tickMetrics({
+          ...prev,
+          inboundsActive: inboundsRef.current.filter((i) => i.enabled).length,
+          totalUsers: clientsCountRef.current
+        })
+      );
       setHistory((prev) => {
         const last = prev[prev.length - 1];
         const next: TrafficPoint = {
@@ -73,7 +89,7 @@ export function MockStoreProvider({ children }: { children: React.ReactNode }) {
       }
     }, 1000);
     return () => window.clearInterval(id);
-  }, [paused, inbounds, clients.length]);
+  }, [paused]);
 
   const toggleInbound = useCallback((id: string) => {
     setInbounds((prev) => prev.map((ib) => (ib.id === id ? { ...ib, enabled: !ib.enabled } : ib)));
@@ -169,14 +185,10 @@ export function MockStoreProvider({ children }: { children: React.ReactNode }) {
     setMetrics((prev) => ({ ...prev, coreRunning: v }));
   }, []);
 
-  const value = useMemo<StoreState & StoreActions>(
+  const metricsValue = useMemo<MetricsSlice>(() => ({ metrics, history }), [metrics, history]);
+  const runtimeValue = useMemo<RuntimeSlice>(() => ({ paused }), [paused]);
+  const actionsValue = useMemo<StoreActions>(
     () => ({
-      metrics,
-      history,
-      inbounds,
-      clients,
-      logs,
-      paused,
       toggleInbound,
       addInbound,
       updateInbound,
@@ -192,12 +204,6 @@ export function MockStoreProvider({ children }: { children: React.ReactNode }) {
       setCoreRunning
     }),
     [
-      metrics,
-      history,
-      inbounds,
-      clients,
-      logs,
-      paused,
       toggleInbound,
       addInbound,
       updateInbound,
@@ -213,11 +219,53 @@ export function MockStoreProvider({ children }: { children: React.ReactNode }) {
     ]
   );
 
-  return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
+  return (
+    <ActionsContext.Provider value={actionsValue}>
+      <InboundsContext.Provider value={inbounds}>
+        <ClientsContext.Provider value={clients}>
+          <LogsContext.Provider value={logs}>
+            <RuntimeContext.Provider value={runtimeValue}>
+              <MetricsContext.Provider value={metricsValue}>{children}</MetricsContext.Provider>
+            </RuntimeContext.Provider>
+          </LogsContext.Provider>
+        </ClientsContext.Provider>
+      </InboundsContext.Provider>
+    </ActionsContext.Provider>
+  );
 }
 
-export function useStore() {
-  const ctx = useContext(StoreContext);
-  if (!ctx) throw new Error("useStore must be used inside <MockStoreProvider />");
+export function useMetrics(): MetricsSlice {
+  const ctx = useContext(MetricsContext);
+  if (!ctx) throw new Error("useMetrics must be used inside <MockStoreProvider />");
+  return ctx;
+}
+
+export function useInbounds(): Inbound[] {
+  const ctx = useContext(InboundsContext);
+  if (!ctx) throw new Error("useInbounds must be used inside <MockStoreProvider />");
+  return ctx;
+}
+
+export function useClients(): Client[] {
+  const ctx = useContext(ClientsContext);
+  if (!ctx) throw new Error("useClients must be used inside <MockStoreProvider />");
+  return ctx;
+}
+
+export function useLogs(): LogEntry[] {
+  const ctx = useContext(LogsContext);
+  if (!ctx) throw new Error("useLogs must be used inside <MockStoreProvider />");
+  return ctx;
+}
+
+export function useRuntime(): RuntimeSlice {
+  const ctx = useContext(RuntimeContext);
+  if (!ctx) throw new Error("useRuntime must be used inside <MockStoreProvider />");
+  return ctx;
+}
+
+export function useStoreActions(): StoreActions {
+  const ctx = useContext(ActionsContext);
+  if (!ctx) throw new Error("useStoreActions must be used inside <MockStoreProvider />");
   return ctx;
 }

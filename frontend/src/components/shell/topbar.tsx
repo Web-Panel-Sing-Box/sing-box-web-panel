@@ -2,7 +2,7 @@
 import { useLocation } from "react-router-dom";
 import { Menu } from "lucide-react";
 
-import { useStore } from "@/lib/mock/store";
+import { useMetrics, useStoreActions } from "@/lib/mock/store";
 import { StatusDot } from "@/components/ui/status-dot";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +16,8 @@ const TITLES: Record<string, string> = {
 
 export function TopBar({ onOpenMobile }: { onOpenMobile: () => void }) {
   const pathname = useLocation().pathname;
-  const { metrics, setCoreRunning } = useStore();
+  const { metrics } = useMetrics();
+  const { setCoreRunning } = useStoreActions();
   const title = TITLES[pathname] ?? "Sing Grok";
   const running = metrics.coreRunning;
 

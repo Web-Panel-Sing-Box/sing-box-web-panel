@@ -1,5 +1,7 @@
 import type { ReactElement } from "react";
+import { Suspense } from "react";
 import { render, type RenderOptions } from "@testing-library/react";
+import { LazyMotion, domMax } from "framer-motion";
 import { MemoryRouter } from "react-router-dom";
 
 import { Toaster } from "@/components/ui/toaster";
@@ -18,9 +20,13 @@ export function renderWithProviders(
   const body = withStore ? <MockStoreProvider>{ui}</MockStoreProvider> : ui;
   return render(
     <I18nProvider>
-      <Toaster>
-        <MemoryRouter initialEntries={[route]}>{body}</MemoryRouter>
-      </Toaster>
+      <LazyMotion features={domMax} strict>
+        <Toaster>
+          <MemoryRouter initialEntries={[route]}>
+            <Suspense fallback={null}>{body}</Suspense>
+          </MemoryRouter>
+        </Toaster>
+      </LazyMotion>
     </I18nProvider>,
     options
   );

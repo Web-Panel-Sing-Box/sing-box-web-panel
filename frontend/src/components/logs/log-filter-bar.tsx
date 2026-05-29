@@ -4,7 +4,7 @@ import { Pause, Play, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { useStore } from "@/lib/mock/store";
+import { useRuntime, useStoreActions } from "@/lib/mock/store";
 import { useI18n } from "@/lib/i18n";
 
 type LogFilter = {
@@ -18,7 +18,8 @@ type Props = {
 };
 
 export function LogFilterBar({ value, onChange }: Props) {
-  const { paused, setPaused } = useStore();
+  const { paused } = useRuntime();
+  const { setPaused } = useStoreActions();
   const { t } = useI18n();
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_180px_auto]">

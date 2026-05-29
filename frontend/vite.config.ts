@@ -3,10 +3,27 @@
 import path from "node:path";
 
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, type PluginOption } from "vite";
+import { visualizer } from "rollup-plugin-visualizer";
+
+const analyze = process.env.ANALYZE === "true";
+
+const plugins: PluginOption[] = [react()];
+
+if (analyze) {
+  plugins.push(
+    visualizer({
+      filename: "dist/stats.html",
+      gzipSize: true,
+      brotliSize: true,
+      template: "treemap",
+      open: true
+    }) as PluginOption
+  );
+}
 
 export default defineConfig({
-  plugins: [react()],
+  plugins,
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src")
@@ -24,7 +41,7 @@ export default defineConfig({
   },
   build: {
     outDir: "dist",
-    sourcemap: true
+    sourcemap: analyze
   },
   test: {
     environment: "jsdom",
