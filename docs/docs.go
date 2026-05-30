@@ -400,6 +400,543 @@ const docTemplate = `{
                 }
             }
         },
+        "/clients": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clients"
+                ],
+                "summary": "List clients",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Filter by inbound ID",
+                        "name": "inboundId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_transport_handler.clientDTO"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clients"
+                ],
+                "summary": "Create a client",
+                "parameters": [
+                    {
+                        "description": "Client",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.createClientRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.clientDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clients"
+                ],
+                "summary": "Get a client",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.clientDTO"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clients"
+                ],
+                "summary": "Update a client",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Patch",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.updateClientRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.clientDTO"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clients"
+                ],
+                "summary": "Delete a client",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/links": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clients"
+                ],
+                "summary": "Get a client's share link and subscription URL",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.clientLinksDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/reset-traffic": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clients"
+                ],
+                "summary": "Reset a client's traffic counters",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.clientDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/status": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clients"
+                ],
+                "summary": "Set a client's status",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.setStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.clientDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/core/config": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "core"
+                ],
+                "summary": "Preview the generated config",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/core/reload": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Renders config from the database, runs ` + "`" + `sing-box check` + "`" + `, installs it and reloads the core. A failed check returns 400 with the validation error and leaves the live config untouched.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "core"
+                ],
+                "summary": "Regenerate, validate and apply the config",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/core/restart": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "core"
+                ],
+                "summary": "Restart the core",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/core/start": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "core"
+                ],
+                "summary": "Start the core",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/core/status": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "core"
+                ],
+                "summary": "Core process status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.coreStatusDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/core/stop": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "core"
+                ],
+                "summary": "Stop the core",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/core/version": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "core"
+                ],
+                "summary": "Core version",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboard/metrics": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dashboard"
+                ],
+                "summary": "Dashboard metrics snapshot",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.metricsDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboard/traffic": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dashboard"
+                ],
+                "summary": "Recent throughput history",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_transport_handler.trafficPointDTO"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "description": "Returns server health status.",
@@ -413,6 +950,337 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/inbounds": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbounds"
+                ],
+                "summary": "List inbounds",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_transport_handler.inboundDTO"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbounds"
+                ],
+                "summary": "Create an inbound",
+                "parameters": [
+                    {
+                        "description": "Inbound",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.inboundRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.inboundDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/inbounds/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbounds"
+                ],
+                "summary": "Get an inbound",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Inbound ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.inboundDTO"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbounds"
+                ],
+                "summary": "Update an inbound",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Inbound ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Inbound",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.inboundRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.inboundDTO"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbounds"
+                ],
+                "summary": "Delete an inbound",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Inbound ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/inbounds/{id}/clone": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbounds"
+                ],
+                "summary": "Clone an inbound",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Inbound ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.inboundDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/inbounds/{id}/toggle": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbounds"
+                ],
+                "summary": "Enable/disable an inbound",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Inbound ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.inboundDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/logs": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns recent core and panel log lines from the in-memory ring buffer.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "logs"
+                ],
+                "summary": "Recent log lines",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "info | warn | error",
+                        "name": "level",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "substring filter",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "max lines (default 200)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_transport_handler.logEntryDTO"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/subscription/{token}": {
+            "get": {
+                "description": "Returns the client's connection config. ?format=base64|plain|json (default base64).",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "subscription"
+                ],
+                "summary": "Fetch a subscription (public)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Subscription token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "base64 | plain | json",
+                        "name": "format",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -438,6 +1306,55 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_transport_handler.clientDTO": {
+            "type": "object",
+            "properties": {
+                "expiry": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "inboundId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "startAfterFirstUse": {
+                    "type": "boolean"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "subscription": {
+                    "type": "string"
+                },
+                "totalQuota": {
+                    "type": "integer"
+                },
+                "usedDown": {
+                    "type": "integer"
+                },
+                "usedUp": {
+                    "type": "integer"
+                },
+                "uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_transport_handler.clientLinksDTO": {
+            "type": "object",
+            "properties": {
+                "link": {
+                    "type": "string"
+                },
+                "subscription": {
+                    "type": "string"
+                }
+            }
+        },
         "internal_transport_handler.confirmTOTPRequest": {
             "type": "object",
             "properties": {
@@ -447,12 +1364,182 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_transport_handler.coreStatusDTO": {
+            "type": "object",
+            "properties": {
+                "pid": {
+                    "type": "integer"
+                },
+                "running": {
+                    "type": "boolean"
+                },
+                "uptimeSeconds": {
+                    "type": "integer"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_transport_handler.createClientRequest": {
+            "type": "object",
+            "properties": {
+                "expiry": {
+                    "type": "string"
+                },
+                "inboundId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "startAfterFirstUse": {
+                    "type": "boolean"
+                },
+                "totalQuota": {
+                    "type": "integer"
+                }
+            }
+        },
         "internal_transport_handler.disableTOTPRequest": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "string",
                     "example": "123456"
+                }
+            }
+        },
+        "internal_transport_handler.diskSegmentDTO": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "totalBytes": {
+                    "type": "integer"
+                },
+                "usedBytes": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_transport_handler.inboundDTO": {
+            "type": "object",
+            "properties": {
+                "clientCount": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "dest": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "settings": {
+                    "$ref": "#/definitions/internal_transport_handler.inboundSettingsDTO"
+                },
+                "sni": {
+                    "type": "string"
+                },
+                "tls": {
+                    "type": "string"
+                },
+                "transmission": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_transport_handler.inboundRequest": {
+            "type": "object",
+            "properties": {
+                "acmeDomain": {
+                    "type": "string"
+                },
+                "acmeEmail": {
+                    "type": "string"
+                },
+                "certPath": {
+                    "type": "string"
+                },
+                "dest": {
+                    "type": "string"
+                },
+                "keyPath": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "sni": {
+                    "type": "string"
+                },
+                "tls": {
+                    "type": "string"
+                },
+                "transmission": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_transport_handler.inboundSettingsDTO": {
+            "type": "object",
+            "properties": {
+                "flow": {
+                    "type": "string"
+                },
+                "grpcServiceName": {
+                    "type": "string"
+                },
+                "publicKey": {
+                    "type": "string"
+                },
+                "shortId": {
+                    "type": "string"
+                },
+                "wsPath": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_transport_handler.logEntryDTO": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "level": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "t": {
+                    "type": "integer"
                 }
             }
         },
@@ -503,6 +1590,119 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "internal_transport_handler.metricsDTO": {
+            "type": "object",
+            "properties": {
+                "coreRunning": {
+                    "type": "boolean"
+                },
+                "coreVersion": {
+                    "type": "string"
+                },
+                "cpu": {
+                    "type": "number"
+                },
+                "diskSegments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_transport_handler.diskSegmentDTO"
+                    }
+                },
+                "downloadBps": {
+                    "type": "integer"
+                },
+                "inboundsActive": {
+                    "type": "integer"
+                },
+                "monthBytes": {
+                    "type": "integer"
+                },
+                "onlineNow": {
+                    "type": "integer"
+                },
+                "ram": {
+                    "type": "number"
+                },
+                "ramTotalBytes": {
+                    "type": "integer"
+                },
+                "ramUsedBytes": {
+                    "type": "integer"
+                },
+                "swap": {
+                    "type": "number"
+                },
+                "swapTotalBytes": {
+                    "type": "integer"
+                },
+                "swapUsedBytes": {
+                    "type": "integer"
+                },
+                "todayBytes": {
+                    "type": "integer"
+                },
+                "totalReceived": {
+                    "type": "integer"
+                },
+                "totalSent": {
+                    "type": "integer"
+                },
+                "totalUsers": {
+                    "type": "integer"
+                },
+                "uploadBps": {
+                    "type": "integer"
+                },
+                "uptimeSeconds": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_transport_handler.setStatusRequest": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_transport_handler.trafficPointDTO": {
+            "type": "object",
+            "properties": {
+                "down": {
+                    "type": "integer"
+                },
+                "t": {
+                    "type": "integer"
+                },
+                "up": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_transport_handler.updateClientRequest": {
+            "type": "object",
+            "properties": {
+                "expiry": {
+                    "type": "string"
+                },
+                "inboundId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "startAfterFirstUse": {
+                    "type": "boolean"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "totalQuota": {
+                    "type": "integer"
                 }
             }
         }

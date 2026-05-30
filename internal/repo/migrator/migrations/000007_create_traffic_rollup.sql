@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS traffic_rollup (
+    day        TEXT     PRIMARY KEY,
+    up         INTEGER  NOT NULL DEFAULT 0,
+    down       INTEGER  NOT NULL DEFAULT 0,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

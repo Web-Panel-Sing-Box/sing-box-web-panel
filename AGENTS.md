@@ -22,6 +22,7 @@ internal/
       argon2.go                          # Argon2id hashing (PHC format)
       jwt.go                             # JWT create/validate + TOTP-pending tokens
       totp.go                            # TOTP secret generation, validation, recovery codes
+    keys/keys.go                         # Reality x25519 keypair, short_id, UUID, tokens, passwords
     sl/slog.go                           # shared slog helpers (Error attr, SetupPrettySlog)
   repo/
     storage.go                           # sentinel errors (ErrNotFound, ErrExist)
@@ -33,19 +34,31 @@ internal/
       admin_repo.go                      # AdminRepository impl
       recovery_repo.go                   # RecoveryCodeRepository impl
   services/
-    auth/
-      auth.go                            # AuthService: Login, SetupTOTP, ConfirmTOTP, ChangePassword, etc.
-      errors.go                          # domain errors (ErrInvalidCredentials, etc.)
-      otp_adapter.go                     # TOTPProvider adapter for TOTPManager
-      time.go                            # timeNow = time.Now (testability)
+    auth/                                # AuthService (login, TOTP, recovery, change-password)
+    inbound/service.go                   # inbound CRUD + validation + Reality/transport defaults
+    client/service.go                    # client CRUD, status/quota transitions, credential + sub-token gen
+    singbox/                             # config generation + core lifecycle
+      schema.go                          # minimal sing-box config structs (JSON tags match the core)
+      generator.go                       # render config.json from the DB (targets sing-box 1.11–1.14)
+      checker.go                         # `sing-box check` wrapper
+      process.go                         # ProcessManager: systemd + subprocess adapters + auto-detect
+      apply.go                           # render→check→atomic write→reload→record revision (debounced)
+    stats/                               # traffic metrics + quota enforcement
+      source.go                          # LiveSource / UserSource interfaces, LiveHolder (+ history)
+      clash.go                           # Clash REST adapter (global throughput, online count)
+      v2ray.go                           # V2Ray gRPC stats adapter (opt-in; per-user counters)
+      worker.go                          # live sampling + expiry/quota enforcement + batched accounting
+    sublink/                             # vless/hysteria2/naive link + subscription (base64/plain/json)
+    sysstat/                             # host CPU/RAM/disk/uptime (linux /proc; stub elsewhere)
+    tlsmgr/tlsmgr.go                     # panel TLS: file | self-signed (bare IP) | acme autocert
+    logbuf/logbuf.go                     # in-memory log ring (slog tee + core-log line writer)
   transport/
-    handler/
-      auth_handler.go                    # /api/auth/* HTTP handlers
-      health_handler.go                  # GET /, GET /health
+    handler/                             # auth, health, inbound, client, core, dashboard, logs, subscription
     middleware/
-      auth.go                            # JWT auth middleware (cookie + Bearer)
+      auth.go                            # JWT auth middleware (cookie + Bearer; public paths/prefixes)
       cors.go                            # CORS middleware (OPTIONS preflight, origin validation)
       logger.go                          # structured request logging (method, path, status, duration)
+      ratelimit.go                       # per-IP token-bucket (login brute-force + general API limit)
 frontend/                                # Vite SPA (see frontend/package.json)
 tests/                                   # mirrored project structure, external test packages
   lib/auth/                              # Argon2, JWT, TOTP unit tests
@@ -81,16 +94,35 @@ config/dev.yaml                          # development YAML config
 | POST | `/api/auth/totp/confirm` | JWT | Confirm TOTP, get recovery codes |
 | POST | `/api/auth/totp/disable` | JWT | Disable TOTP (requires code) |
 | POST | `/api/auth/change-password` | JWT | Change password |
+| GET/POST | `/api/inbounds` | JWT | List / create inbounds |
+| GET/PUT/DELETE | `/api/inbounds/{id}` | JWT | Read / update / delete an inbound |
+| POST | `/api/inbounds/{id}/toggle` | JWT | Enable/disable an inbound |
+| POST | `/api/inbounds/{id}/clone` | JWT | Clone an inbound (new port, disabled) |
+| GET/POST | `/api/clients` | JWT | List (`?inboundId=`) / create clients |
+| GET/PUT/DELETE | `/api/clients/{id}` | JWT | Read / update / delete a client |
+| POST | `/api/clients/{id}/reset-traffic` | JWT | Reset a client's counters |
+| POST | `/api/clients/{id}/status` | JWT | Set client status |
+| GET | `/api/clients/{id}/links` | JWT | Share link + subscription URL |
+| GET | `/api/core/status` | JWT | sing-box process status |
+| POST | `/api/core/{start\|stop\|restart\|reload}` | JWT | Lifecycle; reload = render+check+apply |
+| GET | `/api/core/version` | JWT | Core version |
+| GET | `/api/core/config` | JWT | Preview generated config |
+| GET | `/api/dashboard/metrics` | JWT | Dashboard metrics snapshot |
+| GET | `/api/dashboard/traffic` | JWT | Throughput history |
+| GET | `/api/logs` | JWT | Recent core + panel log lines |
+| GET | `/sub/{token}` | — | Public subscription (`?format=base64\|plain\|json`) |
+| GET | `/api/subscription/{token}` | — | Public subscription (alias) |
 
 ## Middleware Stack (outer to inner)
 
 ```
-Logger → CORS → Auth → Mux
+Logger → API RateLimit → Login RateLimit → CORS → Auth → Mux
 ```
 
 - **Logger**: logs method, path, status, size, duration. 4xx→WARN, 5xx→ERROR.
+- **RateLimit**: per-IP token bucket. A general API limit (`auth.api_rate_limit`, default 100/s) plus a stricter login limit (`auth.login_rate_limit`, default 5/m) on `/api/auth/login*` for brute-force protection. Over-limit → 429.
 - **CORS**: handles OPTIONS preflight (204), validates Origin on non-OPTIONS cross-domain requests. Same-origin always allowed. Allowed origins: localhost:3000, 127.0.0.1:3000.
-- **Auth**: public paths skip auth (`/`, `/health`, `/swagger/*`, `/api/auth/login*`, `/api/auth/logout`). Protected paths require JWT via `Authorization: Bearer <token>` header or `token` cookie.
+- **Auth**: public paths skip auth (`/`, `/health`, `/api/auth/login*`, `/api/auth/logout`); public prefixes are `/swagger`, `/sub/`, `/api/subscription/` (subscription token is the credential). Protected paths require JWT via `Authorization: Bearer <token>` header or `token` cookie.
 
 ## Frontend Conventions
 
@@ -164,8 +196,11 @@ Direct (in go.mod):
 - `github.com/ilyakaznacheev/cleanenv` — config
 - `modernc.org/sqlite` — pure-Go SQLite
 - `github.com/fatih/color` — dev-mode colored output
-- `golang.org/x/crypto` — Argon2id
+- `golang.org/x/crypto` — Argon2id, x25519 (Reality keys), `acme/autocert` (panel Let's Encrypt)
 - `github.com/golang-jwt/jwt/v5` — JWT
 - `github.com/pquerna/otp` — TOTP
 - `github.com/swaggo/http-swagger/v2` — Swagger UI
 - `github.com/swaggo/swag` — Swagger spec generation
+- `google.golang.org/grpc` + `google.golang.org/protobuf` — V2Ray API stats adapter (opt-in; isolated to `internal/services/stats/v2ray.go`, hand-rolled protowire codec, no generated code)
+
+System metrics are read directly from `/proc` + `syscall` on Linux (no dependency); subscription QR rendering is a frontend concern.

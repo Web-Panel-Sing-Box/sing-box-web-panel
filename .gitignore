@@ -26,3 +26,7 @@ secrets/
 config.json
 config.json.bak-*
 sing-box
+storage/
+
+# Local reference clones (sing-box, 3x-ui) used for development only
+.refs/

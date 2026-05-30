@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS config_revisions (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    sha256     TEXT     NOT NULL,
+    ok         BOOLEAN  NOT NULL DEFAULT 0,
+    error      TEXT     NOT NULL DEFAULT '',
+    applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

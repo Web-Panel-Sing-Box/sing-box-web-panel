@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"sing-box-web-panel/docs"
@@ -25,6 +26,13 @@ import (
 	"sing-box-web-panel/internal/lib/sl"
 	sqliterepo "sing-box-web-panel/internal/repo/sqlite"
 	"sing-box-web-panel/internal/services/auth"
+	svcclient "sing-box-web-panel/internal/services/client"
+	svcinbound "sing-box-web-panel/internal/services/inbound"
+	"sing-box-web-panel/internal/services/logbuf"
+	"sing-box-web-panel/internal/services/singbox"
+	"sing-box-web-panel/internal/services/stats"
+	"sing-box-web-panel/internal/services/sysstat"
+	"sing-box-web-panel/internal/services/tlsmgr"
 	"sing-box-web-panel/internal/transport/handler"
 	"sing-box-web-panel/internal/transport/middleware"
 
@@ -33,7 +41,8 @@ import (
 
 func main() {
 	cfg := config.MustLoad()
-	log := setupLogger(cfg.Env)
+	logBuf := logbuf.New(cfg.Logging.MaxMemoryLines)
+	log := setupLogger(cfg.Env, logBuf)
 
 	log.Info("starting server", slog.String("env", cfg.Env))
 
@@ -85,10 +94,79 @@ func main() {
 	healthHandler := handler.NewHealthHandler()
 	healthHandler.Register(mux)
 
+	// Background worker context: cancelled during shutdown to stop the apply loop.
+	rootCtx, rootCancel := context.WithCancel(context.Background())
+	defer rootCancel()
+
+	inboundRepo := sqliterepo.NewInboundRepo(storage)
+	clientRepo := sqliterepo.NewClientRepo(storage)
+	configRevRepo := sqliterepo.NewConfigRevisionRepo(storage)
+
+	// Resolve sing-box paths to absolute so the subprocess working dir does not
+	// double-apply to a relative config path.
+	absConfigPath := absPath(cfg.SingBox.ConfigPath)
+	absWorkingDir := absPath(cfg.SingBox.WorkingDir)
+
+	// sing-box config generation + lifecycle.
+	generator := singbox.NewGenerator(inboundRepo, clientRepo, singbox.GeneratorConfig{
+		LogLevel:        "info",
+		InboundListen:   "::",
+		ClashAPIAddress: cfg.SingBox.APIAddress,
+		ClashAPISecret:  cfg.SingBox.APISecret,
+		CacheFilePath:   filepath.Join(absWorkingDir, "cache.db"),
+		StatsSource:     cfg.Stats.Source,
+		V2RayAPIListen:  cfg.Stats.V2RayAPIAddress,
+	})
+	checker := singbox.NewChecker(cfg.SingBox.BinaryPath, cfg.SingBox.CheckTimeout)
+	processMgr := singbox.NewProcessManager(singbox.ProcessConfig{
+		Mode:         cfg.SingBox.ProcessMode,
+		Binary:       cfg.SingBox.BinaryPath,
+		ConfigPath:   absConfigPath,
+		WorkingDir:   absWorkingDir,
+		ServiceName:  cfg.SingBox.ServiceName,
+		RestartDelay: cfg.SingBox.RestartDelay,
+	}, logBuf.Writer(), log)
+	applier := singbox.NewApplier(generator, checker, processMgr, configRevRepo, absConfigPath, log)
+	go applier.Run(rootCtx)
+
+	// Inbound and client management; the applier is the (debounced) ConfigTrigger.
+	inboundSvc := svcinbound.NewService(inboundRepo, clientRepo, applier)
+	clientSvc := svcclient.NewService(clientRepo, inboundRepo, applier)
+
+	settingRepo := sqliterepo.NewSettingRepo(storage)
+	trafficRepo := sqliterepo.NewTrafficRepo(storage)
+
+	// Traffic stats + quota worker. Clash REST is the live dashboard source; the
+	// per-user source (V2Ray gRPC) stays nil unless explicitly enabled.
+	liveHolder := &stats.LiveHolder{}
+	clashSource := stats.NewClashSource(cfg.SingBox.APIAddress, cfg.SingBox.APISecret)
+	// Per-user accounting source: V2Ray gRPC stats, only when explicitly enabled
+	// (requires a with_v2ray_api binary). Otherwise quota is enforced by expiry.
+	var userSource stats.UserSource
+	if cfg.Stats.Source == "v2ray" {
+		userSource = stats.NewV2RaySource(cfg.Stats.V2RayAPIAddress)
+		log.Info("per-user stats via v2ray api", slog.String("addr", cfg.Stats.V2RayAPIAddress))
+	}
+	statsWorker := stats.NewWorker(clashSource, userSource, clientRepo, trafficRepo, applier, liveHolder, stats.WorkerConfig{
+		SampleInterval: cfg.Metrics.TrafficInterval,
+		FlushInterval:  cfg.Metrics.BatchFlushInterval,
+	}, log)
+	statsWorker.Run(rootCtx)
+
+	handler.NewInboundHandler(inboundSvc, log).Register(mux)
+	handler.NewClientHandler(clientSvc, cfg.Sub.PublicURL, log).Register(mux)
+	handler.NewCoreHandler(processMgr, applier, log).Register(mux)
+	handler.NewSubscriptionHandler(clientRepo, inboundRepo, settingRepo, cfg.Sub.PublicURL, "", log).Register(mux)
+	handler.NewDashboardHandler(sysstat.New(), liveHolder, clientRepo, inboundRepo, trafficRepo, processMgr, log).Register(mux)
+	handler.NewLogsHandler(logBuf).Register(mux)
+
 	corsOrigins := []string{"http://localhost:3000", "http://127.0.0.1:3000"}
 
 	stack := middleware.Auth(jwtMgr)(mux)
 	stack = middleware.CORS(corsOrigins)(stack)
+	// Stricter brute-force limit on login, then a general per-IP API limit.
+	stack = middleware.RateLimit(cfg.Auth.LoginRateLimit, middleware.LoginPathMatcher, log)(stack)
+	stack = middleware.RateLimit(cfg.Auth.APIRateLimit, middleware.APIPathMatcher, log)(stack)
 	stack = middleware.Logger(log)(stack)
 
 	server := &http.Server{
@@ -100,19 +178,48 @@ func main() {
 		MaxHeaderBytes: cfg.HTTP.MaxHeaderBytes,
 	}
 
+	tlsMgr := tlsmgr.New(tlsmgr.Config{
+		Mode:            cfg.TLS.Mode,
+		CertFile:        cfg.TLS.CertFile,
+		KeyFile:         cfg.TLS.KeyFile,
+		ACMEEmail:       cfg.TLS.ACMEEmail,
+		ACMEDomains:     cfg.TLS.ACMEDomains,
+		ACMECacheDir:    cfg.TLS.ACMECacheDir,
+		SelfSignedHosts: cfg.TLS.SelfSignedHosts,
+		SelfSignedDir:   cfg.TLS.SelfSignedDir,
+	})
+	tlsConf, err := tlsMgr.TLSConfig()
+	if err != nil {
+		log.Error("tls setup", sl.Error(err))
+		os.Exit(1)
+	}
+	server.TLSConfig = tlsConf
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
 	go func() {
-		log.Info("http server listening", slog.String("addr", cfg.HTTP.Address))
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Error("http server error", sl.Error(err))
+		scheme := "http"
+		if tlsMgr.Enabled() {
+			scheme = "https"
+		}
+		log.Info("server listening", slog.String("addr", cfg.HTTP.Address), slog.String("scheme", scheme))
+
+		var serveErr error
+		if tlsMgr.Enabled() {
+			serveErr = server.ListenAndServeTLS("", "") // certs come from TLSConfig
+		} else {
+			serveErr = server.ListenAndServe()
+		}
+		if serveErr != nil && serveErr != http.ErrServerClosed {
+			log.Error("http server error", sl.Error(serveErr))
 			os.Exit(1)
 		}
 	}()
 
 	<-ctx.Done()
 	log.Info("shutting down")
+	rootCancel() // stop background workers (apply loop, etc.)
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.HTTP.ShutdownTimeout)
 	defer cancel()
@@ -132,11 +239,22 @@ func shutdown(storage interface{ Close() error }, log *slog.Logger, _ *config.Co
 	}
 }
 
-func setupLogger(env string) *slog.Logger {
+// absPath resolves p to an absolute path, falling back to p on error.
+func absPath(p string) string {
+	if abs, err := filepath.Abs(p); err == nil {
+		return abs
+	}
+	return p
+}
+
+func setupLogger(env string, buf *logbuf.Buffer) *slog.Logger {
+	var base slog.Handler
 	switch env {
 	case "dev", "local":
-		return sl.SetupPrettySlog()
+		base = sl.SetupPrettySlog().Handler()
 	default:
-		return slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
+		base = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
 	}
+	// Tee every record into the in-memory ring so the Logs view can show them.
+	return slog.New(logbuf.NewTeeHandler(base, buf))
 }

@@ -1,0 +1,275 @@
+package handler
+
+import (
+	"log/slog"
+	"net/http"
+	"strconv"
+	"time"
+
+	"sing-box-web-panel/internal/domain"
+	svcinbound "sing-box-web-panel/internal/services/inbound"
+)
+
+type InboundHandler struct {
+	svc *svcinbound.Service
+	log *slog.Logger
+}
+
+func NewInboundHandler(svc *svcinbound.Service, log *slog.Logger) *InboundHandler {
+	return &InboundHandler{svc: svc, log: log}
+}
+
+func (h *InboundHandler) Register(mux *http.ServeMux) {
+	mux.HandleFunc("GET /api/inbounds", h.List)
+	mux.HandleFunc("POST /api/inbounds", h.Create)
+	mux.HandleFunc("GET /api/inbounds/{id}", h.Get)
+	mux.HandleFunc("PUT /api/inbounds/{id}", h.Update)
+	mux.HandleFunc("DELETE /api/inbounds/{id}", h.Delete)
+	mux.HandleFunc("POST /api/inbounds/{id}/toggle", h.Toggle)
+	mux.HandleFunc("POST /api/inbounds/{id}/clone", h.Clone)
+}
+
+type inboundSettingsDTO struct {
+	PublicKey       string `json:"publicKey,omitempty"`
+	ShortID         string `json:"shortId,omitempty"`
+	Flow            string `json:"flow,omitempty"`
+	WSPath          string `json:"wsPath,omitempty"`
+	GRPCServiceName string `json:"grpcServiceName,omitempty"`
+}
+
+type inboundDTO struct {
+	ID           string              `json:"id"`
+	Remark       string              `json:"remark"`
+	Protocol     string              `json:"protocol"`
+	Port         int                 `json:"port"`
+	Transmission string              `json:"transmission"`
+	TLS          string              `json:"tls"`
+	SNI          string              `json:"sni,omitempty"`
+	Dest         string              `json:"dest,omitempty"`
+	Enabled      bool                `json:"enabled"`
+	ClientCount  int                 `json:"clientCount"`
+	CreatedAt    string              `json:"createdAt"`
+	Settings     *inboundSettingsDTO `json:"settings,omitempty"`
+}
+
+func toInboundDTO(ib *domain.Inbound, clientCount int) inboundDTO {
+	dto := inboundDTO{
+		ID:           strconv.FormatInt(ib.ID, 10),
+		Remark:       ib.Remark,
+		Protocol:     string(ib.Protocol),
+		Port:         ib.Port,
+		Transmission: string(ib.Transmission),
+		TLS:          string(ib.TLS),
+		SNI:          ib.SNI,
+		Dest:         ib.Dest,
+		Enabled:      ib.Enabled,
+		ClientCount:  clientCount,
+		CreatedAt:    ib.CreatedAt.UTC().Format(time.RFC3339),
+	}
+	// Surface only non-secret settings; never expose the Reality private key.
+	s := inboundSettingsDTO{
+		PublicKey:       ib.Settings.RealityPublicKey,
+		ShortID:         ib.Settings.RealityShortID,
+		Flow:            ib.Settings.Flow,
+		WSPath:          ib.Settings.WSPath,
+		GRPCServiceName: ib.Settings.GRPCServiceName,
+	}
+	if s != (inboundSettingsDTO{}) {
+		dto.Settings = &s
+	}
+	return dto
+}
+
+type inboundRequest struct {
+	Remark       string `json:"remark"`
+	Protocol     string `json:"protocol"`
+	Port         int    `json:"port"`
+	Transmission string `json:"transmission"`
+	TLS          string `json:"tls"`
+	SNI          string `json:"sni"`
+	Dest         string `json:"dest"`
+	ACMEDomain   string `json:"acmeDomain,omitempty"`
+	ACMEEmail    string `json:"acmeEmail,omitempty"`
+	CertPath     string `json:"certPath,omitempty"`
+	KeyPath      string `json:"keyPath,omitempty"`
+}
+
+func (req inboundRequest) toInput() svcinbound.Input {
+	return svcinbound.Input{
+		Remark:       req.Remark,
+		Protocol:     domain.Protocol(req.Protocol),
+		Port:         req.Port,
+		Transmission: domain.Transmission(req.Transmission),
+		TLS:          domain.TLSMode(req.TLS),
+		SNI:          req.SNI,
+		Dest:         req.Dest,
+		ACMEDomain:   req.ACMEDomain,
+		ACMEEmail:    req.ACMEEmail,
+		CertPath:     req.CertPath,
+		KeyPath:      req.KeyPath,
+	}
+}
+
+// List godoc
+//
+//	@Summary	List inbounds
+//	@Tags		inbounds
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Success	200	{array}	inboundDTO
+//	@Router		/inbounds [get]
+func (h *InboundHandler) List(w http.ResponseWriter, r *http.Request) {
+	views, err := h.svc.List(r.Context())
+	if err != nil {
+		writeServiceError(w, h.log, "list inbounds", err)
+		return
+	}
+	out := make([]inboundDTO, 0, len(views))
+	for i := range views {
+		out = append(out, toInboundDTO(&views[i].Inbound, views[i].ClientCount))
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+// Create godoc
+//
+//	@Summary	Create an inbound
+//	@Tags		inbounds
+//	@Accept		json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param		request	body		inboundRequest	true	"Inbound"
+//	@Success	201		{object}	inboundDTO
+//	@Router		/inbounds [post]
+func (h *InboundHandler) Create(w http.ResponseWriter, r *http.Request) {
+	var req inboundRequest
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+	ib, err := h.svc.Create(r.Context(), req.toInput())
+	if err != nil {
+		writeServiceError(w, h.log, "create inbound", err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, toInboundDTO(ib, 0))
+}
+
+// Get godoc
+//
+//	@Summary	Get an inbound
+//	@Tags		inbounds
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param		id	path		int	true	"Inbound ID"
+//	@Success	200	{object}	inboundDTO
+//	@Router		/inbounds/{id} [get]
+func (h *InboundHandler) Get(w http.ResponseWriter, r *http.Request) {
+	id, ok := idParam(r)
+	if !ok {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
+		return
+	}
+	ib, err := h.svc.Get(r.Context(), id)
+	if err != nil {
+		writeServiceError(w, h.log, "get inbound", err)
+		return
+	}
+	writeJSON(w, http.StatusOK, toInboundDTO(ib, 0))
+}
+
+// Update godoc
+//
+//	@Summary	Update an inbound
+//	@Tags		inbounds
+//	@Accept		json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param		id		path		int				true	"Inbound ID"
+//	@Param		request	body		inboundRequest	true	"Inbound"
+//	@Success	200		{object}	inboundDTO
+//	@Router		/inbounds/{id} [put]
+func (h *InboundHandler) Update(w http.ResponseWriter, r *http.Request) {
+	id, ok := idParam(r)
+	if !ok {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
+		return
+	}
+	var req inboundRequest
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+	ib, err := h.svc.Update(r.Context(), id, req.toInput())
+	if err != nil {
+		writeServiceError(w, h.log, "update inbound", err)
+		return
+	}
+	writeJSON(w, http.StatusOK, toInboundDTO(ib, 0))
+}
+
+// Delete godoc
+//
+//	@Summary	Delete an inbound
+//	@Tags		inbounds
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param		id	path	int	true	"Inbound ID"
+//	@Success	200	{object}	map[string]string
+//	@Router		/inbounds/{id} [delete]
+func (h *InboundHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	id, ok := idParam(r)
+	if !ok {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
+		return
+	}
+	if err := h.svc.Delete(r.Context(), id); err != nil {
+		writeServiceError(w, h.log, "delete inbound", err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"message": "deleted"})
+}
+
+// Toggle godoc
+//
+//	@Summary	Enable/disable an inbound
+//	@Tags		inbounds
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param		id	path		int	true	"Inbound ID"
+//	@Success	200	{object}	inboundDTO
+//	@Router		/inbounds/{id}/toggle [post]
+func (h *InboundHandler) Toggle(w http.ResponseWriter, r *http.Request) {
+	id, ok := idParam(r)
+	if !ok {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
+		return
+	}
+	ib, err := h.svc.Toggle(r.Context(), id)
+	if err != nil {
+		writeServiceError(w, h.log, "toggle inbound", err)
+		return
+	}
+	writeJSON(w, http.StatusOK, toInboundDTO(ib, 0))
+}
+
+// Clone godoc
+//
+//	@Summary	Clone an inbound
+//	@Tags		inbounds
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param		id	path		int	true	"Inbound ID"
+//	@Success	201	{object}	inboundDTO
+//	@Router		/inbounds/{id}/clone [post]
+func (h *InboundHandler) Clone(w http.ResponseWriter, r *http.Request) {
+	id, ok := idParam(r)
+	if !ok {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
+		return
+	}
+	ib, err := h.svc.Clone(r.Context(), id)
+	if err != nil {
+		writeServiceError(w, h.log, "clone inbound", err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, toInboundDTO(ib, 0))
+}

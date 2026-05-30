@@ -9,17 +9,160 @@ definitions:
         example: newpass
         type: string
     type: object
+  internal_transport_handler.clientDTO:
+    properties:
+      expiry:
+        type: string
+      id:
+        type: string
+      inboundId:
+        type: string
+      name:
+        type: string
+      startAfterFirstUse:
+        type: boolean
+      status:
+        type: string
+      subscription:
+        type: string
+      totalQuota:
+        type: integer
+      usedDown:
+        type: integer
+      usedUp:
+        type: integer
+      uuid:
+        type: string
+    type: object
+  internal_transport_handler.clientLinksDTO:
+    properties:
+      link:
+        type: string
+      subscription:
+        type: string
+    type: object
   internal_transport_handler.confirmTOTPRequest:
     properties:
       code:
         example: "123456"
         type: string
     type: object
+  internal_transport_handler.coreStatusDTO:
+    properties:
+      pid:
+        type: integer
+      running:
+        type: boolean
+      uptimeSeconds:
+        type: integer
+      version:
+        type: string
+    type: object
+  internal_transport_handler.createClientRequest:
+    properties:
+      expiry:
+        type: string
+      inboundId:
+        type: string
+      name:
+        type: string
+      startAfterFirstUse:
+        type: boolean
+      totalQuota:
+        type: integer
+    type: object
   internal_transport_handler.disableTOTPRequest:
     properties:
       code:
         example: "123456"
         type: string
+    type: object
+  internal_transport_handler.diskSegmentDTO:
+    properties:
+      color:
+        type: string
+      label:
+        type: string
+      totalBytes:
+        type: integer
+      usedBytes:
+        type: integer
+    type: object
+  internal_transport_handler.inboundDTO:
+    properties:
+      clientCount:
+        type: integer
+      createdAt:
+        type: string
+      dest:
+        type: string
+      enabled:
+        type: boolean
+      id:
+        type: string
+      port:
+        type: integer
+      protocol:
+        type: string
+      remark:
+        type: string
+      settings:
+        $ref: '#/definitions/internal_transport_handler.inboundSettingsDTO'
+      sni:
+        type: string
+      tls:
+        type: string
+      transmission:
+        type: string
+    type: object
+  internal_transport_handler.inboundRequest:
+    properties:
+      acmeDomain:
+        type: string
+      acmeEmail:
+        type: string
+      certPath:
+        type: string
+      dest:
+        type: string
+      keyPath:
+        type: string
+      port:
+        type: integer
+      protocol:
+        type: string
+      remark:
+        type: string
+      sni:
+        type: string
+      tls:
+        type: string
+      transmission:
+        type: string
+    type: object
+  internal_transport_handler.inboundSettingsDTO:
+    properties:
+      flow:
+        type: string
+      grpcServiceName:
+        type: string
+      publicKey:
+        type: string
+      shortId:
+        type: string
+      wsPath:
+        type: string
+    type: object
+  internal_transport_handler.logEntryDTO:
+    properties:
+      id:
+        type: string
+      level:
+        type: string
+      message:
+        type: string
+      t:
+        type: integer
     type: object
   internal_transport_handler.loginRecoveryRequest:
     properties:
@@ -54,6 +197,80 @@ definitions:
         type: string
       username:
         type: string
+    type: object
+  internal_transport_handler.metricsDTO:
+    properties:
+      coreRunning:
+        type: boolean
+      coreVersion:
+        type: string
+      cpu:
+        type: number
+      diskSegments:
+        items:
+          $ref: '#/definitions/internal_transport_handler.diskSegmentDTO'
+        type: array
+      downloadBps:
+        type: integer
+      inboundsActive:
+        type: integer
+      monthBytes:
+        type: integer
+      onlineNow:
+        type: integer
+      ram:
+        type: number
+      ramTotalBytes:
+        type: integer
+      ramUsedBytes:
+        type: integer
+      swap:
+        type: number
+      swapTotalBytes:
+        type: integer
+      swapUsedBytes:
+        type: integer
+      todayBytes:
+        type: integer
+      totalReceived:
+        type: integer
+      totalSent:
+        type: integer
+      totalUsers:
+        type: integer
+      uploadBps:
+        type: integer
+      uptimeSeconds:
+        type: integer
+    type: object
+  internal_transport_handler.setStatusRequest:
+    properties:
+      status:
+        type: string
+    type: object
+  internal_transport_handler.trafficPointDTO:
+    properties:
+      down:
+        type: integer
+      t:
+        type: integer
+      up:
+        type: integer
+    type: object
+  internal_transport_handler.updateClientRequest:
+    properties:
+      expiry:
+        type: string
+      inboundId:
+        type: string
+      name:
+        type: string
+      startAfterFirstUse:
+        type: boolean
+      status:
+        type: string
+      totalQuota:
+        type: integer
     type: object
 host: localhost:8080
 info:
@@ -311,6 +528,333 @@ paths:
       summary: Initiate TOTP setup
       tags:
       - auth
+  /clients:
+    get:
+      parameters:
+      - description: Filter by inbound ID
+        in: query
+        name: inboundId
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_transport_handler.clientDTO'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List clients
+      tags:
+      - clients
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_transport_handler.createClientRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_transport_handler.clientDTO'
+      security:
+      - BearerAuth: []
+      summary: Create a client
+      tags:
+      - clients
+  /clients/{id}:
+    delete:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a client
+      tags:
+      - clients
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_transport_handler.clientDTO'
+      security:
+      - BearerAuth: []
+      summary: Get a client
+      tags:
+      - clients
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Patch
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_transport_handler.updateClientRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_transport_handler.clientDTO'
+      security:
+      - BearerAuth: []
+      summary: Update a client
+      tags:
+      - clients
+  /clients/{id}/links:
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_transport_handler.clientLinksDTO'
+      security:
+      - BearerAuth: []
+      summary: Get a client's share link and subscription URL
+      tags:
+      - clients
+  /clients/{id}/reset-traffic:
+    post:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_transport_handler.clientDTO'
+      security:
+      - BearerAuth: []
+      summary: Reset a client's traffic counters
+      tags:
+      - clients
+  /clients/{id}/status:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Status
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_transport_handler.setStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_transport_handler.clientDTO'
+      security:
+      - BearerAuth: []
+      summary: Set a client's status
+      tags:
+      - clients
+  /core/config:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Preview the generated config
+      tags:
+      - core
+  /core/reload:
+    post:
+      description: Renders config from the database, runs `sing-box check`, installs
+        it and reloads the core. A failed check returns 400 with the validation error
+        and leaves the live config untouched.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Regenerate, validate and apply the config
+      tags:
+      - core
+  /core/restart:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Restart the core
+      tags:
+      - core
+  /core/start:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Start the core
+      tags:
+      - core
+  /core/status:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_transport_handler.coreStatusDTO'
+      security:
+      - BearerAuth: []
+      summary: Core process status
+      tags:
+      - core
+  /core/stop:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Stop the core
+      tags:
+      - core
+  /core/version:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Core version
+      tags:
+      - core
+  /dashboard/metrics:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_transport_handler.metricsDTO'
+      security:
+      - BearerAuth: []
+      summary: Dashboard metrics snapshot
+      tags:
+      - dashboard
+  /dashboard/traffic:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_transport_handler.trafficPointDTO'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Recent throughput history
+      tags:
+      - dashboard
   /health:
     get:
       description: Returns server health status.
@@ -326,6 +870,213 @@ paths:
       summary: Health check
       tags:
       - health
+  /inbounds:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_transport_handler.inboundDTO'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List inbounds
+      tags:
+      - inbounds
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Inbound
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_transport_handler.inboundRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_transport_handler.inboundDTO'
+      security:
+      - BearerAuth: []
+      summary: Create an inbound
+      tags:
+      - inbounds
+  /inbounds/{id}:
+    delete:
+      parameters:
+      - description: Inbound ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete an inbound
+      tags:
+      - inbounds
+    get:
+      parameters:
+      - description: Inbound ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_transport_handler.inboundDTO'
+      security:
+      - BearerAuth: []
+      summary: Get an inbound
+      tags:
+      - inbounds
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Inbound ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Inbound
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_transport_handler.inboundRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_transport_handler.inboundDTO'
+      security:
+      - BearerAuth: []
+      summary: Update an inbound
+      tags:
+      - inbounds
+  /inbounds/{id}/clone:
+    post:
+      parameters:
+      - description: Inbound ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_transport_handler.inboundDTO'
+      security:
+      - BearerAuth: []
+      summary: Clone an inbound
+      tags:
+      - inbounds
+  /inbounds/{id}/toggle:
+    post:
+      parameters:
+      - description: Inbound ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_transport_handler.inboundDTO'
+      security:
+      - BearerAuth: []
+      summary: Enable/disable an inbound
+      tags:
+      - inbounds
+  /logs:
+    get:
+      description: Returns recent core and panel log lines from the in-memory ring
+        buffer.
+      parameters:
+      - description: info | warn | error
+        in: query
+        name: level
+        type: string
+      - description: substring filter
+        in: query
+        name: q
+        type: string
+      - description: max lines (default 200)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_transport_handler.logEntryDTO'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Recent log lines
+      tags:
+      - logs
+  /subscription/{token}:
+    get:
+      description: Returns the client's connection config. ?format=base64|plain|json
+        (default base64).
+      parameters:
+      - description: Subscription token
+        in: path
+        name: token
+        required: true
+        type: string
+      - description: base64 | plain | json
+        in: query
+        name: format
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Fetch a subscription (public)
+      tags:
+      - subscription
 securityDefinitions:
   BearerAuth:
     description: Enter "Bearer " followed by the JWT token.

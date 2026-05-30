@@ -1,0 +1,245 @@
+package singbox
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net"
+	"strconv"
+
+	"sing-box-web-panel/internal/domain"
+)
+
+// InboundLister yields the inbounds that should appear in the live config.
+type InboundLister interface {
+	ListEnabled(ctx context.Context) ([]domain.Inbound, error)
+}
+
+// ClientLister yields the clients eligible to be emitted as users.
+type ClientLister interface {
+	ListEnabled(ctx context.Context) ([]domain.Client, error)
+}
+
+// GeneratorConfig holds the static, rarely-changing knobs for config rendering.
+type GeneratorConfig struct {
+	LogLevel        string
+	InboundListen   string // address inbounds bind to (e.g. "::")
+	ClashAPIAddress string
+	ClashAPISecret  string
+	CacheFilePath   string
+	StatsSource     string // "auto" | "clash" | "v2ray"
+	V2RayAPIListen  string
+}
+
+type Generator struct {
+	inbounds InboundLister
+	clients  ClientLister
+	cfg      GeneratorConfig
+}
+
+func NewGenerator(inbounds InboundLister, clients ClientLister, cfg GeneratorConfig) *Generator {
+	if cfg.InboundListen == "" {
+		cfg.InboundListen = "::"
+	}
+	if cfg.LogLevel == "" {
+		cfg.LogLevel = "info"
+	}
+	return &Generator{inbounds: inbounds, clients: clients, cfg: cfg}
+}
+
+// Render builds the full sing-box config.json from the database.
+func (g *Generator) Render(ctx context.Context) ([]byte, error) {
+	inbounds, err := g.inbounds.ListEnabled(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list inbounds: %w", err)
+	}
+	clients, err := g.clients.ListEnabled(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list clients: %w", err)
+	}
+
+	byInbound := make(map[int64][]domain.Client)
+	for i := range clients {
+		c := clients[i]
+		if c.Status != domain.ClientStatusActive {
+			continue
+		}
+		byInbound[c.InboundID] = append(byInbound[c.InboundID], c)
+	}
+
+	var (
+		built      []any
+		statsUsers []string
+	)
+	for i := range inbounds {
+		ib := inbounds[i]
+		members := byInbound[ib.ID]
+		entry, err := g.buildInbound(&ib, members)
+		if err != nil {
+			return nil, fmt.Errorf("build inbound %d: %w", ib.ID, err)
+		}
+		built = append(built, entry)
+		for _, c := range members {
+			statsUsers = append(statsUsers, c.Name)
+		}
+	}
+
+	// Note: the DNS block is intentionally omitted. No single DNS form is valid
+	// across sing-box 1.11 (legacy only) and 1.14 (new format only), so the core
+	// default is used. Blocking uses the 1.11+ "reject" rule action rather than a
+	// block outbound (removed in 1.14).
+	cfg := &sbConfig{
+		Log:      &sbLog{Level: g.cfg.LogLevel, Timestamp: true},
+		Inbounds: built,
+		Outbounds: []sbOutbound{
+			{Type: "direct", Tag: "direct"},
+		},
+		Route: &sbRoute{
+			Rules: []sbRouteRule{
+				{Protocol: "bittorrent", Action: "reject"},
+			},
+			Final: "direct",
+		},
+		Experimental: g.buildExperimental(statsUsers),
+	}
+
+	out, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("marshal config: %w", err)
+	}
+	return out, nil
+}
+
+func (g *Generator) buildExperimental(statsUsers []string) *sbExperimental {
+	exp := &sbExperimental{
+		ClashAPI: &sbClashAPI{
+			ExternalController: g.cfg.ClashAPIAddress,
+			Secret:             g.cfg.ClashAPISecret,
+		},
+	}
+	if g.cfg.CacheFilePath != "" {
+		exp.CacheFile = &sbCacheFile{Enabled: true, Path: g.cfg.CacheFilePath}
+	}
+	// Only emit v2ray_api when explicitly selected; the official binary lacks it
+	// and "auto" must not break `sing-box check`.
+	if g.cfg.StatsSource == "v2ray" && g.cfg.V2RayAPIListen != "" {
+		exp.V2RayAPI = &sbV2RayAPI{
+			Listen: g.cfg.V2RayAPIListen,
+			Stats:  &sbV2RayStats{Enabled: true, Users: statsUsers},
+		}
+	}
+	return exp
+}
+
+func (g *Generator) buildInbound(ib *domain.Inbound, clients []domain.Client) (any, error) {
+	tag := inboundTag(ib)
+	switch ib.Protocol {
+	case domain.ProtocolVLESS:
+		users := make([]sbVLESSUser, 0, len(clients))
+		for _, c := range clients {
+			users = append(users, sbVLESSUser{Name: c.Name, UUID: c.UUID, Flow: ib.Settings.Flow})
+		}
+		return sbVLESSInbound{
+			Type:       "vless",
+			Tag:        tag,
+			Listen:     g.cfg.InboundListen,
+			ListenPort: ib.Port,
+			Users:      users,
+			TLS:        buildTLS(ib, nil),
+			Transport:  buildTransport(ib),
+		}, nil
+
+	case domain.ProtocolHysteria2:
+		users := make([]sbHysteria2User, 0, len(clients))
+		for _, c := range clients {
+			users = append(users, sbHysteria2User{Name: c.Name, Password: c.Password})
+		}
+		return sbHysteria2Inbound{
+			Type:       "hysteria2",
+			Tag:        tag,
+			Listen:     g.cfg.InboundListen,
+			ListenPort: ib.Port,
+			Users:      users,
+			TLS:        buildTLS(ib, []string{"h3"}),
+		}, nil
+
+	case domain.ProtocolNaive:
+		users := make([]sbNaiveUser, 0, len(clients))
+		for _, c := range clients {
+			users = append(users, sbNaiveUser{Username: c.Name, Password: c.Password})
+		}
+		return sbNaiveInbound{
+			Type:       "naive",
+			Tag:        tag,
+			Listen:     g.cfg.InboundListen,
+			ListenPort: ib.Port,
+			Users:      users,
+			TLS:        buildTLS(ib, []string{"h2", "http/1.1"}),
+		}, nil
+
+	default:
+		return nil, fmt.Errorf("unsupported protocol %q", ib.Protocol)
+	}
+}
+
+func buildTransport(ib *domain.Inbound) *sbTransport {
+	switch ib.Transmission {
+	case domain.TransmissionWS:
+		return &sbTransport{Type: "ws", Path: ib.Settings.WSPath}
+	case domain.TransmissionGRPC:
+		return &sbTransport{Type: "grpc", ServiceName: ib.Settings.GRPCServiceName}
+	default:
+		return nil
+	}
+}
+
+func buildTLS(ib *domain.Inbound, defaultALPN []string) *sbInboundTLS {
+	switch ib.TLS {
+	case domain.TLSModeReality:
+		host, port := parseDest(ib.Dest)
+		return &sbInboundTLS{
+			Enabled:    true,
+			ServerName: ib.SNI,
+			Reality: &sbReality{
+				Enabled:    true,
+				Handshake:  sbHandshake{Server: host, ServerPort: port},
+				PrivateKey: ib.Settings.RealityPrivateKey,
+				ShortID:    []string{ib.Settings.RealityShortID},
+			},
+		}
+	case domain.TLSModeTLS:
+		tls := &sbInboundTLS{
+			Enabled:    true,
+			ServerName: ib.SNI,
+			ALPN:       defaultALPN,
+		}
+		if ib.Settings.ACMEDomain != "" {
+			tls.ACME = &sbACME{Domain: []string{ib.Settings.ACMEDomain}, Email: ib.Settings.ACMEEmail}
+		} else {
+			tls.CertPath = ib.Settings.CertPath
+			tls.KeyPath = ib.Settings.KeyPath
+		}
+		return tls
+	default:
+		return nil
+	}
+}
+
+func parseDest(dest string) (string, int) {
+	if dest == "" {
+		return "", 443
+	}
+	host, portStr, err := net.SplitHostPort(dest)
+	if err != nil {
+		return dest, 443
+	}
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		return host, 443
+	}
+	return host, port
+}
+
+func inboundTag(ib *domain.Inbound) string {
+	return fmt.Sprintf("%s-%d", ib.Protocol, ib.ID)
+}

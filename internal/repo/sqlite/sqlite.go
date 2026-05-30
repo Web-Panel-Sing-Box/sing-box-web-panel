@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"sing-box-web-panel/internal/config"
@@ -15,6 +17,12 @@ import (
 
 func New(cfg config.DBConfig, log *slog.Logger) (*sql.DB, error) {
 	log.Debug("opening database", slog.String("path", cfg.Path))
+
+	if dir := filepath.Dir(cfg.Path); dir != "" && dir != "." {
+		if err := os.MkdirAll(dir, 0o750); err != nil {
+			return nil, fmt.Errorf("create db dir: %w", err)
+		}
+	}
 
 	db, err := sql.Open("sqlite", cfg.Path)
 	if err != nil {

@@ -1,0 +1,187 @@
+package sublink
+
+import (
+	"encoding/base64"
+	"encoding/json"
+	"strings"
+
+	"sing-box-web-panel/internal/domain"
+)
+
+// Supported subscription output formats.
+const (
+	FormatPlain  = "plain"
+	FormatBase64 = "base64"
+	FormatJSON   = "json"
+)
+
+// Result is a rendered subscription payload.
+type Result struct {
+	ContentType string
+	Body        []byte
+}
+
+// Render builds a subscription payload for a single client/inbound pair in the
+// requested format. Unknown formats default to base64.
+func Render(format string, ib *domain.Inbound, c *domain.Client, host string) (Result, error) {
+	switch format {
+	case FormatPlain:
+		return Result{ContentType: "text/plain; charset=utf-8", Body: []byte(BuildLink(ib, c, host))}, nil
+	case FormatJSON:
+		body, err := BuildClientConfig(ib, c, host)
+		if err != nil {
+			return Result{}, err
+		}
+		return Result{ContentType: "application/json", Body: body}, nil
+	default: // base64
+		link := BuildLink(ib, c, host)
+		enc := base64.StdEncoding.EncodeToString([]byte(link))
+		return Result{ContentType: "text/plain; charset=utf-8", Body: []byte(enc)}, nil
+	}
+}
+
+// --- sing-box client config (JSON format) ---
+
+type clientConfig struct {
+	Log       map[string]any `json:"log,omitempty"`
+	Outbounds []any          `json:"outbounds"`
+	Route     map[string]any `json:"route,omitempty"`
+}
+
+type clientOutTLS struct {
+	Enabled    bool             `json:"enabled"`
+	ServerName string           `json:"server_name,omitempty"`
+	ALPN       []string         `json:"alpn,omitempty"`
+	Reality    *clientOutReality `json:"reality,omitempty"`
+	UTLS       *clientOutUTLS    `json:"utls,omitempty"`
+}
+
+type clientOutReality struct {
+	Enabled   bool   `json:"enabled"`
+	PublicKey string `json:"public_key"`
+	ShortID   string `json:"short_id,omitempty"`
+}
+
+type clientOutUTLS struct {
+	Enabled     bool   `json:"enabled"`
+	Fingerprint string `json:"fingerprint,omitempty"`
+}
+
+type clientOutTransport struct {
+	Type        string `json:"type"`
+	Path        string `json:"path,omitempty"`
+	ServiceName string `json:"service_name,omitempty"`
+}
+
+type vlessOutbound struct {
+	Type       string              `json:"type"`
+	Tag        string              `json:"tag"`
+	Server     string              `json:"server"`
+	ServerPort int                 `json:"server_port"`
+	UUID       string              `json:"uuid"`
+	Flow       string              `json:"flow,omitempty"`
+	TLS        *clientOutTLS       `json:"tls,omitempty"`
+	Transport  *clientOutTransport `json:"transport,omitempty"`
+}
+
+type hysteria2Outbound struct {
+	Type       string        `json:"type"`
+	Tag        string        `json:"tag"`
+	Server     string        `json:"server"`
+	ServerPort int           `json:"server_port"`
+	Password   string        `json:"password"`
+	TLS        *clientOutTLS `json:"tls,omitempty"`
+}
+
+type naiveOutbound struct {
+	Type       string        `json:"type"`
+	Tag        string        `json:"tag"`
+	Server     string        `json:"server"`
+	ServerPort int           `json:"server_port"`
+	Username   string        `json:"username"`
+	Password   string        `json:"password"`
+	TLS        *clientOutTLS `json:"tls,omitempty"`
+}
+
+// BuildClientConfig renders a minimal sing-box client config whose proxy
+// outbound mirrors the inbound. Modern clients import this directly.
+func BuildClientConfig(ib *domain.Inbound, c *domain.Client, host string) ([]byte, error) {
+	proxy := buildProxyOutbound(ib, c, host)
+	cfg := clientConfig{
+		Log: map[string]any{"level": "info"},
+		Outbounds: []any{
+			proxy,
+			map[string]any{"type": "direct", "tag": "direct"},
+		},
+		Route: map[string]any{"final": "proxy"},
+	}
+	return json.MarshalIndent(cfg, "", "  ")
+}
+
+func buildProxyOutbound(ib *domain.Inbound, c *domain.Client, host string) any {
+	switch ib.Protocol {
+	case domain.ProtocolVLESS:
+		out := vlessOutbound{
+			Type: "vless", Tag: "proxy", Server: host, ServerPort: ib.Port,
+			UUID: c.UUID, Flow: ib.Settings.Flow,
+			TLS:       clientTLS(ib),
+			Transport: clientTransport(ib),
+		}
+		return out
+	case domain.ProtocolHysteria2:
+		return hysteria2Outbound{
+			Type: "hysteria2", Tag: "proxy", Server: host, ServerPort: ib.Port,
+			Password: c.Password, TLS: clientTLS(ib),
+		}
+	case domain.ProtocolNaive:
+		return naiveOutbound{
+			Type: "naive", Tag: "proxy", Server: host, ServerPort: ib.Port,
+			Username: c.Name, Password: c.Password, TLS: clientTLS(ib),
+		}
+	default:
+		return map[string]any{"type": "direct", "tag": "proxy"}
+	}
+}
+
+func clientTLS(ib *domain.Inbound) *clientOutTLS {
+	switch ib.TLS {
+	case domain.TLSModeReality:
+		return &clientOutTLS{
+			Enabled:    true,
+			ServerName: ib.SNI,
+			UTLS:       &clientOutUTLS{Enabled: true, Fingerprint: "chrome"},
+			Reality: &clientOutReality{
+				Enabled:   true,
+				PublicKey: ib.Settings.RealityPublicKey,
+				ShortID:   ib.Settings.RealityShortID,
+			},
+		}
+	case domain.TLSModeTLS:
+		tls := &clientOutTLS{Enabled: true, ServerName: ib.SNI}
+		if ib.Protocol == domain.ProtocolHysteria2 {
+			tls.ALPN = []string{"h3"}
+		}
+		return tls
+	default:
+		return nil
+	}
+}
+
+func clientTransport(ib *domain.Inbound) *clientOutTransport {
+	switch ib.Transmission {
+	case domain.TransmissionWS:
+		return &clientOutTransport{Type: "ws", Path: ib.Settings.WSPath}
+	case domain.TransmissionGRPC:
+		return &clientOutTransport{Type: "grpc", ServiceName: ib.Settings.GRPCServiceName}
+	default:
+		return nil
+	}
+}
+
+// HostFromRequestHost strips an optional port from a Host header value.
+func HostFromRequestHost(hostHeader string) string {
+	if i := strings.LastIndex(hostHeader, ":"); i > 0 && !strings.Contains(hostHeader[i:], "]") {
+		return hostHeader[:i]
+	}
+	return hostHeader
+}

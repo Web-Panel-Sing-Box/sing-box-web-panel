@@ -28,7 +28,7 @@ func Auth(jwt *auth.JWTManager) func(http.Handler) http.Handler {
 				return
 			}
 
-			if strings.HasPrefix(r.URL.Path, "/swagger") {
+			if isPublicPrefix(r.URL.Path) {
 				next.ServeHTTP(w, r)
 				return
 			}
@@ -49,6 +49,23 @@ func Auth(jwt *auth.JWTManager) func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+// publicPrefixes are path prefixes served without authentication: the Swagger
+// UI and the public subscription endpoints (token is the credential).
+var publicPrefixes = []string{
+	"/swagger",
+	"/sub/",
+	"/api/subscription/",
+}
+
+func isPublicPrefix(path string) bool {
+	for _, p := range publicPrefixes {
+		if strings.HasPrefix(path, p) {
+			return true
+		}
+	}
+	return false
 }
 
 func extractToken(r *http.Request) string {

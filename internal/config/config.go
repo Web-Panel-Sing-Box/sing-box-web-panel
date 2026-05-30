@@ -16,9 +16,27 @@ type Config struct {
 	Frontend FrontendConfig `yaml:"frontend"`
 	Auth     AuthConfig     `yaml:"auth"`
 	SingBox  SingBoxConfig  `yaml:"sing_box"`
+	Stats    StatsConfig    `yaml:"stats"`
+	TLS      TLSConfig      `yaml:"tls"`
 	Metrics  MetricsConfig  `yaml:"metrics"`
 	Logging  LoggingConfig  `yaml:"logging"`
 	Sub      SubConfig      `yaml:"subscription"`
+}
+
+// TLSConfig controls how the panel's own HTTP server is secured.
+//   - off:         plain HTTP (default; sit behind a reverse proxy)
+//   - file:        serve cert_file/key_file
+//   - self_signed: generate a self-signed cert (works on a bare IP)
+//   - acme:        Let's Encrypt via autocert for acme_domains (TLS-ALPN-01)
+type TLSConfig struct {
+	Mode            string   `yaml:"mode" env:"SING_GROK_TLS_MODE" env-default:"off"`
+	CertFile        string   `yaml:"cert_file" env:"SING_GROK_TLS_CERT_FILE" env-default:""`
+	KeyFile         string   `yaml:"key_file" env:"SING_GROK_TLS_KEY_FILE" env-default:""`
+	ACMEEmail       string   `yaml:"acme_email" env:"SING_GROK_TLS_ACME_EMAIL" env-default:""`
+	ACMEDomains     []string `yaml:"acme_domains" env:"SING_GROK_TLS_ACME_DOMAINS" env-separator:","`
+	ACMECacheDir    string   `yaml:"acme_cache_dir" env:"SING_GROK_TLS_ACME_CACHE_DIR" env-default:"/var/lib/sing-grok/acme"`
+	SelfSignedHosts []string `yaml:"self_signed_hosts" env:"SING_GROK_TLS_SELF_SIGNED_HOSTS" env-separator:","`
+	SelfSignedDir   string   `yaml:"self_signed_dir" env:"SING_GROK_TLS_SELF_SIGNED_DIR" env-default:"./storage/tls"`
 }
 
 type RuntimeConfig struct {
@@ -74,6 +92,13 @@ type SingBoxConfig struct {
 	CheckTimeout time.Duration `yaml:"check_timeout" env:"SING_GROK_SING_BOX_CHECK_TIMEOUT" env-default:"8s"`
 	RestartDelay time.Duration `yaml:"restart_delay" env:"SING_GROK_SING_BOX_RESTART_DELAY" env-default:"2s"`
 	MaxRestarts  int           `yaml:"max_restarts" env:"SING_GROK_SING_BOX_MAX_RESTARTS" env-default:"4"`
+	ProcessMode  string        `yaml:"process_mode" env:"SING_GROK_SING_BOX_PROCESS_MODE" env-default:"auto"`
+	ServiceName  string        `yaml:"service_name" env:"SING_GROK_SING_BOX_SERVICE_NAME" env-default:"sing-box"`
+}
+
+type StatsConfig struct {
+	Source          string `yaml:"source" env:"SING_GROK_STATS_SOURCE" env-default:"clash"`
+	V2RayAPIAddress string `yaml:"v2ray_api_address" env:"SING_GROK_STATS_V2RAY_API_ADDRESS" env-default:"127.0.0.1:8088"`
 }
 
 type MetricsConfig struct {

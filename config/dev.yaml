@@ -48,6 +48,22 @@ sing_box:
   check_timeout: "8s"
   restart_delay: "2s"
   max_restarts: 4
+  process_mode: "auto"
+  service_name: "sing-box"
+
+stats:
+  source: "clash"
+  v2ray_api_address: "127.0.0.1:8088"
+
+tls:
+  mode: "off"            # off | file | self_signed | acme
+  cert_file: ""
+  key_file: ""
+  acme_email: ""
+  acme_domains: []
+  acme_cache_dir: "./storage/acme"
+  self_signed_hosts: []  # e.g. ["203.0.113.10", "panel.example"]
+  self_signed_dir: "./storage/tls"
 
 metrics:
   system_interval: "2s"

@@ -1,8 +1,6 @@
 
 # Описание UI 
 
-Сделай мне вэб-панель, похожую на панель 3x-ui (https://github.com/MHSanaei/3x-ui) для ядра sing box (https://github.com/SagerNet/sing-box) в стиле chatgpt openai 
-
 ## Стэк 
 
 архитектура **SPA (Single Page Application) + Микро-бэкенд**.
