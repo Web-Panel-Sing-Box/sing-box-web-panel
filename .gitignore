@@ -12,10 +12,10 @@ __pycache__/
 venv/
 dist/
 build/
-# Embed target for Go binary: keep placeholder, ignore generated frontend.
+# Embed target for Go: keep PLACEHOLDER so go:embed works, ignore generated dist.
 !cmd/frontend/dist/
 cmd/frontend/dist/*
-!cmd/frontend/dist/.gitkeep
+!cmd/frontend/dist/PLACEHOLDER
 node_modules/
 .next/
 out/
