@@ -66,6 +66,17 @@ func (a *Applier) Trigger() {
 	}
 }
 
+// ApplyIfMissing generates and installs the config only if no config file
+// exists at the configured path yet. Used by the Start handler to bootstrap
+// the first config before launching the core.
+func (a *Applier) ApplyIfMissing(ctx context.Context) error {
+	if _, err := os.Stat(a.configPath); err == nil {
+		return nil
+	}
+	a.log.Info("initial config not found, applying first config")
+	return a.Apply(ctx)
+}
+
 // Run consumes trigger events and applies after a quiet period. It returns when
 // ctx is cancelled.
 func (a *Applier) Run(ctx context.Context) {

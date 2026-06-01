@@ -13,11 +13,14 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime/debug"
+	"strings"
 	"syscall"
 
 	"sing-box-web-panel/docs"
@@ -79,6 +82,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	debug.SetMemoryLimit(mustBytes(cfg.Runtime.GoMemLimit))
+	debug.SetGCPercent(cfg.Runtime.GoGC)
+
 	mux := http.NewServeMux()
 
 	if cfg.Env == "dev" || cfg.Env == "local" {
@@ -129,6 +135,12 @@ func main() {
 	applier := singbox.NewApplier(generator, checker, processMgr, configRevRepo, absConfigPath, log)
 	go applier.Run(rootCtx)
 
+	log.Debug("starting sing-box core")
+	// Bootstrap the initial config and start the core automatically.
+	if err := bootCore(context.Background(), applier, processMgr, log); err != nil {
+		log.Warn("boot core", sl.Error(err))
+	}
+
 	// Inbound and client management; the applier is the (debounced) ConfigTrigger.
 	inboundSvc := svcinbound.NewService(inboundRepo, clientRepo, applier)
 	clientSvc := svcclient.NewService(clientRepo, inboundRepo, applier)
@@ -162,7 +174,7 @@ func main() {
 
 	corsOrigins := []string{"http://localhost:3000", "http://127.0.0.1:3000"}
 
-	stack := middleware.Auth(jwtMgr)(mux)
+	stack := middleware.Auth(jwtMgr, log)(mux)
 	stack = middleware.CORS(corsOrigins)(stack)
 	// Stricter brute-force limit on login, then a general per-IP API limit.
 	stack = middleware.RateLimit(cfg.Auth.LoginRateLimit, middleware.LoginPathMatcher, log)(stack)
@@ -227,6 +239,10 @@ func main() {
 		log.Error("http shutdown error", sl.Error(err))
 	}
 
+	if err := processMgr.Stop(context.Background()); err != nil {
+		log.Warn("stop core", sl.Error(err))
+	}
+
 	shutdown(storage, log, cfg)
 	log.Info("stopped")
 }
@@ -237,6 +253,17 @@ func shutdown(storage interface{ Close() error }, log *slog.Logger, _ *config.Co
 	} else {
 		log.Info("database connection closed")
 	}
+}
+
+func bootCore(ctx context.Context, applier *singbox.Applier, pm singbox.ProcessManager, log *slog.Logger) error {
+	if err := applier.ApplyIfMissing(ctx); err != nil {
+		return fmt.Errorf("apply initial config: %w", err)
+	}
+	if err := pm.Start(ctx); err != nil {
+		return fmt.Errorf("start core: %w", err)
+	}
+	log.Info("core started")
+	return nil
 }
 
 // absPath resolves p to an absolute path, falling back to p on error.
@@ -255,6 +282,28 @@ func setupLogger(env string, buf *logbuf.Buffer) *slog.Logger {
 	default:
 		base = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
 	}
-	// Tee every record into the in-memory ring so the Logs view can show them.
 	return slog.New(logbuf.NewTeeHandler(base, buf))
+}
+
+func mustBytes(s string) int64 {
+	if s == "" {
+		return 0
+	}
+	var n float64
+	unit := "B"
+	if _, err := fmt.Sscanf(s, "%f%s", &n, &unit); err != nil {
+		return 0
+	}
+	switch strings.ToUpper(strings.TrimSpace(unit)) {
+	case "B":
+		return int64(n)
+	case "KB", "KIB":
+		return int64(n * 1024)
+	case "MB", "MIB":
+		return int64(n * 1024 * 1024)
+	case "GB", "GIB":
+		return int64(n * 1024 * 1024 * 1024)
+	default:
+		return int64(n)
+	}
 }

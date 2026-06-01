@@ -139,7 +139,7 @@ func (g *Generator) buildInbound(ib *domain.Inbound, clients []domain.Client) (a
 		for _, c := range clients {
 			users = append(users, sbVLESSUser{Name: c.Name, UUID: c.UUID, Flow: ib.Settings.Flow})
 		}
-		return sbVLESSInbound{
+		entry := sbVLESSInbound{
 			Type:       "vless",
 			Tag:        tag,
 			Listen:     g.cfg.InboundListen,
@@ -147,21 +147,43 @@ func (g *Generator) buildInbound(ib *domain.Inbound, clients []domain.Client) (a
 			Users:      users,
 			TLS:        buildTLS(ib, nil),
 			Transport:  buildTransport(ib),
-		}, nil
+		}
+		if ib.Settings.MultiplexEnabled {
+			entry.Multiplex = &sbMultiplex{Enabled: true}
+		}
+		return entry, nil
 
 	case domain.ProtocolHysteria2:
 		users := make([]sbHysteria2User, 0, len(clients))
 		for _, c := range clients {
 			users = append(users, sbHysteria2User{Name: c.Name, Password: c.Password})
 		}
-		return sbHysteria2Inbound{
-			Type:       "hysteria2",
-			Tag:        tag,
-			Listen:     g.cfg.InboundListen,
-			ListenPort: ib.Port,
-			Users:      users,
-			TLS:        buildTLS(ib, []string{"h3"}),
-		}, nil
+		hy2 := sbHysteria2Inbound{
+			Type:                   "hysteria2",
+			Tag:                    tag,
+			Listen:                 g.cfg.InboundListen,
+			ListenPort:             ib.Port,
+			Users:                  users,
+			TLS:                    buildTLS(ib, []string{"h3"}),
+			UpMbps:                 ib.Settings.Hy2UpMbps,
+			DownMbps:               ib.Settings.Hy2DownMbps,
+			IgnoreClientBandwidth:  ib.Settings.Hy2IgnoreClientBandwidth,
+			Network:                ib.Settings.Hy2Network,
+			BrutalDebug:            ib.Settings.Hy2BrutalDebug,
+			BBRProfile:             ib.Settings.Hy2BBRProfile,
+		}
+		if ib.Settings.Hy2ObfsPassword != "" {
+			hy2.Obfs = &sbHysteria2Obfs{
+				Type:          "salamander",
+				Password:      ib.Settings.Hy2ObfsPassword,
+				MinPacketSize: ib.Settings.Hy2ObfsMinPacketSize,
+				MaxPacketSize: ib.Settings.Hy2ObfsMaxPacketSize,
+			}
+		}
+		if ib.Settings.Hy2Masquerade != "" {
+			hy2.Masquerade = ib.Settings.Hy2Masquerade
+		}
+		return hy2, nil
 
 	case domain.ProtocolNaive:
 		users := make([]sbNaiveUser, 0, len(clients))
@@ -169,12 +191,14 @@ func (g *Generator) buildInbound(ib *domain.Inbound, clients []domain.Client) (a
 			users = append(users, sbNaiveUser{Username: c.Name, Password: c.Password})
 		}
 		return sbNaiveInbound{
-			Type:       "naive",
-			Tag:        tag,
-			Listen:     g.cfg.InboundListen,
-			ListenPort: ib.Port,
-			Users:      users,
-			TLS:        buildTLS(ib, []string{"h2", "http/1.1"}),
+			Type:                  "naive",
+			Tag:                   tag,
+			Listen:                g.cfg.InboundListen,
+			ListenPort:            ib.Port,
+			Users:                 users,
+			TLS:                   buildTLS(ib, []string{"h2", "http/1.1"}),
+			Network:               ib.Settings.NaiveNetwork,
+			QuicCongestionControl: ib.Settings.NaiveQuicCongestionCtrl,
 		}, nil
 
 	default:

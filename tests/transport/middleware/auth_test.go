@@ -1,14 +1,18 @@
 package middleware_test
 
 import (
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
 	"sing-box-web-panel/internal/lib/auth"
 	"sing-box-web-panel/internal/transport/middleware"
 )
+
+var testLogger = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelWarn}))
 
 func TestAuth_PublicPaths(t *testing.T) {
 	jwt := auth.NewJWTManager("secret", time.Hour)
@@ -18,7 +22,7 @@ func TestAuth_PublicPaths(t *testing.T) {
 	for _, path := range publicPaths {
 		t.Run(path, func(t *testing.T) {
 			called := false
-			handler := middleware.Auth(jwt)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handler := 	middleware.Auth(jwt, testLogger)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				called = true
 			}))
 
@@ -38,7 +42,7 @@ func TestAuth_SwaggerPath(t *testing.T) {
 	jwt := auth.NewJWTManager("secret", time.Hour)
 
 	called := false
-	handler := middleware.Auth(jwt)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := 	middleware.Auth(jwt, testLogger)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		called = true
 	}))
 
@@ -55,7 +59,7 @@ func TestAuth_SwaggerPath(t *testing.T) {
 func TestAuth_ProtectedWithoutToken(t *testing.T) {
 	jwt := auth.NewJWTManager("secret", time.Hour)
 
-	handler := middleware.Auth(jwt)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := 	middleware.Auth(jwt, testLogger)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Error("handler should not be called without token")
 	}))
 
@@ -75,7 +79,7 @@ func TestAuth_ProtectedWithValidToken(t *testing.T) {
 
 	called := false
 	var capturedID int64
-	handler := middleware.Auth(jwt)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := 	middleware.Auth(jwt, testLogger)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		called = true
 		capturedID = middleware.AdminID(r)
 	}))
@@ -99,7 +103,7 @@ func TestAuth_ProtectedWithValidCookie(t *testing.T) {
 	token, _ := jwt.Create(7)
 
 	called := false
-	handler := middleware.Auth(jwt)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := 	middleware.Auth(jwt, testLogger)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		called = true
 	}))
 
@@ -117,7 +121,7 @@ func TestAuth_ProtectedWithValidCookie(t *testing.T) {
 func TestAuth_ProtectedWithInvalidToken(t *testing.T) {
 	jwt := auth.NewJWTManager("secret", time.Hour)
 
-	handler := middleware.Auth(jwt)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := 	middleware.Auth(jwt, testLogger)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Error("handler should not be called with invalid token")
 	}))
 

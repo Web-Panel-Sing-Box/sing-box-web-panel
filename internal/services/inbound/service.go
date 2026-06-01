@@ -75,6 +75,22 @@ type Input struct {
 	ACMEEmail  string
 	CertPath   string
 	KeyPath    string
+	// VLESS multiplex.
+	MultiplexEnabled bool
+	// Hysteria2.
+	Hy2UpMbps                int
+	Hy2DownMbps              int
+	Hy2IgnoreClientBandwidth bool
+	Hy2ObfsPassword          string
+	Hy2ObfsMinPacketSize     int
+	Hy2ObfsMaxPacketSize     int
+	Hy2Masquerade            string
+	Hy2Network               string
+	Hy2BrutalDebug           bool
+	Hy2BBRProfile            string
+	// Naive.
+	NaiveNetwork            string
+	NaiveQuicCongestionCtrl string
 }
 
 // applyTLSMaterial copies optional cert/ACME inputs into the inbound settings.
@@ -83,6 +99,22 @@ func applyTLSMaterial(ib *domain.Inbound, in Input) {
 	ib.Settings.ACMEEmail = in.ACMEEmail
 	ib.Settings.CertPath = in.CertPath
 	ib.Settings.KeyPath = in.KeyPath
+}
+
+func applyProtocolSettings(ib *domain.Inbound, in Input) {
+	ib.Settings.MultiplexEnabled = in.MultiplexEnabled
+	ib.Settings.Hy2UpMbps = in.Hy2UpMbps
+	ib.Settings.Hy2DownMbps = in.Hy2DownMbps
+	ib.Settings.Hy2IgnoreClientBandwidth = in.Hy2IgnoreClientBandwidth
+	ib.Settings.Hy2ObfsPassword = in.Hy2ObfsPassword
+	ib.Settings.Hy2ObfsMinPacketSize = in.Hy2ObfsMinPacketSize
+	ib.Settings.Hy2ObfsMaxPacketSize = in.Hy2ObfsMaxPacketSize
+	ib.Settings.Hy2Masquerade = in.Hy2Masquerade
+	ib.Settings.Hy2Network = in.Hy2Network
+	ib.Settings.Hy2BrutalDebug = in.Hy2BrutalDebug
+	ib.Settings.Hy2BBRProfile = in.Hy2BBRProfile
+	ib.Settings.NaiveNetwork = in.NaiveNetwork
+	ib.Settings.NaiveQuicCongestionCtrl = in.NaiveQuicCongestionCtrl
 }
 
 func (s *Service) List(ctx context.Context) ([]View, error) {
@@ -120,6 +152,7 @@ func (s *Service) Create(ctx context.Context, in Input) (*domain.Inbound, error)
 		Enabled:      true,
 	}
 	applyTLSMaterial(ib, in)
+	applyProtocolSettings(ib, in)
 	if err := s.applyGeneratedSettings(ib); err != nil {
 		return nil, err
 	}
@@ -152,6 +185,7 @@ func (s *Service) Update(ctx context.Context, id int64, in Input) (*domain.Inbou
 	ib.SNI = in.SNI
 	ib.Dest = in.Dest
 	applyTLSMaterial(ib, in)
+	applyProtocolSettings(ib, in)
 
 	// (Re)generate Reality material if it was just enabled and is missing.
 	if ib.TLS == domain.TLSModeReality && (!wasReality || ib.Settings.RealityPrivateKey == "") {
@@ -306,6 +340,36 @@ func validate(in Input) error {
 	}
 	if in.Protocol == domain.ProtocolHysteria2 && in.TLS == domain.TLSModeReality {
 		return fmt.Errorf("%w: hysteria2 does not support reality", ErrValidation)
+	}
+	// Hysteria2: bandwidth limits.
+	if in.Protocol == domain.ProtocolHysteria2 {
+		if in.Hy2UpMbps < 0 {
+			return fmt.Errorf("%w: up_mbps must be >= 0", ErrValidation)
+		}
+		if in.Hy2DownMbps < 0 {
+			return fmt.Errorf("%w: down_mbps must be >= 0", ErrValidation)
+		}
+		if in.Hy2ObfsPassword != "" && in.TLS == domain.TLSModeNone {
+			return fmt.Errorf("%w: obfs requires tls", ErrValidation)
+		}
+		switch in.Hy2Network {
+		case "", "tcp", "udp":
+		default:
+			return fmt.Errorf("%w: hysteria2 network must be tcp, udp, or empty", ErrValidation)
+		}
+		switch in.Hy2BBRProfile {
+		case "", "conservative", "standard", "aggressive":
+		default:
+			return fmt.Errorf("%w: bbr_profile must be conservative, standard, or aggressive", ErrValidation)
+		}
+	}
+	// Naive: network must be one of the allowed values.
+	if in.Protocol == domain.ProtocolNaive {
+		switch in.NaiveNetwork {
+		case "", "tcp", "udp":
+		default:
+			return fmt.Errorf("%w: naive network must be tcp, udp, or empty", ErrValidation)
+		}
 	}
 	return nil
 }

@@ -69,12 +69,18 @@ func (h *CoreHandler) action(w http.ResponseWriter, r *http.Request, op string, 
 // Start godoc
 //
 //	@Summary	Start the core
+//	@Description	Generates the initial config (if missing), then starts the core process.
 //	@Tags		core
 //	@Produce	json
 //	@Security	BearerAuth
 //	@Success	200	{object}	map[string]string
 //	@Router		/core/start [post]
 func (h *CoreHandler) Start(w http.ResponseWriter, r *http.Request) {
+	if err := h.applier.ApplyIfMissing(r.Context()); err != nil {
+		h.log.Error("core start: apply config", slog.String("error", err.Error()))
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "apply config: " + err.Error()})
+		return
+	}
 	h.action(w, r, "start", func() error { return h.pm.Start(r.Context()) })
 }
 

@@ -91,7 +91,7 @@ const docTemplate = `{
         },
         "/auth/login": {
             "post": {
-                "description": "Logs in with username and password. If 2FA is enabled and no TOTP code is provided, returns 403 with requires_totp.",
+                "description": "Logs in with username and password. Returns a JWT token, or temp_token + requires_totp if 2FA is enabled.",
                 "consumes": [
                     "application/json"
                 ],
@@ -142,7 +142,7 @@ const docTemplate = `{
                         }
                     },
                     "403": {
-                        "description": "requires_totp",
+                        "description": "requires_totp with temp_token",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -172,6 +172,61 @@ const docTemplate = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/internal_transport_handler.loginRecoveryRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login/totp": {
+            "post": {
+                "description": "Completes 2FA login using the temp_token returned by /login and a TOTP code.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Complete TOTP login",
+                "parameters": [
+                    {
+                        "description": "TOTP login payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.loginTOTPRequest"
                         }
                     }
                 ],
@@ -1483,7 +1538,49 @@ const docTemplate = `{
                 "dest": {
                     "type": "string"
                 },
+                "hy2BbrProfile": {
+                    "type": "string"
+                },
+                "hy2BrutalDebug": {
+                    "type": "boolean"
+                },
+                "hy2DownMbps": {
+                    "type": "integer"
+                },
+                "hy2IgnoreClientBandwidth": {
+                    "type": "boolean"
+                },
+                "hy2Masquerade": {
+                    "type": "string"
+                },
+                "hy2Network": {
+                    "type": "string"
+                },
+                "hy2ObfsMaxPacketSize": {
+                    "type": "integer"
+                },
+                "hy2ObfsMinPacketSize": {
+                    "type": "integer"
+                },
+                "hy2ObfsPassword": {
+                    "type": "string"
+                },
+                "hy2UpMbps": {
+                    "description": "Hysteria2.",
+                    "type": "integer"
+                },
                 "keyPath": {
+                    "type": "string"
+                },
+                "multiplexEnabled": {
+                    "description": "VLESS multiplex.",
+                    "type": "boolean"
+                },
+                "naiveNetwork": {
+                    "description": "Naive.",
+                    "type": "string"
+                },
+                "naiveQuicCongestionCtrl": {
                     "type": "string"
                 },
                 "port": {
@@ -1513,6 +1610,48 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "grpcServiceName": {
+                    "type": "string"
+                },
+                "hy2BbrProfile": {
+                    "type": "string"
+                },
+                "hy2BrutalDebug": {
+                    "type": "boolean"
+                },
+                "hy2DownMbps": {
+                    "type": "integer"
+                },
+                "hy2IgnoreClientBandwidth": {
+                    "type": "boolean"
+                },
+                "hy2Masquerade": {
+                    "type": "string"
+                },
+                "hy2Network": {
+                    "type": "string"
+                },
+                "hy2ObfsMaxPacketSize": {
+                    "type": "integer"
+                },
+                "hy2ObfsMinPacketSize": {
+                    "type": "integer"
+                },
+                "hy2ObfsPassword": {
+                    "type": "string"
+                },
+                "hy2UpMbps": {
+                    "description": "Hysteria2.",
+                    "type": "integer"
+                },
+                "multiplexEnabled": {
+                    "description": "VLESS multiplex.",
+                    "type": "boolean"
+                },
+                "naiveNetwork": {
+                    "description": "Naive.",
+                    "type": "string"
+                },
+                "naiveQuicCongestionCtrl": {
                     "type": "string"
                 },
                 "publicKey": {
@@ -1563,13 +1702,22 @@ const docTemplate = `{
                     "type": "string",
                     "example": "admin"
                 },
-                "totp_code": {
-                    "type": "string",
-                    "example": "123456"
-                },
                 "username": {
                     "type": "string",
                     "example": "admin"
+                }
+            }
+        },
+        "internal_transport_handler.loginTOTPRequest": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "123456"
+                },
+                "temp_token": {
+                    "type": "string",
+                    "example": "eyJhbG..."
                 }
             }
         },
