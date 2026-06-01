@@ -11,8 +11,8 @@ func NewHealthHandler() *HealthHandler {
 }
 
 func (h *HealthHandler) Register(mux *http.ServeMux) {
-	mux.HandleFunc("GET /", h.Root)
-	mux.HandleFunc("GET /health", h.Health)
+	mux.HandleFunc("GET /api/health", h.Health)
+	mux.HandleFunc("GET /api", h.Root)
 }
 
 // Root godoc

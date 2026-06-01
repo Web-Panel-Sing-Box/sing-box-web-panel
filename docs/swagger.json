@@ -2,7 +2,7 @@
     "swagger": "2.0",
     "info": {
         "description": "Local-first web panel for managing a sing-box process.",
-        "title": "SingGrok API",
+        "title": "Shilka API",
         "contact": {},
         "version": "0.1.0"
     },

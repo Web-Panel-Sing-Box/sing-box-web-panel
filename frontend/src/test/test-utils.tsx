@@ -11,7 +11,7 @@ import { StoreProvider, type InboundDTO, type ClientDTO } from "@/lib/store";
 
 type Options = RenderOptions & {
   route?: string;
-  seed?: { inbounds?: InboundDTO[]; clients?: ClientDTO[] };
+  seed?: { inbounds?: InboundDTO[]; clients?: ClientDTO[]; metrics?: { coreRunning?: boolean } };
 };
 
 export function renderWithProviders(

@@ -11,7 +11,7 @@ import (
 )
 
 func TestTOTPManager_GenerateSecret(t *testing.T) {
-	tm := auth.NewTOTPManager("SingGrok")
+	tm := auth.NewTOTPManager("Shilka")
 
 	key, err := tm.GenerateSecret("admin")
 	if err != nil {
@@ -26,13 +26,13 @@ func TestTOTPManager_GenerateSecret(t *testing.T) {
 		t.Errorf("URL should start with otpauth://totp/, got: %s", key.URL())
 	}
 
-	if !strings.Contains(key.URL(), "SingGrok") {
+	if !strings.Contains(key.URL(), "Shilka") {
 		t.Error("URL should contain issuer")
 	}
 }
 
 func TestTOTPManager_Validate(t *testing.T) {
-	tm := auth.NewTOTPManager("SingGrok")
+	tm := auth.NewTOTPManager("Shilka")
 
 	key, err := tm.GenerateSecret("admin")
 	if err != nil {
@@ -58,7 +58,7 @@ func TestTOTPManager_Validate(t *testing.T) {
 }
 
 func TestTOTPManager_ValidateEmptySecret(t *testing.T) {
-	tm := auth.NewTOTPManager("SingGrok")
+	tm := auth.NewTOTPManager("Shilka")
 
 	if tm.Validate("123456", "") {
 		t.Error("Validate() should return false for empty secret")
@@ -66,7 +66,7 @@ func TestTOTPManager_ValidateEmptySecret(t *testing.T) {
 }
 
 func TestTOTPManager_ValidateInvalidSecret(t *testing.T) {
-	tm := auth.NewTOTPManager("SingGrok")
+	tm := auth.NewTOTPManager("Shilka")
 
 	if tm.Validate("123456", "not-base32-!!!") {
 		t.Error("Validate() should return false for invalid base32 secret")
@@ -97,7 +97,7 @@ func TestGenerateRecoveryCode(t *testing.T) {
 }
 
 func TestTOTPManager_SecretFromURI(t *testing.T) {
-	tm := auth.NewTOTPManager("SingGrok")
+	tm := auth.NewTOTPManager("Shilka")
 
 	key, err := tm.GenerateSecret("admin")
 	if err != nil {
@@ -115,7 +115,7 @@ func TestTOTPManager_SecretFromURI(t *testing.T) {
 }
 
 func TestTOTPManager_SecretFromURIInvalid(t *testing.T) {
-	tm := auth.NewTOTPManager("SingGrok")
+	tm := auth.NewTOTPManager("Shilka")
 
 	_, err := tm.SecretFromURI("not-a-valid-uri")
 	if err == nil {

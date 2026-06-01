@@ -1,8 +1,8 @@
-# Singbox Web Panel
+# Shilka – Singbox Web Panel
 
 Status: Planning and early scaffold.
 
-Sing Grok is a local-first web panel for managing a local `sing-box` process through `127.0.0.1`. It is designed to run on a user's own machine or VPS without a required external control plane.
+Shilka is a local-first web panel for managing a local `sing-box` process through `127.0.0.1`. It is designed to run on a user's own machine or VPS without a required external control plane.
 
 ## Stack
 

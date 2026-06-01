@@ -18,8 +18,8 @@ var publicPaths = map[string]bool{
 	"/api/auth/login/totp":     true,
 	"/api/auth/login/recovery": true,
 	"/api/auth/logout":         true,
-	"/":                        true,
-	"/health":                  true,
+	"/api":                     true,
+	"/api/health":              true,
 }
 
 func Auth(jwt *auth.JWTManager, log *slog.Logger) func(http.Handler) http.Handler {
@@ -75,6 +75,11 @@ func isPublicPrefix(path string) bool {
 		if strings.HasPrefix(path, p) {
 			return true
 		}
+	}
+	// Frontend SPA paths: anything not under /api or /swagger is a frontend
+	// asset or route handled by the embedded SPA and needs no auth.
+	if !strings.HasPrefix(path, "/api") && !strings.HasPrefix(path, "/swagger") {
+		return true
 	}
 	return false
 }

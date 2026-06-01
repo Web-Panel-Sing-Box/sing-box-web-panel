@@ -29,5 +29,6 @@ config.json.bak-*
 sing-box
 storage/
 
-# Local reference clones (sing-box, 3x-ui) used for development only
-.refs/
+# Embed target: only keep the gitkeep, everything else is generated
+cmd/frontend/
+!cmd/frontend/dist/.gitkeep

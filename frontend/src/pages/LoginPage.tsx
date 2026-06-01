@@ -39,7 +39,7 @@ export function LoginPage() {
 
   const from =
     (location.state as { from?: { pathname?: string } } | null)?.from
-      ?.pathname ?? "/";
+      ?.pathname ?? "/dashboard";
 
   const [step, setStep] = useState<Step>("credentials");
   const [username, setUsername] = useState("");

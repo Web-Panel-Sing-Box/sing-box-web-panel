@@ -154,7 +154,7 @@ Logger → API RateLimit → Login RateLimit → CORS → Auth → Mux
 ## Config
 
 - Primary config is `config/dev.yaml` (YAML). Override secrets via environment variables at runtime.
-- `SING_GROK_CONFIG_PATH` env var can point to a different config file.
+- `SHILKA_CONFIG_PATH` env var can point to a different config file.
 - `cleanenv.ReadConfig()` reads YAML first, then overrides matching fields from env vars.
 - All config struct fields have `env-default` tags for sensible defaults on weak VDS.
 

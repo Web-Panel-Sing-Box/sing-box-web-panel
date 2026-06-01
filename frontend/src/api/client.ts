@@ -1,4 +1,4 @@
-const TOKEN_KEY = "sing-grok:token";
+const TOKEN_KEY = "shilka:token";
 
 let token: string | null = null;
 

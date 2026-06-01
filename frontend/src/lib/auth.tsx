@@ -7,7 +7,7 @@ import {
 } from "react";
 import * as api from "@/api";
 
-const SESSION_KEY = "sing-grok:auth";
+const SESSION_KEY = "shilka:auth";
 
 type AuthContextValue = {
   isAuthenticated: boolean;

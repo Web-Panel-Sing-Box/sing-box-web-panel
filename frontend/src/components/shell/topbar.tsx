@@ -6,18 +6,18 @@ import { StatusDot } from "@/components/ui/status-dot";
 import { cn } from "@/lib/utils";
 
 const TITLES: Record<string, string> = {
-  "/": "Dashboard",
+  "/dashboard": "Dashboard",
   "/inbounds": "Inbounds",
   "/clients": "Clients",
   "/settings": "Settings",
-  "/logs": "Logs"
+  "/logs": "Logs",
 };
 
 export function TopBar({ onOpenMobile }: { onOpenMobile: () => void }) {
   const pathname = useLocation().pathname;
   const { metrics } = useMetrics();
   const { setCoreRunning } = useStoreActions();
-  const title = TITLES[pathname] ?? "Sing Grok";
+  const title = TITLES[pathname] ?? "Shilka";
   const running = metrics.coreRunning;
 
   return (
