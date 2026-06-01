@@ -12,6 +12,10 @@ __pycache__/
 venv/
 dist/
 build/
+# Embed target for Go: keep PLACEHOLDER so go:embed works, ignore generated dist.
+!cmd/frontend/dist/
+cmd/frontend/dist/*
+!cmd/frontend/dist/PLACEHOLDER
 node_modules/
 .next/
 out/
@@ -28,6 +32,3 @@ config.json
 config.json.bak-*
 sing-box
 storage/
-
-# Local reference clones (sing-box, 3x-ui) used for development only
-.refs/

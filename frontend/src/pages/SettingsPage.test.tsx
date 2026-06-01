@@ -11,7 +11,7 @@ afterEach(() => {
 
 test("uses a single page-level save button and switches to Russian", async () => {
   const user = userEvent.setup();
-  renderWithProviders(<SettingsPage />, { withStore: false });
+  renderWithProviders(<SettingsPage />);
 
   expect(screen.getAllByRole("button", { name: "Save" })).toHaveLength(1);
 

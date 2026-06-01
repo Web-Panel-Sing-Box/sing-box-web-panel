@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import type { Client, ClientStatus } from "@/lib/mock/clients";
+import type { Client, ClientStatus } from "@/lib/store";
 
 export type ClientFilterState = {
   query: string;

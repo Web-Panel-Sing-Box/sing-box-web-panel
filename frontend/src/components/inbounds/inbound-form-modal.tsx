@@ -17,7 +17,7 @@ import {
   TRANSMISSION_OPTIONS,
   type Inbound,
   type TlsMode
-} from "@/lib/mock/inbounds";
+} from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
 
 export type { InboundFormMode } from "@/hooks/useInboundForm";

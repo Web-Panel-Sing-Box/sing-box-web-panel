@@ -351,7 +351,7 @@ host: localhost:8080
 info:
   contact: {}
   description: Local-first web panel for managing a sing-box process.
-  title: SingGrok API
+  title: Shilka API
   version: 0.1.0
 paths:
   /:

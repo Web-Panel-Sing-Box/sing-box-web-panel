@@ -10,12 +10,12 @@ import (
 )
 
 // TestV2RayUserDeltasLive exercises the hand-rolled gRPC StatsService codec
-// against a real sing-box V2Ray API. It is skipped unless SING_GROK_LIVE_V2RAY
+// against a real sing-box V2Ray API. It is skipped unless SHILKA_LIVE_V2RAY
 // is set to the api address (e.g. 127.0.0.1:8088).
 func TestV2RayUserDeltasLive(t *testing.T) {
-	addr := os.Getenv("SING_GROK_LIVE_V2RAY")
+	addr := os.Getenv("SHILKA_LIVE_V2RAY")
 	if addr == "" {
-		t.Skip("set SING_GROK_LIVE_V2RAY=host:port to run")
+		t.Skip("set SHILKA_LIVE_V2RAY=host:port to run")
 	}
 
 	src := stats.NewV2RaySource(addr)

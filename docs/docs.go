@@ -1930,7 +1930,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:8080",
 	BasePath:         "/api",
 	Schemes:          []string{},
-	Title:            "SingGrok API",
+	Title:            "Shilka API",
 	Description:      "Local-first web panel for managing a sing-box process.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

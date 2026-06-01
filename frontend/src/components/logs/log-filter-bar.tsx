@@ -4,7 +4,7 @@ import { Pause, Play, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { useRuntime, useStoreActions } from "@/lib/mock/store";
+import { useRuntime, useStoreActions } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
 
 type LogFilter = {

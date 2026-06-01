@@ -1,6 +1,6 @@
 package main
 
-//	@title			SingGrok API
+//	@title			Shilka API
 //	@version		0.1.0
 //	@description	Local-first web panel for managing a sing-box process.
 //	@host			localhost:8080
@@ -61,7 +61,7 @@ func main() {
 		cfg.Auth.Argon2Parallelism,
 	)
 	jwtMgr := libauth.NewJWTManager(cfg.Auth.JWTSecret, cfg.Auth.JWTExpiry)
-	totpMgr := libauth.NewTOTPManager("SingGrok")
+	totpMgr := libauth.NewTOTPManager("Shilka")
 
 	adminRepo := sqliterepo.NewAdminRepo(storage)
 	recoveryRepo := sqliterepo.NewRecoveryRepo(storage)
@@ -177,6 +177,9 @@ func main() {
 	handler.NewSubscriptionHandler(clientRepo, inboundRepo, settingRepo, cfg.Sub.PublicURL, "", log).Register(mux)
 	handler.NewDashboardHandler(sysstat.New(), liveHolder, clientRepo, inboundRepo, trafficRepo, processMgr, log).Register(mux)
 	handler.NewLogsHandler(logBuf).Register(mux)
+
+	frontendHandler := handler.NewFrontendHandler(cfg.Frontend.ServeMode, cfg.Frontend.DiskPath, cfg.Frontend.CacheTTL, frontendDist)
+	mux.Handle("/", frontendHandler)
 
 	corsOrigins := []string{"http://localhost:3000", "http://127.0.0.1:3000"}
 

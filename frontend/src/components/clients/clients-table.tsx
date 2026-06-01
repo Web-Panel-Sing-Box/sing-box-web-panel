@@ -4,9 +4,9 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { StatusDot } from "@/components/ui/status-dot";
 import { formatBytes, formatDate, truncateMiddle } from "@/lib/format";
-import { useClients, useInbounds } from "@/lib/mock/store";
+import { useClients, useInbounds } from "@/lib/store";
 import { useClientFilter } from "@/hooks/useClientFilter";
-import type { Client } from "@/lib/mock/clients";
+import type { Client } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 

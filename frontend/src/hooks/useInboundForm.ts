@@ -2,13 +2,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useToast } from "@/components/ui/toast";
 import { useI18n } from "@/lib/i18n";
-import { useStoreActions } from "@/lib/mock/store";
+import { useStoreActions } from "@/lib/store";
 import type {
   Inbound,
   Protocol,
   TlsMode,
   Transmission,
-} from "@/lib/mock/inbounds";
+} from "@/lib/store";
 import { makeUuid, randomHex, randomPort } from "@/lib/random";
 
 export type InboundFormMode = "create" | "edit" | "clone";

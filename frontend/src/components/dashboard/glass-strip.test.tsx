@@ -7,7 +7,7 @@ import { renderWithProviders } from "@/test/test-utils";
 
 test("asks for confirmation only when stopping an active core", async () => {
   const user = userEvent.setup();
-  renderWithProviders(<GlassStrip />);
+  renderWithProviders(<GlassStrip />, { seed: { metrics: { coreRunning: true } } });
 
   await user.click(screen.getByRole("button", { name: /active/i }));
   expect(screen.getByText("Are you sure you want to stop the core?")).toBeInTheDocument();

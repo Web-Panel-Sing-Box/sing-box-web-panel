@@ -1,39 +1,54 @@
-# Singbox Web Panel
+# Shilka – Sing-box Web Panel
 
-Status: Planning and early scaffold.
-
-Sing Grok is a local-first web panel for managing a local `sing-box` process through `127.0.0.1`. It is designed to run on a user's own machine or VPS without a required external control plane.
+Shilka is a local-first web panel for managing a local `sing-box` process. Single binary, single port, single systemd unit. Designed for VPS deployment with minimal resources.
 
 ## Stack
 
-- Backend: Python 3.11+, FastAPI, asyncio, SQLite, SQLAlchemy Async.
-- Frontend: Next.js App Router, TypeScript, Tailwind CSS, Framer Motion, Recharts.
-- Core: local `sing-box` binary and local `config.json`.
-- Ops: Bash installer, systemd units, local console menu.
+- **Backend**: Go 1.26, embedded SQLite (`modernc.org/sqlite`), JWT + TOTP 2FA, Argon2id passwords.
+- **Frontend**: Vite + React 19 SPA, Tailwind CSS 4, Framer Motion, Recharts, embedded into binary.
+- **Core**: local `sing-box` binary, config generated from DB, validated with `sing-box check`.
+- **Ops**: one-command install script, single systemd unit.
 
-## Safety Default
+## Quick Start (VPS)
 
-The panel must keep sing-box management APIs bound to `127.0.0.1`. Public exposure, if needed, belongs only to the web panel and must be configured explicitly by the operator.
+```bash
+curl -fsSL https://raw.githubusercontent.com/Web-Panel-Sing-Box/sing-box-web-panel/main/scripts/install.sh | bash
+```
 
 ## Local Development
 
+### Backend
+
+```bash
+go run ./cmd/main.go
+# API at http://127.0.0.1:8080
+# Swagger at http://127.0.0.1:8080/swagger/
+```
+
 ### Frontend
 
-The frontend is a Vite + React Single Page Application (SPA) located in the `frontend/` directory. 
+```bash
+cd frontend
+pnpm install
+pnpm dev
+# Dev server at http://127.0.0.1:3000, proxies /api to :8080
+```
 
-To run the frontend locally:
+### Build (embedded)
 
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Start the Vite development server:
-   ```bash
-   npm run dev
-   ```
+```bash
+cd frontend && pnpm build
+cd .. && rsync -a frontend/dist/ cmd/frontend/dist/
+go build -o shilka ./cmd/
+```
 
-The application will be available at `http://127.0.0.1:3000/` and uses mock data for the UI by default when the backend is not connected.
+### Tests
+
+```bash
+go test ./tests/...           # Backend unit + integration
+cd frontend && pnpm test      # Frontend unit
+```
+
+## Safety
+
+sing-box management APIs (`Clash API`, `V2Ray API`) bind to `127.0.0.1`. Only the web panel port is exposed.

@@ -33,7 +33,7 @@ type NavItem = {
 };
 
 const NAV: NavItem[] = [
-  { labelKey: "nav.dashboard", href: "/", icon: LayoutDashboard },
+  { labelKey: "nav.dashboard", href: "/dashboard", icon: LayoutDashboard },
   { labelKey: "nav.inbounds", href: "/inbounds", icon: Network },
   { labelKey: "nav.clients", href: "/clients", icon: Users },
   { labelKey: "nav.settings", href: "/settings", icon: Settings },
@@ -136,7 +136,7 @@ function SidebarContents({
       <nav className="flex-1 px-2 py-2">
         <ul className="flex flex-col gap-1">
           {NAV.map((item) => {
-            const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+            const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
             const Icon = item.icon;
             const label = t(item.labelKey);
             return (

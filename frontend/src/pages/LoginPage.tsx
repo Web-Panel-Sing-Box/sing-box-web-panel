@@ -39,39 +39,53 @@ export function LoginPage() {
 
   const from =
     (location.state as { from?: { pathname?: string } } | null)?.from
-      ?.pathname ?? "/";
+      ?.pathname ?? "/dashboard";
 
   const [step, setStep] = useState<Step>("credentials");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
+  const [tempToken, setTempToken] = useState("");
+  const [loading, setLoading] = useState(false);
 
   if (isAuthenticated) {
     return <Navigate to={from} replace />;
   }
 
-  const handleCredentials = (e: FormEvent) => {
+  const handleCredentials = async (e: FormEvent) => {
     e.preventDefault();
-    const result = login(username.trim(), password);
-    if (!result.ok) {
-      push(t("login.invalidCredentials"), "error");
-      return;
+    setLoading(true);
+    try {
+      const result = await login(username.trim(), password);
+      if (!result.ok) {
+        push(t("login.invalidCredentials"), "error");
+        return;
+      }
+      if (result.needsTwoFactor) {
+        setTempToken(result.tempToken ?? "");
+        setCode("");
+        setStep("twofactor");
+        return;
+      }
+      navigate(from, { replace: true });
+    } finally {
+      setLoading(false);
     }
-    if (result.needsTwoFactor) {
-      setCode("");
-      setStep("twofactor");
-      return;
-    }
-    navigate(from, { replace: true });
   };
 
-  const handleVerify = (e: FormEvent) => {
+  const handleVerify = async (e: FormEvent) => {
     e.preventDefault();
-    if (verifyTwoFactor(code.trim())) {
-      navigate(from, { replace: true });
-      return;
+    setLoading(true);
+    try {
+      const ok = await verifyTwoFactor(tempToken, code.trim());
+      if (ok) {
+        navigate(from, { replace: true });
+        return;
+      }
+      push(t("login.invalidCode"), "error");
+    } finally {
+      setLoading(false);
     }
-    push(t("login.invalidCode"), "error");
   };
 
   return (
@@ -112,7 +126,7 @@ export function LoginPage() {
                 autoComplete="current-password"
               />
 
-              <Button type="submit" variant="white" className="w-full">
+              <Button type="submit" variant="white" className="w-full" disabled={loading}>
                 {t("login.submit")}
               </Button>
               <p className="text-center text-xs text-ink-tertiary">
@@ -148,7 +162,7 @@ export function LoginPage() {
                 type="submit"
                 variant="white"
                 className="w-full"
-                disabled={code.length !== 6}
+                disabled={code.length !== 6 || loading}
               >
                 {t("login.verify")}
               </Button>

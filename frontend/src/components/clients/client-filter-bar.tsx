@@ -3,8 +3,8 @@ import { Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import type { ClientStatus } from "@/lib/mock/clients";
-import { useInbounds } from "@/lib/mock/store";
+import type { ClientStatus } from "@/lib/store";
+import { useInbounds } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
 import type { ClientFilterState } from "@/hooks/useClientFilter";
 
