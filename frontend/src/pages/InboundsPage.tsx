@@ -1,4 +1,3 @@
-
 import { Suspense, lazy, useCallback, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Plus } from "lucide-react";
@@ -11,7 +10,9 @@ import type { Inbound, Protocol } from "@/lib/mock/inbounds";
 import { useI18n } from "@/lib/i18n";
 
 const InboundFormModal = lazy(() =>
-  import("@/components/inbounds/inbound-form-modal").then((m) => ({ default: m.InboundFormModal }))
+  import("@/components/inbounds/inbound-form-modal").then((m) => ({
+    default: m.InboundFormModal,
+  })),
 );
 
 const prefetchInboundForm = () => {
@@ -30,28 +31,56 @@ export function InboundsPage() {
   const [searchParams] = useSearchParams();
   const inbounds = useInbounds();
   const { t } = useI18n();
-  const [modal, setModal] = useState<ModalState>({ open: false, mode: "create", inbound: null });
+  const [modal, setModal] = useState<ModalState>({
+    open: false,
+    mode: "create",
+    inbound: null,
+  });
   const protocol = searchParams.get("protocol");
-  const protocolFilter = PROTOCOLS.includes(protocol as Protocol) ? (protocol as Protocol) : null;
+  const protocolFilter = PROTOCOLS.includes(protocol as Protocol)
+    ? (protocol as Protocol)
+    : null;
   const filtered = useMemo(
-    () => (protocolFilter ? inbounds.filter((inbound) => inbound.protocol === protocolFilter) : inbounds),
-    [inbounds, protocolFilter]
+    () =>
+      protocolFilter
+        ? inbounds.filter((inbound) => inbound.protocol === protocolFilter)
+        : inbounds,
+    [inbounds, protocolFilter],
   );
 
-  const openCreate = useCallback(() => setModal({ open: true, mode: "create", inbound: null }), []);
-  const openEdit = useCallback((inbound: Inbound) => setModal({ open: true, mode: "edit", inbound }), []);
-  const closeModal = useCallback(() => setModal((prev) => ({ ...prev, open: false })), []);
-  const openClone = useCallback((inbound: Inbound) => setModal({ open: true, mode: "clone", inbound }), []);
+  const openCreate = useCallback(
+    () => setModal({ open: true, mode: "create", inbound: null }),
+    [],
+  );
+  const openEdit = useCallback(
+    (inbound: Inbound) => setModal({ open: true, mode: "edit", inbound }),
+    [],
+  );
+  const closeModal = useCallback(
+    () => setModal((prev) => ({ ...prev, open: false })),
+    [],
+  );
+  const openClone = useCallback(
+    (inbound: Inbound) => setModal({ open: true, mode: "clone", inbound }),
+    [],
+  );
 
   return (
-    <div className="mx-auto flex max-w-[1240px] flex-col gap-6">
+    <div className="mx-auto flex max-w-310 flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-semibold text-ink-primary">{t("inbounds.title")}</h2>
+          <h2 className="text-2xl font-semibold text-ink-primary">
+            {t("inbounds.title")}
+          </h2>
           {protocolFilter ? (
             <div className="mt-2 flex items-center gap-2 text-xs text-ink-tertiary">
-              <span>{t("inbounds.filterProtocol", { protocol: protocolFilter })}</span>
-              <Link to="/inbounds" className="text-ink-secondary transition-colors duration-150 hover:text-ink-primary">
+              <span>
+                {t("inbounds.filterProtocol", { protocol: protocolFilter })}
+              </span>
+              <Link
+                to="/inbounds"
+                className="text-ink-secondary transition-colors duration-150 hover:text-ink-primary"
+              >
                 {t("inbounds.clearFilter")}
               </Link>
             </div>

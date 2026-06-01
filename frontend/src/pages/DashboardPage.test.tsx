@@ -10,5 +10,8 @@ test("removes quick links and exposes protocol links to filtered inbounds", () =
   expect(screen.queryByText("Manage inbounds")).not.toBeInTheDocument();
   expect(screen.getAllByText("Traffic").length).toBeGreaterThan(0);
   expect(screen.getByText("Inbounds active")).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: "vless" })).toHaveAttribute("href", "/inbounds?protocol=vless");
+  expect(screen.getByRole("link", { name: "vless" })).toHaveAttribute(
+    "href",
+    "/inbounds?protocol=vless",
+  );
 });

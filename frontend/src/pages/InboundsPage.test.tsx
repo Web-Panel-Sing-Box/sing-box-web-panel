@@ -10,10 +10,14 @@ test("opens inbound rows directly in edit mode and starts clone mode from the mo
   renderWithProviders(<InboundsPage />);
 
   await user.click(screen.getByText("berlin-edge-01"));
-  expect(await screen.findByText("Edit inbound connection")).toBeInTheDocument();
+  expect(
+    await screen.findByText("Edit inbound connection"),
+  ).toBeInTheDocument();
 
   await user.click(await screen.findByRole("button", { name: "Clone" }));
-  expect(await screen.findByText("Clone inbound connection")).toBeInTheDocument();
+  expect(
+    await screen.findByText("Clone inbound connection"),
+  ).toBeInTheDocument();
   expect(screen.getByDisplayValue("berlin-edge-01-copy")).toBeInTheDocument();
 });
 
@@ -25,7 +29,9 @@ test("shows a confirmation modal before deleting an inbound", async () => {
   await user.click(await screen.findByRole("button", { name: "Delete" }));
 
   expect(await screen.findByText("Delete this inbound?")).toBeInTheDocument();
-  expect(screen.getByText("berlin-edge-01 will be removed from the mock list.")).toBeInTheDocument();
+  expect(
+    screen.getByText("berlin-edge-01 will be removed from the mock list."),
+  ).toBeInTheDocument();
 });
 
 test("honors protocol filters from dashboard links", () => {
