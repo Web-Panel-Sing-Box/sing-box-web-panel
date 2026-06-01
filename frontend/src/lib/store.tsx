@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import * as api from "@/api";
+import { getToken } from "@/api/client";
 import type { InboundDTO } from "@/api/inbounds";
 import type { ClientDTO } from "@/api/clients";
 import type { ClientStatus } from "@/api/types";
@@ -70,6 +71,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [paused, setPaused] = useState(false);
 
   const loadAll = useCallback(async () => {
+    if (!getToken()) return;
     try {
       const [ibList, clList, m] = await Promise.all([
         api.listInbounds(),

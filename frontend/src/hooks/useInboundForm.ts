@@ -3,7 +3,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useToast } from "@/components/ui/toast";
 import { useI18n } from "@/lib/i18n";
 import { useStoreActions } from "@/lib/store";
-import type { Inbound, Protocol, TlsMode, Transmission } from "@/lib/store";
+import type {
+  Inbound,
+  Protocol,
+  TlsMode,
+  Transmission,
+} from "@/lib/store";
 import { makeUuid, randomHex, randomPort } from "@/lib/random";
 
 export type InboundFormMode = "create" | "edit" | "clone";
@@ -57,9 +62,13 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
 
   useEffect(() => {
     if (!open) return;
-    setRemark(mode === "clone" && inbound ? `${inbound.remark}-copy` : inbound?.remark ?? "");
+    setRemark(
+      mode === "clone" && inbound
+        ? `${inbound.remark}-copy`
+        : (inbound?.remark ?? ""),
+    );
     setProtocol(inbound?.protocol ?? "naive");
-    setPort(mode === "clone" ? randomPort() : inbound?.port ?? randomPort());
+    setPort(mode === "clone" ? randomPort() : (inbound?.port ?? randomPort()));
     setTrafficReset("never");
     setTransmission(inbound?.transmission ?? "tcp");
     setTls(inbound?.tls ?? "none");
@@ -111,18 +120,36 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
       transmission,
       tls,
       sni: tls === "none" ? undefined : sni,
-      dest: tls === "reality" ? dest : undefined
+      dest: tls === "reality" ? dest : undefined,
     };
     if (mode === "edit" && inbound) {
       updateInbound(inbound.id, payload);
       push(t("inbounds.updated"), "success");
     } else {
       addInbound(payload);
-      push(mode === "clone" ? t("inbounds.cloned") : t("inbounds.created"), "success");
+      push(
+        mode === "clone" ? t("inbounds.cloned") : t("inbounds.created"),
+        "success",
+      );
     }
     setSaving(false);
     onClose();
-  }, [remark, protocol, port, transmission, tls, sni, dest, mode, inbound, push, t, addInbound, updateInbound, onClose]);
+  }, [
+    remark,
+    protocol,
+    port,
+    transmission,
+    tls,
+    sni,
+    dest,
+    mode,
+    inbound,
+    push,
+    t,
+    addInbound,
+    updateInbound,
+    onClose,
+  ]);
 
   const handleDelete = useCallback(() => {
     if (!inbound) return;
@@ -140,32 +167,61 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
     confirmDelete,
     openConfirmDelete,
     closeConfirmDelete,
-    remark, setRemark,
-    protocol, setProtocol,
-    port, setPort,
-    trafficReset, setTrafficReset,
-    transmission, setTransmission,
-    sniffing, setSniffing,
-    snifHttp, setSnifHttp,
-    snifTls, setSnifTls,
-    snifQuic, setSnifQuic,
-    snifFakedns, setSnifFakedns,
-    metadataOnly, setMetadataOnly,
-    routeOnly, setRouteOnly,
-    ipsExcluded, setIpsExcluded,
-    domainsExcluded, setDomainsExcluded,
-    tls, setTls,
-    dest, setDest,
-    sni, setSni,
-    shortIds, setShortIds,
-    privateKey, publicKey, generateKeypair,
-    userId, setUserId,
-    uuid, regenerateUuid,
-    subscription, setSubscription,
-    totalFlowGb, setTotalFlowGb,
-    expiry, setExpiry,
-    startAfterFirstUse, setStartAfterFirstUse,
-    diceSpin, randomizePort,
-    saving, handleSave, handleDelete
+    remark,
+    setRemark,
+    protocol,
+    setProtocol,
+    port,
+    setPort,
+    trafficReset,
+    setTrafficReset,
+    transmission,
+    setTransmission,
+    sniffing,
+    setSniffing,
+    snifHttp,
+    setSnifHttp,
+    snifTls,
+    setSnifTls,
+    snifQuic,
+    setSnifQuic,
+    snifFakedns,
+    setSnifFakedns,
+    metadataOnly,
+    setMetadataOnly,
+    routeOnly,
+    setRouteOnly,
+    ipsExcluded,
+    setIpsExcluded,
+    domainsExcluded,
+    setDomainsExcluded,
+    tls,
+    setTls,
+    dest,
+    setDest,
+    sni,
+    setSni,
+    shortIds,
+    setShortIds,
+    privateKey,
+    publicKey,
+    generateKeypair,
+    userId,
+    setUserId,
+    uuid,
+    regenerateUuid,
+    subscription,
+    setSubscription,
+    totalFlowGb,
+    setTotalFlowGb,
+    expiry,
+    setExpiry,
+    startAfterFirstUse,
+    setStartAfterFirstUse,
+    diceSpin,
+    randomizePort,
+    saving,
+    handleSave,
+    handleDelete,
   };
 }

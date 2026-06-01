@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 
 import { TwoFactorSetupModal } from "@/components/auth/two-factor-setup-modal";
@@ -14,14 +13,14 @@ import { useI18n, type Language } from "@/lib/i18n";
 
 const LANGUAGE_OPTIONS: { value: Language; label: string }[] = [
   { value: "en", label: "English" },
-  { value: "ru", label: "Русский" }
+  { value: "ru", label: "Русский" },
 ];
 
 const LOG_LEVELS = [
   { value: "debug", label: "Debug" },
   { value: "info", label: "Info" },
   { value: "warn", label: "Warn" },
-  { value: "error", label: "Error" }
+  { value: "error", label: "Error" },
 ];
 
 export function SettingsPage() {
@@ -51,7 +50,9 @@ export function SettingsPage() {
   return (
     <div className="mx-auto flex max-w-[920px] flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold text-ink-primary">{t("settings.title")}</h2>
+        <h2 className="text-2xl font-semibold text-ink-primary">
+          {t("settings.title")}
+        </h2>
         <Button variant="white" onClick={save}>
           {t("common.save")}
         </Button>
@@ -59,10 +60,17 @@ export function SettingsPage() {
 
       <Section title={t("settings.general")}>
         <Row label={t("settings.panelName")} hint={t("settings.panelNameHint")}>
-          <Input value={panelName} onChange={(e) => setPanelName(e.target.value)} />
+          <Input
+            value={panelName}
+            onChange={(e) => setPanelName(e.target.value)}
+          />
         </Row>
         <Row label={t("settings.language")} hint={t("settings.languageHint")}>
-          <Select<Language> value={language} options={LANGUAGE_OPTIONS} onChange={setLanguage} />
+          <Select<Language>
+            value={language}
+            options={LANGUAGE_OPTIONS}
+            onChange={setLanguage}
+          />
         </Row>
       </Section>
 
@@ -73,7 +81,10 @@ export function SettingsPage() {
         <Row label={t("settings.twoFactor")} hint={t("settings.twoFactorHint")}>
           <Toggle checked={twoFactorEnabled} onChange={handleTwoFactorToggle} />
         </Row>
-        <Row label={t("settings.changePassword")} hint={t("settings.changePasswordHint")}>
+        <Row
+          label={t("settings.changePassword")}
+          hint={t("settings.changePasswordHint")}
+        >
           <Button disabled variant="secondary">
             {t("settings.changePassword")}
           </Button>
@@ -81,11 +92,22 @@ export function SettingsPage() {
       </Section>
 
       <Section title={t("settings.singBox")}>
-        <Row label={t("settings.binaryPath")} hint={t("settings.binaryPathHint")}>
-          <Input value={binaryPath} onChange={(e) => setBinaryPath(e.target.value)} mono />
+        <Row
+          label={t("settings.binaryPath")}
+          hint={t("settings.binaryPathHint")}
+        >
+          <Input
+            value={binaryPath}
+            onChange={(e) => setBinaryPath(e.target.value)}
+            mono
+          />
         </Row>
         <Row label={t("settings.logLevel")} hint={t("settings.logLevelHint")}>
-          <Select value={logLevel} options={LOG_LEVELS} onChange={setLogLevel} />
+          <Select
+            value={logLevel}
+            options={LOG_LEVELS}
+            onChange={setLogLevel}
+          />
         </Row>
         <Row label={t("settings.clashPort")} hint={t("settings.boundLocal")}>
           <Input value="9090" readOnly mono />
@@ -96,8 +118,15 @@ export function SettingsPage() {
       </Section>
 
       <Section title={t("settings.subscriptions")}>
-        <Row label={t("settings.publicBaseUrl")} hint={t("settings.publicBaseUrlHint")}>
-          <Input value={publicHost} onChange={(e) => setPublicHost(e.target.value)} mono />
+        <Row
+          label={t("settings.publicBaseUrl")}
+          hint={t("settings.publicBaseUrlHint")}
+        >
+          <Input
+            value={publicHost}
+            onChange={(e) => setPublicHost(e.target.value)}
+            mono
+          />
         </Row>
         <Row label={t("settings.tokenTtl")} hint={t("settings.tokenTtlHint")}>
           <Input value={ttl} onChange={(e) => setTtl(e.target.value)} mono />
@@ -113,7 +142,13 @@ export function SettingsPage() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <Card>
       <CardHeader>
@@ -124,7 +159,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Row({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function Row({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-[1fr_320px]">
       <div className="space-y-0.5">

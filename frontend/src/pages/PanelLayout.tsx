@@ -13,7 +13,10 @@ export function PanelLayout() {
   return (
     <StoreProvider>
       <div className="flex min-h-screen w-full bg-surface">
-        <Sidebar mobileOpen={mobileOpen} onCloseMobile={() => setMobileOpen(false)} />
+        <Sidebar
+          mobileOpen={mobileOpen}
+          onCloseMobile={() => setMobileOpen(false)}
+        />
         <div className="flex min-w-0 flex-1 flex-col">
           <button
             type="button"

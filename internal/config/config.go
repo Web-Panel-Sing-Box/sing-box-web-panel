@@ -94,6 +94,7 @@ type SingBoxConfig struct {
 	MaxRestarts  int           `yaml:"max_restarts" env:"SING_GROK_SING_BOX_MAX_RESTARTS" env-default:"4"`
 	ProcessMode  string        `yaml:"process_mode" env:"SING_GROK_SING_BOX_PROCESS_MODE" env-default:"auto"`
 	ServiceName  string        `yaml:"service_name" env:"SING_GROK_SING_BOX_SERVICE_NAME" env-default:"sing-box"`
+	CoreLogPath  string        `yaml:"core_log_path" env:"SING_GROK_SING_BOX_CORE_LOG_PATH" env-default:""`
 }
 
 type StatsConfig struct {

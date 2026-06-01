@@ -31,7 +31,9 @@ type PasswordHasher interface {
 
 type TokenManager interface {
 	Create(adminID int64) (string, error)
+	CreateTOTPPending(adminID int64) (string, error)
 	Validate(tokenString string) (int64, error)
+	ValidateTOTPPending(tokenString string) (int64, error)
 }
 
 type TOTPProvider interface {
@@ -48,6 +50,7 @@ type RecoveryCodeGenerator func() (string, error)
 
 type LoginResult struct {
 	Token        string `json:"token,omitempty"`
+	TempToken    string `json:"temp_token,omitempty"`
 	RequiresTOTP bool   `json:"requires_totp"`
 	AdminID      int64  `json:"-"`
 }
@@ -98,7 +101,14 @@ func (s *Service) Login(ctx context.Context, username, password, totpCode string
 
 	if admin.IsTOTPEnabled && admin.TOTPConfirmedAt != nil {
 		if totpCode == "" {
-			return &LoginResult{RequiresTOTP: true}, nil
+			pendingToken, err := s.tokenManager.CreateTOTPPending(admin.ID)
+			if err != nil {
+				return nil, fmt.Errorf("create pending token: %w", err)
+			}
+			return &LoginResult{
+				TempToken:    pendingToken,
+				RequiresTOTP: true,
+			}, nil
 		}
 		if !s.totp.Validate(totpCode, admin.TOTPSecret) {
 			return nil, ErrInvalidTOTP
@@ -114,6 +124,29 @@ func (s *Service) Login(ctx context.Context, username, password, totpCode string
 		Token:   token,
 		AdminID: admin.ID,
 	}, nil
+}
+
+func (s *Service) LoginTOTP(ctx context.Context, tempToken, code string) (string, error) {
+	adminID, err := s.tokenManager.ValidateTOTPPending(tempToken)
+	if err != nil {
+		return "", ErrInvalidTOTP
+	}
+
+	admin, err := s.admins.GetByID(ctx, adminID)
+	if err != nil {
+		return "", ErrInvalidTOTP
+	}
+
+	if !s.totp.Validate(code, admin.TOTPSecret) {
+		return "", ErrInvalidTOTP
+	}
+
+	token, err := s.tokenManager.Create(admin.ID)
+	if err != nil {
+		return "", fmt.Errorf("create token: %w", err)
+	}
+
+	return token, nil
 }
 
 func (s *Service) SetupTOTP(ctx context.Context, adminID int64) (string, error) {
@@ -173,29 +206,31 @@ func (s *Service) VerifyRecoveryCode(ctx context.Context, adminID int64, code st
 		return "", err
 	}
 
-	codeHash, err := s.passwordHasher.Hash(code)
+	codes, err := s.recoveryCodes.FindUnusedByAdminID(ctx, adminID)
 	if err != nil {
-		return "", fmt.Errorf("hash recovery code: %w", err)
+		return "", fmt.Errorf("get recovery codes: %w", err)
 	}
 
-	rc, err := s.recoveryCodes.GetByAdminIDAndHash(ctx, admin.ID, codeHash)
-	if err != nil {
-		if err == repo.ErrNotFound {
-			return "", ErrInvalidRecoveryCode
+	for _, rc := range codes {
+		ok, err := s.passwordHasher.Verify(code, rc.CodeHash)
+		if err != nil {
+			continue
 		}
-		return "", err
+		if ok {
+			if err := s.recoveryCodes.MarkUsed(ctx, rc.ID); err != nil {
+				return "", fmt.Errorf("mark recovery code used: %w", err)
+			}
+
+			token, err := s.tokenManager.Create(admin.ID)
+			if err != nil {
+				return "", fmt.Errorf("create token: %w", err)
+			}
+
+			return token, nil
+		}
 	}
 
-	if err := s.recoveryCodes.MarkUsed(ctx, rc.ID); err != nil {
-		return "", fmt.Errorf("mark recovery code used: %w", err)
-	}
-
-	token, err := s.tokenManager.Create(admin.ID)
-	if err != nil {
-		return "", fmt.Errorf("create token: %w", err)
-	}
-
-	return token, nil
+	return "", ErrInvalidRecoveryCode
 }
 
 func (s *Service) ChangePassword(ctx context.Context, adminID int64, currentPassword, newPassword string) error {
