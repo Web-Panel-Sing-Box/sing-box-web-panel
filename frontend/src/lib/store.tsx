@@ -18,7 +18,9 @@ import { getPanelLogs } from "@/api/logs";
 
 // Re-export types for backward compatibility
 export type { InboundDTO as Inbound } from "@/api/inbounds";
+export type { InboundDTO } from "@/api/inbounds";
 export type { ClientDTO as Client } from "@/api/clients";
+export type { ClientDTO } from "@/api/clients";
 export type { ClientStatus } from "@/api/types";
 export type { MetricsDTO as Metrics } from "@/api/dashboard";
 export type { TrafficPoint } from "@/api/dashboard";
@@ -62,11 +64,17 @@ const emptyMetrics: MetricsDTO = {
 
 const StoreContext = createContext<(StoreState & StoreActions) | null>(null);
 
-export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [metrics, setMetrics] = useState<MetricsDTO>(emptyMetrics);
+type SeedData = {
+  inbounds?: InboundDTO[];
+  clients?: ClientDTO[];
+  metrics?: Partial<MetricsDTO>;
+};
+
+export function StoreProvider({ children, seed }: { children: React.ReactNode; seed?: SeedData }) {
+  const [metrics, setMetrics] = useState<MetricsDTO>({ ...emptyMetrics, ...seed?.metrics });
   const [history, setHistory] = useState<TrafficPoint[]>([]);
-  const [inbounds, setInbounds] = useState<InboundDTO[]>([]);
-  const [clients, setClients] = useState<ClientDTO[]>([]);
+  const [inbounds, setInbounds] = useState<InboundDTO[]>(seed?.inbounds ?? []);
+  const [clients, setClients] = useState<ClientDTO[]>(seed?.clients ?? []);
   const [logs, setLogs] = useState<LogEntryDTO[]>([]);
   const [paused, setPaused] = useState(false);
 

@@ -7,18 +7,18 @@ import { MemoryRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/lib/auth";
 import { I18nProvider } from "@/lib/i18n";
-import { StoreProvider } from "@/lib/store";
+import { StoreProvider, type InboundDTO, type ClientDTO } from "@/lib/store";
 
 type Options = RenderOptions & {
   route?: string;
-  withStore?: boolean;
+  seed?: { inbounds?: InboundDTO[]; clients?: ClientDTO[] };
 };
 
 export function renderWithProviders(
   ui: ReactElement,
-  { route = "/", withStore = true, ...options }: Options = {}
+  { route = "/", seed, ...options }: Options = {}
 ) {
-  const body = withStore ? <StoreProvider>{ui}</StoreProvider> : ui;
+  const body = seed ? <StoreProvider seed={seed}>{ui}</StoreProvider> : ui;
   return render(
     <I18nProvider>
       <LazyMotion features={domMax} strict>
