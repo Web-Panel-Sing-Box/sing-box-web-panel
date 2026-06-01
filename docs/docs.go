@@ -772,6 +772,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/core/logs": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns lines from the sing-box log file with pagination.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "core"
+                ],
+                "summary": "Core process logs",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Line offset",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 200,
+                        "description": "Lines per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.coreLogsResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/core/reload": {
             "post": {
                 "security": [
@@ -843,6 +884,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
+                "description": "Generates the initial config (if missing), then starts the core process.",
                 "produces": [
                     "application/json"
                 ],
@@ -1416,6 +1458,23 @@ const docTemplate = `{
                 "code": {
                     "type": "string",
                     "example": "123456"
+                }
+            }
+        },
+        "internal_transport_handler.coreLogsResponse": {
+            "type": "object",
+            "properties": {
+                "hasMore": {
+                    "type": "boolean"
+                },
+                "lines": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },

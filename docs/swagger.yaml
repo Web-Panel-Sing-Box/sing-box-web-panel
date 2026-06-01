@@ -47,6 +47,17 @@ definitions:
         example: "123456"
         type: string
     type: object
+  internal_transport_handler.coreLogsResponse:
+    properties:
+      hasMore:
+        type: boolean
+      lines:
+        items:
+          type: string
+        type: array
+      total:
+        type: integer
+    type: object
   internal_transport_handler.coreStatusDTO:
     properties:
       pid:
@@ -823,6 +834,32 @@ paths:
       summary: Preview the generated config
       tags:
       - core
+  /core/logs:
+    get:
+      description: Returns lines from the sing-box log file with pagination.
+      parameters:
+      - default: 0
+        description: Line offset
+        in: query
+        name: offset
+        type: integer
+      - default: 200
+        description: Lines per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_transport_handler.coreLogsResponse'
+      security:
+      - BearerAuth: []
+      summary: Core process logs
+      tags:
+      - core
   /core/reload:
     post:
       description: Renders config from the database, runs `sing-box check`, installs
@@ -866,6 +903,8 @@ paths:
       - core
   /core/start:
     post:
+      description: Generates the initial config (if missing), then starts the core
+        process.
       produces:
       - application/json
       responses:

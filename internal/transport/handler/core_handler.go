@@ -3,18 +3,22 @@ package handler
 import (
 	"log/slog"
 	"net/http"
+	"os"
+	"strconv"
+	"strings"
 
 	"sing-box-web-panel/internal/services/singbox"
 )
 
 type CoreHandler struct {
-	pm      singbox.ProcessManager
-	applier *singbox.Applier
-	log     *slog.Logger
+	pm          singbox.ProcessManager
+	applier     *singbox.Applier
+	log         *slog.Logger
+	coreLogPath string
 }
 
-func NewCoreHandler(pm singbox.ProcessManager, applier *singbox.Applier, log *slog.Logger) *CoreHandler {
-	return &CoreHandler{pm: pm, applier: applier, log: log}
+func NewCoreHandler(pm singbox.ProcessManager, applier *singbox.Applier, log *slog.Logger, coreLogPath string) *CoreHandler {
+	return &CoreHandler{pm: pm, applier: applier, log: log, coreLogPath: coreLogPath}
 }
 
 func (h *CoreHandler) Register(mux *http.ServeMux) {
@@ -25,6 +29,7 @@ func (h *CoreHandler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/core/reload", h.Reload)
 	mux.HandleFunc("GET /api/core/version", h.Version)
 	mux.HandleFunc("GET /api/core/config", h.Config)
+	mux.HandleFunc("GET /api/core/logs", h.Logs)
 }
 
 type coreStatusDTO struct {
@@ -157,4 +162,81 @@ func (h *CoreHandler) Config(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
+}
+
+type coreLogsResponse struct {
+	Lines   []string `json:"lines"`
+	Total   int      `json:"total"`
+	HasMore bool     `json:"hasMore"`
+}
+
+// Logs godoc
+//
+//	@Summary	Core process logs
+//	@Description	Returns lines from the sing-box log file with pagination.
+//	@Tags		core
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param		offset	query		int	false	"Line offset"	default(0)
+//	@Param		limit	query		int	false	"Lines per page"	default(200)
+//	@Success	200		{object}	coreLogsResponse
+//	@Router		/core/logs [get]
+func (h *CoreHandler) Logs(w http.ResponseWriter, r *http.Request) {
+	if h.coreLogPath == "" {
+		writeJSON(w, http.StatusOK, coreLogsResponse{Lines: []string{}, Total: 0, HasMore: false})
+		return
+	}
+
+	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
+	if offset < 0 {
+		offset = 0
+	}
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	if limit <= 0 || limit > 1000 {
+		limit = 200
+	}
+
+	lines, err := readLogLines(h.coreLogPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			writeJSON(w, http.StatusOK, coreLogsResponse{Lines: []string{}, Total: 0, HasMore: false})
+			return
+		}
+		h.log.Error("core logs", slog.String("error", err.Error()))
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	total := len(lines)
+
+	if offset >= total {
+		writeJSON(w, http.StatusOK, coreLogsResponse{Lines: []string{}, Total: total, HasMore: false})
+		return
+	}
+
+	end := offset + limit
+	if end > total {
+		end = total
+	}
+
+	writeJSON(w, http.StatusOK, coreLogsResponse{
+		Lines:   lines[offset:end],
+		Total:   total,
+		HasMore: end < total,
+	})
+}
+
+func readLogLines(path string) ([]string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	if len(data) == 0 {
+		return []string{}, nil
+	}
+	text := strings.TrimSuffix(string(data), "\n")
+	if text == "" {
+		return []string{}, nil
+	}
+	return strings.Split(text, "\n"), nil
 }

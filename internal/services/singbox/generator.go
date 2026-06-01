@@ -29,6 +29,7 @@ type GeneratorConfig struct {
 	CacheFilePath   string
 	StatsSource     string // "auto" | "clash" | "v2ray"
 	V2RayAPIListen  string
+	CoreLogPath     string // sing-box log output file path
 }
 
 type Generator struct {
@@ -89,7 +90,7 @@ func (g *Generator) Render(ctx context.Context) ([]byte, error) {
 	// default is used. Blocking uses the 1.11+ "reject" rule action rather than a
 	// block outbound (removed in 1.14).
 	cfg := &sbConfig{
-		Log:      &sbLog{Level: g.cfg.LogLevel, Timestamp: true},
+		Log:      &sbLog{Level: g.cfg.LogLevel, Timestamp: true, Output: g.cfg.CoreLogPath},
 		Inbounds: built,
 		Outbounds: []sbOutbound{
 			{Type: "direct", Tag: "direct"},

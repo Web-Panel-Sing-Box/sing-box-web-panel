@@ -113,6 +113,11 @@ func main() {
 	absConfigPath := absPath(cfg.SingBox.ConfigPath)
 	absWorkingDir := absPath(cfg.SingBox.WorkingDir)
 
+	absCoreLogPath := ""
+	if cfg.SingBox.CoreLogPath != "" {
+		absCoreLogPath = absPath(cfg.SingBox.CoreLogPath)
+	}
+
 	// sing-box config generation + lifecycle.
 	generator := singbox.NewGenerator(inboundRepo, clientRepo, singbox.GeneratorConfig{
 		LogLevel:        "info",
@@ -122,6 +127,7 @@ func main() {
 		CacheFilePath:   filepath.Join(absWorkingDir, "cache.db"),
 		StatsSource:     cfg.Stats.Source,
 		V2RayAPIListen:  cfg.Stats.V2RayAPIAddress,
+		CoreLogPath:     absCoreLogPath,
 	})
 	checker := singbox.NewChecker(cfg.SingBox.BinaryPath, cfg.SingBox.CheckTimeout)
 	processMgr := singbox.NewProcessManager(singbox.ProcessConfig{
@@ -167,7 +173,7 @@ func main() {
 
 	handler.NewInboundHandler(inboundSvc, log).Register(mux)
 	handler.NewClientHandler(clientSvc, cfg.Sub.PublicURL, log).Register(mux)
-	handler.NewCoreHandler(processMgr, applier, log).Register(mux)
+	handler.NewCoreHandler(processMgr, applier, log, absCoreLogPath).Register(mux)
 	handler.NewSubscriptionHandler(clientRepo, inboundRepo, settingRepo, cfg.Sub.PublicURL, "", log).Register(mux)
 	handler.NewDashboardHandler(sysstat.New(), liveHolder, clientRepo, inboundRepo, trafficRepo, processMgr, log).Register(mux)
 	handler.NewLogsHandler(logBuf).Register(mux)

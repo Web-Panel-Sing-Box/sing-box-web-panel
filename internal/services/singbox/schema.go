@@ -15,6 +15,7 @@ type sbConfig struct {
 type sbLog struct {
 	Level     string `json:"level,omitempty"`
 	Timestamp bool   `json:"timestamp,omitempty"`
+	Output    string `json:"output,omitempty"`
 }
 
 type sbOutbound struct {

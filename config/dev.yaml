@@ -49,6 +49,7 @@ sing_box:
   restart_delay: "2s"
   max_restarts: 4
   process_mode: "auto"
+  core_log_path: "./runtime/sing-box.log"
   service_name: "sing-box"
 
 stats:
