@@ -93,7 +93,6 @@ func toInboundDTO(ib *domain.Inbound, clientCount int) inboundDTO {
 		Hy2UpMbps:                ib.Settings.Hy2UpMbps,
 		Hy2DownMbps:              ib.Settings.Hy2DownMbps,
 		Hy2IgnoreClientBandwidth: ib.Settings.Hy2IgnoreClientBandwidth,
-		Hy2ObfsPassword:          obfuscateIfSet(ib.Settings.Hy2ObfsPassword),
 		Hy2ObfsMinPacketSize:     ib.Settings.Hy2ObfsMinPacketSize,
 		Hy2ObfsMaxPacketSize:     ib.Settings.Hy2ObfsMaxPacketSize,
 		Hy2Masquerade:            ib.Settings.Hy2Masquerade,
@@ -210,13 +209,6 @@ func (h *InboundHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusCreated, toInboundDTO(ib, 0))
-}
-
-func obfuscateIfSet(s string) string {
-	if s == "" {
-		return ""
-	}
-	return "********"
 }
 
 // Get godoc

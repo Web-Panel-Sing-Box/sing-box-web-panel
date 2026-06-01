@@ -66,7 +66,7 @@ export function InboundsPage() {
   );
 
   return (
-    <div className="mx-auto flex max-w-310 flex-col gap-6">
+    <div className="mx-auto flex max-w-[1240px] flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold text-ink-primary">

@@ -1,11 +1,11 @@
 package handler
 
 import (
+	"bufio"
 	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 
 	"sing-box-web-panel/internal/services/singbox"
 )
@@ -196,7 +196,7 @@ func (h *CoreHandler) Logs(w http.ResponseWriter, r *http.Request) {
 		limit = 200
 	}
 
-	lines, err := readLogLines(h.coreLogPath)
+	lines, total, err := readLogLines(h.coreLogPath, offset, limit)
 	if err != nil {
 		if os.IsNotExist(err) {
 			writeJSON(w, http.StatusOK, coreLogsResponse{Lines: []string{}, Total: 0, HasMore: false})
@@ -207,36 +207,38 @@ func (h *CoreHandler) Logs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	total := len(lines)
-
 	if offset >= total {
 		writeJSON(w, http.StatusOK, coreLogsResponse{Lines: []string{}, Total: total, HasMore: false})
 		return
 	}
 
-	end := offset + limit
-	if end > total {
-		end = total
-	}
-
 	writeJSON(w, http.StatusOK, coreLogsResponse{
-		Lines:   lines[offset:end],
+		Lines:   lines,
 		Total:   total,
-		HasMore: end < total,
+		HasMore: offset+len(lines) < total,
 	})
 }
 
-func readLogLines(path string) ([]string, error) {
-	data, err := os.ReadFile(path)
+func readLogLines(path string, offset, limit int) ([]string, int, error) {
+	f, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	if len(data) == 0 {
-		return []string{}, nil
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+
+	lines := make([]string, 0, limit)
+	total := 0
+	for scanner.Scan() {
+		if total >= offset && len(lines) < limit {
+			lines = append(lines, scanner.Text())
+		}
+		total++
 	}
-	text := strings.TrimSuffix(string(data), "\n")
-	if text == "" {
-		return []string{}, nil
+	if err := scanner.Err(); err != nil {
+		return nil, 0, err
 	}
-	return strings.Split(text, "\n"), nil
+	return lines, total, nil
 }

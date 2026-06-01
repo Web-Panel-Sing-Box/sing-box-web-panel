@@ -72,6 +72,8 @@ func (a *Applier) Trigger() {
 func (a *Applier) ApplyIfMissing(ctx context.Context) error {
 	if _, err := os.Stat(a.configPath); err == nil {
 		return nil
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("check config path: %w", err)
 	}
 	a.log.Info("initial config not found, applying first config")
 	return a.Apply(ctx)

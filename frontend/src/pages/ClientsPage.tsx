@@ -63,7 +63,7 @@ export function ClientsPage() {
 
   return (
     <div
-      className="mx-auto flex max-w-330 flex-col gap-6"
+      className="mx-auto flex max-w-[1320px] flex-col gap-6"
       onMouseEnter={prefetchDetailModal}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">

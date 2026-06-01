@@ -36,7 +36,9 @@ func TestChecker_ValidConfig(t *testing.T) {
 
 	cfg := singboxConfigJSON("", 10080, 19090)
 	path := filepath.Join(dir, "config.json")
-	os.WriteFile(path, cfg, 0644)
+	if err := os.WriteFile(path, cfg, 0644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
 
 	checker := singbox.NewChecker("sing-box", 5*time.Second)
 	if err := checker.Check(context.Background(), path); err != nil {
@@ -50,7 +52,9 @@ func TestChecker_InvalidConfig(t *testing.T) {
 
 	cfg := []byte(`{"type":"garbage"}`)
 	path := filepath.Join(dir, "config.json")
-	os.WriteFile(path, cfg, 0644)
+	if err := os.WriteFile(path, cfg, 0644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
 
 	checker := singbox.NewChecker("sing-box", 5*time.Second)
 	if err := checker.Check(context.Background(), path); err == nil {
@@ -75,7 +79,9 @@ func TestProcessManager_StartStopStatus(t *testing.T) {
 
 	cfg := singboxConfigJSON(dir, 10081, 19091)
 	cfgPath := filepath.Join(dir, "config.json")
-	os.WriteFile(cfgPath, cfg, 0644)
+	if err := os.WriteFile(cfgPath, cfg, 0644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
 
 	pm := singbox.NewProcessManager(singbox.ProcessConfig{
 		Mode:       "subprocess",
@@ -128,7 +134,9 @@ func TestProcessManager_Restart(t *testing.T) {
 
 	cfg := singboxConfigJSON(dir, 10082, 19092)
 	cfgPath := filepath.Join(dir, "config.json")
-	os.WriteFile(cfgPath, cfg, 0644)
+	if err := os.WriteFile(cfgPath, cfg, 0644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
 
 	pm := singbox.NewProcessManager(singbox.ProcessConfig{
 		Mode:       "subprocess",
@@ -299,12 +307,8 @@ func TestFullPipeline_ConfigToClashAPI(t *testing.T) {
 	}
 	defer pm.Stop(ctx)
 
-	time.Sleep(500 * time.Millisecond)
-
 	clashURL := fmt.Sprintf("http://127.0.0.1:%d/connections", clashPort)
-	req, _ := http.NewRequest("GET", clashURL, nil)
-	req.Header.Set("Authorization", "Bearer "+secret)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := waitForClashAPI(ctx, clashURL, secret, 5*time.Second)
 	if err != nil {
 		t.Fatalf("Clash API: %v", err)
 	}
@@ -315,7 +319,9 @@ func TestFullPipeline_ConfigToClashAPI(t *testing.T) {
 	}
 
 	var data map[string]any
-	json.NewDecoder(resp.Body).Decode(&data)
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		t.Fatalf("decode clash response: %v", err)
+	}
 	t.Logf("Clash API response: downloadTotal=%v, uploadTotal=%v", data["downloadTotal"], data["uploadTotal"])
 
 	st, err := pm.Status(ctx)
@@ -326,6 +332,32 @@ func TestFullPipeline_ConfigToClashAPI(t *testing.T) {
 		t.Fatal("core should still be running")
 	}
 	t.Logf("Pipeline test: core running, pid=%d, version=%s", st.PID, st.Version)
+}
+
+func waitForClashAPI(ctx context.Context, url, secret string, timeout time.Duration) (*http.Response, error) {
+	deadline := time.Now().Add(timeout)
+	for {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+		if err != nil {
+			return nil, err
+		}
+		req.Header.Set("Authorization", "Bearer "+secret)
+
+		resp, err := http.DefaultClient.Do(req)
+		if err == nil && resp.StatusCode == http.StatusOK {
+			return resp, nil
+		}
+		if resp != nil {
+			resp.Body.Close()
+		}
+		if time.Now().After(deadline) {
+			if err != nil {
+				return nil, err
+			}
+			return nil, fmt.Errorf("unexpected status: %d", resp.StatusCode)
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
 }
 
 // singboxConfigJSON returns a minimal valid sing-box config JSON.
@@ -347,7 +379,7 @@ func singboxConfigJSON(workingDir string, port int, clashPort int) []byte {
 		"outbounds": []any{
 			map[string]any{"type": "direct", "tag": "direct"},
 		},
-		"route":      map[string]any{"final": "direct"},
+		"route": map[string]any{"final": "direct"},
 		"experimental": map[string]any{
 			"clash_api": map[string]any{
 				"external_controller": fmt.Sprintf("127.0.0.1:%d", clashPort),

@@ -70,11 +70,12 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	var req loginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		var maxBytesErr *http.MaxBytesError
 		if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
 			return
 		}
-		if err.Error() == "http: request body too large" {
+		if errors.As(err, &maxBytesErr) {
 			writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"error": "request body too large"})
 			return
 		}
@@ -144,7 +145,12 @@ func (h *AuthHandler) LoginTOTP(w http.ResponseWriter, r *http.Request) {
 
 	token, err := h.svc.LoginTOTP(r.Context(), req.TempToken, req.Code)
 	if err != nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid totp code"})
+		if errors.Is(err, svcauth.ErrInvalidTOTP) {
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid totp code"})
+			return
+		}
+		h.log.Error("login totp", slog.String("error", err.Error()))
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 

@@ -76,7 +76,7 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-surface px-4 py-10">
-      <Card elevated className="w-full max-w-100 p-7">
+      <Card elevated className="w-full max-w-sm p-7">
         <div className="mb-6 flex justify-center">
           <BrandMark />
         </div>
