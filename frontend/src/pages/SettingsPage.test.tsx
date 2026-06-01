@@ -18,6 +18,8 @@ test("uses a single page-level save button and switches to Russian", async () =>
   await user.click(screen.getByRole("button", { name: "English" }));
   await user.click(screen.getByRole("option", { name: "Русский" }));
 
-  expect(screen.getByRole("heading", { name: "Настройки" })).toBeInTheDocument();
+  expect(
+    screen.getByRole("heading", { name: "Настройки" }),
+  ).toBeInTheDocument();
   expect(screen.getAllByRole("button", { name: "Сохранить" })).toHaveLength(1);
 });

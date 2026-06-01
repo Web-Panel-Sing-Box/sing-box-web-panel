@@ -3,9 +3,12 @@ import {
   CpuCard,
   DiskCard,
   RamCard,
-  TrafficSplitCard
+  TrafficSplitCard,
 } from "@/components/dashboard/metric-card";
-import { ClientsTelemetryCard, InboundsActiveCard } from "@/components/dashboard/connections-panel";
+import {
+  ClientsTelemetryCard,
+  InboundsActiveCard,
+} from "@/components/dashboard/connections-panel";
 import { TrafficChart } from "@/components/dashboard/traffic-chart";
 
 export function DashboardPage() {

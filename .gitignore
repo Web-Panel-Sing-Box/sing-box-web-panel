@@ -1,5 +1,6 @@
 .DS_Store
 .env
+*.exe
 .env.*
 !.env.example
 __pycache__/

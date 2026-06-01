@@ -13,8 +13,16 @@ function BrandMark() {
   return (
     <div className="grid size-11 place-items-center rounded-xl bg-white/5 text-ink-primary">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
-        <path d="M5 8.5 12 5l7 3.5v7L12 19l-7-3.5v-7Z" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M5 8.5 12 12l7-3.5M12 12v7" stroke="currentColor" strokeWidth="1.5" />
+        <path
+          d="M5 8.5 12 5l7 3.5v7L12 19l-7-3.5v-7Z"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        />
+        <path
+          d="M5 8.5 12 12l7-3.5M12 12v7"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        />
       </svg>
     </div>
   );
@@ -29,7 +37,9 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? "/";
+  const from =
+    (location.state as { from?: { pathname?: string } } | null)?.from
+      ?.pathname ?? "/";
 
   const [step, setStep] = useState<Step>("credentials");
   const [username, setUsername] = useState("");
@@ -66,7 +76,7 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-surface px-4 py-10">
-      <Card elevated className="w-full max-w-[400px] p-7">
+      <Card elevated className="w-full max-w-sm p-7">
         <div className="mb-6 flex justify-center">
           <BrandMark />
         </div>
@@ -105,7 +115,9 @@ export function LoginPage() {
               <Button type="submit" variant="white" className="w-full">
                 {t("login.submit")}
               </Button>
-              <p className="text-center text-xs text-ink-tertiary">{t("login.credentialsHint")}</p>
+              <p className="text-center text-xs text-ink-tertiary">
+                {t("login.credentialsHint")}
+              </p>
             </m.form>
           ) : (
             <m.form
@@ -120,7 +132,9 @@ export function LoginPage() {
               <Input
                 id="login-code"
                 value={code}
-                onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
+                onChange={(e) =>
+                  setCode(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))
+                }
                 placeholder={t("login.code")}
                 aria-label={t("login.code")}
                 inputMode="numeric"
@@ -130,7 +144,12 @@ export function LoginPage() {
                 autoFocus
               />
 
-              <Button type="submit" variant="white" className="w-full" disabled={code.length !== 6}>
+              <Button
+                type="submit"
+                variant="white"
+                className="w-full"
+                disabled={code.length !== 6}
+              >
                 {t("login.verify")}
               </Button>
             </m.form>

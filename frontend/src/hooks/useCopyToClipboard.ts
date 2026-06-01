@@ -11,7 +11,8 @@ export function useCopyToClipboard(resetMs = 1500): CopyResult {
 
   const copy = useCallback(
     async (text: string) => {
-      if (typeof navigator === "undefined" || !navigator.clipboard) return false;
+      if (typeof navigator === "undefined" || !navigator.clipboard)
+        return false;
       try {
         await navigator.clipboard.writeText(text);
         setCopied(true);
@@ -21,7 +22,7 @@ export function useCopyToClipboard(resetMs = 1500): CopyResult {
         return false;
       }
     },
-    [resetMs]
+    [resetMs],
   );
 
   const reset = useCallback(() => setCopied(false), []);
