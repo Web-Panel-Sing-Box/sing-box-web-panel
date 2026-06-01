@@ -1,7 +1,7 @@
 
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { useMetrics } from "@/lib/mock/store";
+import { useMetrics } from "@/lib/store";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatSpeed } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";

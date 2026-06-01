@@ -7,7 +7,7 @@ import { MemoryRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/lib/auth";
 import { I18nProvider } from "@/lib/i18n";
-import { MockStoreProvider } from "@/lib/mock/store";
+import { StoreProvider } from "@/lib/store";
 
 type Options = RenderOptions & {
   route?: string;
@@ -18,7 +18,7 @@ export function renderWithProviders(
   ui: ReactElement,
   { route = "/", withStore = true, ...options }: Options = {}
 ) {
-  const body = withStore ? <MockStoreProvider>{ui}</MockStoreProvider> : ui;
+  const body = withStore ? <StoreProvider>{ui}</StoreProvider> : ui;
   return render(
     <I18nProvider>
       <LazyMotion features={domMax} strict>

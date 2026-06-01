@@ -4,8 +4,8 @@ import { Link } from "react-router-dom";
 import { Toggle } from "@/components/ui/toggle";
 import { StatusDot } from "@/components/ui/status-dot";
 import { cn } from "@/lib/utils";
-import type { Inbound, Protocol, TlsMode, Transmission } from "@/lib/mock/inbounds";
-import { useStoreActions } from "@/lib/mock/store";
+import type { Inbound, Protocol, TlsMode, Transmission } from "@/lib/store";
+import { useStoreActions } from "@/lib/store";
 import { useToast } from "@/components/ui/toast";
 import { useI18n } from "@/lib/i18n";
 

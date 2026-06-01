@@ -6,8 +6,8 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InboundsList } from "@/components/inbounds/inbounds-list";
 import type { InboundFormMode } from "@/components/inbounds/inbound-form-modal";
-import { useInbounds } from "@/lib/mock/store";
-import type { Inbound, Protocol } from "@/lib/mock/inbounds";
+import { useInbounds } from "@/lib/store";
+import type { Inbound, Protocol } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
 
 const InboundFormModal = lazy(() =>

@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import type { Inbound } from "@/lib/mock/inbounds";
+import type { Inbound } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
 
 import { InboundHeader, InboundRow } from "./inbound-row";

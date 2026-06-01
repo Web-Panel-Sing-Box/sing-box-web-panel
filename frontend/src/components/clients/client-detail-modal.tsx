@@ -8,8 +8,8 @@ import { Modal, ModalBody, ModalFooter, ModalHeader } from "@/components/ui/moda
 import { Select } from "@/components/ui/select";
 import { Toggle } from "@/components/ui/toggle";
 import { useToast } from "@/components/ui/toast";
-import type { Client, ClientStatus } from "@/lib/mock/clients";
-import { useInbounds, useStoreActions } from "@/lib/mock/store";
+import type { Client, ClientStatus } from "@/lib/store";
+import { useInbounds, useStoreActions } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
 
 import { QrModal } from "./qr-modal";

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ClientFilterBar, type FilterState } from "@/components/clients/client-filter-bar";
 import { ClientsTable } from "@/components/clients/clients-table";
 import { useDisclosure } from "@/hooks/useDisclosure";
-import type { Client } from "@/lib/mock/clients";
+import type { Client } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
 
 const AddClientModal = lazy(() =>

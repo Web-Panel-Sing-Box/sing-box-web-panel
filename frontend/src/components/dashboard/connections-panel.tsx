@@ -3,11 +3,11 @@ import type { MouseEventHandler } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Network, Users } from "lucide-react";
 
-import { useClients, useInbounds, useMetrics } from "@/lib/mock/store";
+import { useClients, useInbounds, useMetrics } from "@/lib/store";
 import { Card, CardHeader, CardLabel } from "@/components/ui/card";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { StatusDot } from "@/components/ui/status-dot";
-import type { Inbound, Protocol } from "@/lib/mock/inbounds";
+import type { Inbound, Protocol } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 
