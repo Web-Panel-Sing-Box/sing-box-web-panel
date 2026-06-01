@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Toggle } from "@/components/ui/toggle";
 import { StatusDot } from "@/components/ui/status-dot";
 import { cn } from "@/lib/utils";
-import type { Inbound, Protocol, TlsMode, Transmission } from "@/lib/mock/inbounds";
+import type { Inbound, Network, Protocol, TlsMode, VlessTransport } from "@/lib/mock/inbounds";
 import { useStoreActions } from "@/lib/mock/store";
 import { useToast } from "@/components/ui/toast";
 import { useI18n } from "@/lib/i18n";
@@ -48,7 +48,7 @@ function InboundRowImpl({ inbound, onEdit }: { inbound: Inbound; onEdit: (inboun
       <ProtocolChip protocol={inbound.protocol} />
       <span className="font-mono text-sm text-ink-secondary">{inbound.port}</span>
       <span className="truncate text-sm text-ink-primary">{inbound.remark}</span>
-      <TransportChip transmission={inbound.transmission} tls={inbound.tls} />
+      <TransportChip inbound={inbound} />
       <Link
         to={`/clients?inbound=${inbound.id}`}
         onClick={(event) => event.stopPropagation()}
@@ -100,24 +100,38 @@ export function ProtocolChip({ protocol }: { protocol: Inbound["protocol"] }) {
   );
 }
 
-function TransportChip({ transmission, tls }: { transmission: Transmission; tls: TlsMode }) {
+function TransportChip({ inbound }: { inbound: Inbound }) {
   return (
     <span className="inline-flex h-7 w-fit items-center rounded-full border border-white/15 bg-canvas px-2.5 font-mono text-[11px] uppercase tracking-wider text-ink-secondary">
-      {transportLabel(transmission)} · {tlsLabel(tls)}
+      {connectionLabel(inbound)} · {tlsLabel(inbound.tls)}
     </span>
   );
 }
 
-function transportLabel(transmission: Transmission) {
-  const labels: Record<Transmission, string> = {
+function connectionLabel(inbound: Inbound) {
+  if (inbound.protocol === "vless") return transportLabel(inbound.transport ?? "tcp");
+  if (inbound.protocol === "naive") return networkLabel(inbound.network ?? "both");
+  return "QUIC"; // hysteria2
+}
+
+function transportLabel(transport: VlessTransport) {
+  const labels: Record<VlessTransport, string> = {
     tcp: "TCP",
-    mkcp: "mKCP",
-    grpc: "gRPC",
     ws: "WS",
-    xhttp: "XHTTP",
+    grpc: "gRPC",
+    http: "HTTP/2",
     httpupgrade: "HTTPUpgrade"
   };
-  return labels[transmission];
+  return labels[transport];
+}
+
+function networkLabel(network: Network) {
+  const labels: Record<Network, string> = {
+    tcp: "TCP",
+    udp: "UDP",
+    both: "TCP+UDP"
+  };
+  return labels[network];
 }
 
 function tlsLabel(tls: TlsMode) {
