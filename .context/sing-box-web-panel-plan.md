@@ -1,4 +1,4 @@
-# Sing-Box Web Panel Implementation Plan
+# Shilka Implementation Plan
 
 ## Summary
 
@@ -6,90 +6,74 @@ Build a local-first control panel for `sing-box` with Go, SQLite, Vite+React SPA
 
 ## Repository
 
-Monorepo with `cmd/`, `internal/`, `frontend/`, `config/`, `scripts/`, `systemd/`, `.context/`, `README.md`, and `AGENTS.md`.
+Monorepo with `cmd/`, `internal/`, `frontend/`, `config/`, `scripts/`, `.context/`, `README.md`, and `AGENTS.md`.
 
 ## Backend (Go)
 
-- Go 1.26.2 with `cleanenv` for YAML config + env var override.
+- Go 1.26 with `cleanenv` for YAML config + env var override.
 - SQLite via `modernc.org/sqlite` (pure Go, no CGo). WAL mode, `synchronous=NORMAL`, mmap, batched writes.
 - `log/slog` for structured logging, `github.com/fatih/color` for dev-mode pretty output.
-- Embedded `//go:embed` migrations with version tracking in `schema_migrations`. Applied automatically on startup via `sqlite.New()`.
+- Embedded `//go:embed` migrations and frontend SPA.
 - Graceful shutdown via `signal.NotifyContext` (SIGINT/SIGTERM) with HTTP `ShutdownTimeout`.
-- Tables: `admins`, `admin_recovery_codes`, `inbounds`, `users`, `user_inbounds`, `traffic_ledger`, `settings`, `config_revisions`, `subscriptions`.
+- Auto-start core on panel boot; core stopped on graceful shutdown.
+- Tables: `admins`, `admin_recovery_codes`, `inbounds`, `clients`, `settings`, `config_revisions`, `traffic_ledger`, `subscriptions`.
 
 ### Implemented
 
-- **Auth**: JWT cookie auth (HS256), Argon2id password hashing (PHC format), TOTP 2FA (SHA1, 6 digits, 30s), recovery codes (Argon2id-hashed, one-time use).
+- **Auth**: JWT cookie/Bearer auth (HS256), Argon2id password hashing (PHC format), TOTP 2FA (SHA1, 6 digits, 30s) with pending JWT flow, recovery codes (Argon2id-hashed, one-time use).
 - **Bootstrap**: first admin auto-created from config if `admins` table is empty.
-- **HTTP server**: with swagger, cors, auth, and request logging middleware.
-- **API endpoints**: login, login/recovery, me, logout, totp/setup, totp/confirm, totp/disable, change-password, health, root.
-- **Swagger UI**: served at `/swagger/`, spec generated via `swaggo/swag` annotations.
+- **Core lifecycle**: ProcessManager (systemd + subprocess), generator (full config.json from DB), checker (`sing-box check`), applier (render→check→atomic write→restart, debounced).
+- **Traffic stats**: Clash REST API polling (global throughput, online count), V2Ray gRPC (opt-in, per-user counters), batched DB writes, quota enforcement.
+- **Full protocol support**: VLESS (TCP/WS/gRPC, TLS/Reality, flow, multiplex), Hysteria2 (obfs, masquerade, bandwidth, bbr_profile, brutal_debug, realm stubs), Naive (quic_congestion_control).
+- **API endpoints**: auth (login, TOTP, recovery, change-password), inbound CRUD, client CRUD, core lifecycle, dashboard metrics, logs, subscriptions, share links.
+- **Swagger UI**: served at `/swagger/` (dev only), spec via `swaggo/swag`.
+- **Frontend serving**: embedded `//go:embed` (prod) or disk mode (dev). SPA fallback for all unknown paths.
+- **Middleware**: Logger (structured, 4xx=WARN, 5xx=ERROR), CORS (same-origin + allowed list), Auth (JWT cookie/Bearer), RateLimit (per-IP token bucket).
 
-### Domain Models
+### Config
 
-- `Admin` — username, password_hash, totp_secret, is_totp_enabled, totp_confirmed_at
-- `RecoveryCode` — admin_id, code_hash, is_used, used_at
-- `Inbound` — remark, protocol (vless/hysteria2/naive), port, enabled, config_json (protocol-specific)
-- `User` — name, traffic counters, quota, expiry, status
-- `TrafficEntry`, `Setting`, `ConfigRevision`, `Subscription`
-
-### Future
-
-- `LocalConfigGenerator` that reads SQLite, builds full `config.json`, validates with `sing-box check`, writes atomically, records revisions.
-- `ProcessManager` adapters for systemd and direct subprocess mode.
-- `TrafficBackgroundWorker` with live speed polling, per-user source adapters, quota enforcement, batched SQLite writes.
-- CRUD for users and inbounds, subscription links, QR generation, dashboard metrics, log reads, core process actions.
+- Primary: `config/dev.yaml` (YAML). Secrets overridden via environment variables.
+- `SHILKA_CONFIG_PATH` env var to point to a different config file.
+- `cleanenv.ReadConfig()` reads YAML first, then overrides from env vars.
+- Prod config template: `config/prod.yaml`.
 
 ## Frontend
 
 - Vite + React 19 + TypeScript SPA. Tailwind CSS, Framer Motion, Recharts, React Router DOM.
-- True black background (`#171717`), mono typography (Inter + JetBrains Mono), restrained panels, neon accents.
+- True black background, mono typography, restrained panels, neon accents.
 - Screens: Dashboard, Inbounds, Clients, Settings, Logs.
+- **API layer**: `src/api/` with typed DTOs and fetch functions for all backend endpoints.
+- **State**: `StoreProvider` polls backend every 3s when authenticated, skips when no token.
+- Auth: real login via `POST /api/auth/login`, TOTP pending token flow.
+- Routes: `/login` (public), `/dashboard`, `/inbounds`, `/clients`, `/settings`, `/logs` (protected).
 - Dev server proxies `/api/*` to `127.0.0.1:8080`.
-- Current state: fully functional **mock UI** with in-memory store. All data shapes defined, ready for real API integration.
+
+## Build & Deploy
+
+- **Embedded binary**: `pnpm build` → `rsync frontend/dist cmd/frontend/dist` → `go build ./cmd/`
+- **CI**: backend (build, vet, test), frontend (typecheck, test, build, smoke tests), shellcheck
+- **CD**: push to `main` → semantic-release → build linux/amd64 + linux/arm64 binaries → GitHub Release with checksums
+- **install.sh**: downloads sing-box + shilka binary from GitHub releases, writes prod config, installs systemd unit
 
 ## Tests
 
-- Located in `tests/` mirroring `internal/` structure.
-- External test packages (`package foo_test`).
-- Tests for all implemented packages: Argon2, JWT, TOTP, AuthService (with mocks), CORS middleware, Auth middleware, Logger middleware, Health handler, Auth handler.
-- Run: `go test ./tests/...`
+- `tests/` mirrors `internal/` structure, external test packages.
+- Unit: Argon2, JWT, TOTP, AuthService (mocks), CORS, Auth middleware, Logger middleware, handlers.
+- Integration: sing-box checker, process manager, applier, full pipeline (config→core→Clash API).
+- Frontend unit: vitest + testing-library.
+- Frontend e2e: Playwright smoke tests.
 
-## CI/CD
+## Security
 
-- GitHub Actions: Go build, vet, test (`go build ./...`, `go vet ./...`, `go test ./tests/...`).
-- Frontend: typecheck, unit tests, build, Playwright smoke tests.
-- Shell scripts: shellcheck lint.
-
-## Config
-
-- Primary: `config/dev.yaml` (YAML). Secrets overridden via environment variables.
-- `SING_GROK_CONFIG_PATH` env var to point to a different config file.
-- `cleanenv.ReadConfig()` reads YAML first, then overrides from env vars.
-- Sections: runtime (GoMemLimit, GoGC), database (SQLite pragmas), http, frontend, auth, sing_box, metrics, logging, subscription.
-
-## Check Commands
-
-```
-go build ./...
-go vet ./...
-go test ./tests/...
-swag init -g cmd/main.go -o docs --parseDependency --parseInternal
-cd frontend && pnpm typecheck
-cd frontend && pnpm build
-cd frontend && pnpm test
-```
-
-## Security and Disk I/O
-
-- sing-box Clash/V2Ray APIs must bind only to `127.0.0.1`.
-- Secrets must not be logged, committed to git, or hardcoded in YAML.
-- SQLite uses WAL, `synchronous=NORMAL`, `busy_timeout`, foreign keys, and batched traffic writes.
-- Shell commands must avoid interpolating untrusted user input.
-- Recovery codes and passwords are Argon2id-hashed. TOTP secrets stored in DB (future: AES-encrypted).
+- sing-box Clash/V2Ray APIs bind only to `127.0.0.1`.
+- Secrets never logged, committed, or hardcoded in YAML.
+- Recovery codes and passwords Argon2id-hashed.
+- Subprocess Reload uses full Restart (SIGHUP unreliable cross-platform).
+- Rate limiting on login (5/m) and general API (100/s).
 
 ## Acceptance Goals
 
-- Installer can deploy on Ubuntu/Debian VPS with one command.
-- Panel can create an inbound/client, generate a valid link/QR, validate and apply sing-box config, restart local core, stream logs, and enforce traffic limits.
+- One-command deployment on Ubuntu/Debian VPS.
+- Panel can create inbounds/clients, generate links, validate and apply config, restart core, stream logs, enforce quotas.
 - Optimized for weak VDS (256–512 MB RAM, single vCPU).
+- Single binary, single port, single systemd unit.

@@ -12,6 +12,10 @@ __pycache__/
 venv/
 dist/
 build/
+# Embed target for Go binary: keep placeholder, ignore generated frontend.
+!cmd/frontend/dist/
+cmd/frontend/dist/*
+!cmd/frontend/dist/.gitkeep
 node_modules/
 .next/
 out/
@@ -28,7 +32,3 @@ config.json
 config.json.bak-*
 sing-box
 storage/
-
-# Embed target: only keep the gitkeep, everything else is generated
-cmd/frontend/
-!cmd/frontend/dist/.gitkeep
