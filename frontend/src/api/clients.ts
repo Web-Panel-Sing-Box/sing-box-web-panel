@@ -5,6 +5,8 @@ import type { ClientStatus } from "./types";
 
 export type ClientDTO = {
   id: string;
+  nodeId?: string;
+  remoteId?: string;
   name: string;
   uuid: string;
   inboundId: string;
@@ -14,6 +16,8 @@ export type ClientDTO = {
   expiry: string;
   status: ClientStatus;
   subscription: string;
+  subToken?: string;
+  enabled?: boolean;
   startAfterFirstUse: boolean;
 };
 

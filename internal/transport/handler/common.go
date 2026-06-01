@@ -13,6 +13,8 @@ import (
 	svcinbound "sing-box-web-panel/internal/services/inbound"
 )
 
+const timeRFC3339 = time.RFC3339
+
 // idParam parses the {id} path value as a positive int64.
 func idParam(r *http.Request) (int64, bool) {
 	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)

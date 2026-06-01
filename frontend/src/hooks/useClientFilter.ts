@@ -5,6 +5,7 @@ import type { Client, ClientStatus } from "@/lib/store";
 export type ClientFilterState = {
   query: string;
   inboundId: string;
+  nodeId: string;
   status: ClientStatus | "all";
 };
 
@@ -16,6 +17,9 @@ export function useClientFilter(
     const q = filter.query.trim().toLowerCase();
     return clients.filter((c) => {
       if (filter.inboundId !== "all" && c.inboundId !== filter.inboundId)
+        return false;
+      if (filter.nodeId === "local" && c.nodeId) return false;
+      if (filter.nodeId !== "all" && filter.nodeId !== "local" && c.nodeId !== filter.nodeId)
         return false;
       if (filter.status !== "all" && c.status !== filter.status) return false;
       if (!q) return true;

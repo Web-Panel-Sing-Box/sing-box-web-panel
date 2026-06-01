@@ -10,7 +10,7 @@ import { useToast } from "@/components/ui/toast";
 import { useI18n } from "@/lib/i18n";
 
 const ROW_GRID =
-  "grid-cols-[minmax(96px,1fr)_minmax(90px,0.8fr)_minmax(180px,1.5fr)_minmax(150px,1.2fr)_minmax(100px,0.8fr)_minmax(90px,0.7fr)_minmax(110px,0.8fr)]";
+  "grid-cols-[minmax(96px,1fr)_minmax(90px,0.8fr)_minmax(180px,1.5fr)_minmax(110px,0.8fr)_minmax(150px,1.2fr)_minmax(100px,0.8fr)_minmax(90px,0.7fr)_minmax(110px,0.8fr)]";
 
 function InboundRowImpl({ inbound, onEdit }: { inbound: Inbound; onEdit: (inbound: Inbound) => void }) {
   const { toggleInbound } = useStoreActions();
@@ -48,6 +48,9 @@ function InboundRowImpl({ inbound, onEdit }: { inbound: Inbound; onEdit: (inboun
       <ProtocolChip protocol={inbound.protocol} />
       <span className="font-mono text-sm text-ink-secondary">{inbound.port}</span>
       <span className="truncate text-sm text-ink-primary">{inbound.remark}</span>
+      <span className="w-fit rounded-full border border-subtle bg-canvas px-2.5 py-1 font-mono text-[11px] text-ink-tertiary">
+        {inbound.nodeId ? `node:${inbound.nodeId}` : "local"}
+      </span>
       <TransportChip transmission={inbound.transmission} tls={inbound.tls} />
       <Link
         to={`/clients?inbound=${inbound.id}`}

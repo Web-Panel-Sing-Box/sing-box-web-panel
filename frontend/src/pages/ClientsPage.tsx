@@ -35,6 +35,7 @@ export function ClientsPage() {
   const [filter, setFilter] = useState<FilterState>({
     query: "",
     inboundId: "all",
+    nodeId: "all",
     status: "all",
   });
   const [selected, setSelected] = useState<Client | null>(null);
@@ -43,8 +44,11 @@ export function ClientsPage() {
 
   useEffect(() => {
     const inboundId = searchParams.get("inbound") ?? "all";
+    const nodeId = searchParams.get("node") ?? "all";
     setFilter((prev) =>
-      prev.inboundId === inboundId ? prev : { ...prev, inboundId },
+      prev.inboundId === inboundId && prev.nodeId === nodeId
+        ? prev
+        : { ...prev, inboundId, nodeId },
     );
   }, [searchParams]);
 
@@ -54,6 +58,8 @@ export function ClientsPage() {
       const params = new URLSearchParams(searchParams);
       if (next.inboundId === "all") params.delete("inbound");
       else params.set("inbound", next.inboundId);
+      if (next.nodeId === "all") params.delete("node");
+      else params.set("node", next.nodeId);
       setSearchParams(params, { replace: true });
     },
     [searchParams, setSearchParams],

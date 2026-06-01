@@ -34,18 +34,22 @@ const (
 // Inbound is a configured sing-box listener. Protocol-specific and rarely
 // changing details live in Settings (persisted as JSON).
 type Inbound struct {
-	ID           int64
-	Remark       string
-	Protocol     Protocol
-	Port         int
-	Transmission Transmission
-	TLS          TLSMode
-	SNI          string
-	Dest         string
-	Enabled      bool
-	Settings     InboundSettings
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID            int64
+	NodeID        *int64
+	RemoteID      string
+	RemoteVersion string
+	Remark        string
+	Protocol      Protocol
+	Port          int
+	Transmission  Transmission
+	TLS           TLSMode
+	SNI           string
+	Dest          string
+	Enabled       bool
+	Settings      InboundSettings
+	LastSyncedAt  *time.Time
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }
 
 // InboundSettings holds protocol/transport/TLS material that is generated or
@@ -81,8 +85,8 @@ type InboundSettings struct {
 	Hy2BBRProfile            string `json:"hy2BbrProfile,omitempty"` // conservative, standard, aggressive
 
 	// Naive.
-	NaiveNetwork             string `json:"naiveNetwork,omitempty"` // tcp, udp, ""
-	NaiveQuicCongestionCtrl  string `json:"naiveQuicCongestionCtrl,omitempty"` // bbr, cubic, reno, etc.
+	NaiveNetwork            string `json:"naiveNetwork,omitempty"`            // tcp, udp, ""
+	NaiveQuicCongestionCtrl string `json:"naiveQuicCongestionCtrl,omitempty"` // bbr, cubic, reno, etc.
 
 	// VLESS multiplex.
 	MultiplexEnabled bool `json:"multiplexEnabled,omitempty"`

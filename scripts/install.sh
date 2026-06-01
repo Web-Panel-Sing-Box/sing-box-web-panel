@@ -157,9 +157,9 @@ stats:
   v2ray_api_address: "127.0.0.1:8088"
 
 tls:
-  mode: "file"
-  cert_file: "${CONFIG_DIR}/tls/cert.pem"
-  key_file: "${CONFIG_DIR}/tls/key.pem"
+  mode: "off"
+  cert_file: ""
+  key_file: ""
   acme_email: ""
   acme_domains: []
   acme_cache_dir: "${DATA_DIR}/acme"
@@ -194,7 +194,7 @@ YAML
 }
 
 install_systemd() {
-  cat >/etc/systemd/system/shilka.service <<'UNIT'
+  cat >/etc/systemd/system/shilka.service <<UNIT
 [Unit]
 Description=Shilka web panel
 After=network-online.target
@@ -202,17 +202,17 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=shilka
-Group=shilka
-WorkingDirectory=/opt/shilka
-Environment=SHILKA_CONFIG_PATH=/etc/shilka/prod.yaml
-ExecStart=/opt/shilka/bin/shilka
+User=${APP_USER}
+Group=${APP_USER}
+WorkingDirectory=${APP_HOME}
+Environment=SHILKA_CONFIG_PATH=${CONFIG_DIR}/prod.yaml
+ExecStart=${APP_HOME}/bin/shilka run
 Restart=on-failure
 RestartSec=3
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=full
-ReadWritePaths=/etc/shilka /var/lib/shilka /var/log/shilka
+ReadWritePaths=${CONFIG_DIR} ${DATA_DIR} ${LOG_DIR}
 StandardOutput=journal
 StandardError=journal
 
@@ -225,6 +225,13 @@ UNIT
 set -Eeuo pipefail
 
 CONFIG_DIR="${CONFIG_DIR:-/etc/shilka}"
+DATA_DIR="${DATA_DIR:-/var/lib/shilka}"
+BIN="${BIN:-/opt/shilka/bin/shilka}"
+export SHILKA_CONFIG_PATH="${SHILKA_CONFIG_PATH:-${CONFIG_DIR}/prod.yaml}"
+
+if [[ "$#" -gt 0 ]]; then
+  exec "${BIN}" "$@"
+fi
 
 start_services()   { systemctl start shilka.service; }
 stop_services()    { systemctl stop shilka.service; }
@@ -238,14 +245,10 @@ reset_admin_password() {
     echo "Password cannot be empty"
     exit 1
   fi
-  systemctl stop shilka.service
-  local tmp="$(mktemp)"
-  sed "s/^  admin_password: .*/  admin_password: \"${password}\"/" "${CONFIG_DIR}/prod.yaml" >"${tmp}"
-  mv "${tmp}" "${CONFIG_DIR}/prod.yaml"
+  "${BIN}" admin reset-password -password "${password}"
   echo "${password}" >"${CONFIG_DIR}/initial-admin-password"
   chmod 0600 "${CONFIG_DIR}/initial-admin-password"
-  rm -f /var/lib/shilka/panel.db /var/lib/shilka/panel.db-wal /var/lib/shilka/panel.db-shm
-  systemctl start shilka.service
+  systemctl restart shilka.service
   echo "Password reset. Log in with username 'admin' and the new password."
 }
 
@@ -256,14 +259,57 @@ change_panel_port() {
     echo "Invalid port"
     return 1
   fi
-  sed -i.bak "s/^  address: \"127.0.0.1:.*$/  address: \"127.0.0.1:${port}\"/" "${CONFIG_DIR}/prod.yaml"
+  "${BIN}" setting -port "${port}"
   systemctl restart shilka.service
+}
+
+set_domain() {
+  local domain
+  read -rp "Panel domain: " domain
+  if [[ -z "${domain}" ]]; then
+    echo "Domain cannot be empty"
+    return 1
+  fi
+  "${BIN}" setting -domain "${domain}" -public-url "https://${domain}"
+  systemctl restart shilka.service
+}
+
+create_api_token() {
+  local name
+  read -rp "Token name [node]: " name
+  name="${name:-node}"
+  "${BIN}" api-token create -name "${name}" -scopes node
+}
+
+set_custom_cert() {
+  local cert key
+  read -rp "Certificate path: " cert
+  read -rp "Key path: " key
+  "${BIN}" cert set-files -cert "${cert}" -key "${key}"
+  systemctl restart shilka.service
+}
+
+disable_panel_tls() {
+  "${BIN}" cert reset
+  systemctl restart shilka.service
+}
+
+backup_db() {
+  local out="${DATA_DIR}/panel-$(date +%Y%m%d-%H%M%S).db"
+  cp -a "${DATA_DIR}/panel.db" "${out}"
+  echo "Backup: ${out}"
+}
+
+core_reload() {
+  "${BIN}" core reload
 }
 
 show_menu() {
   cat <<'MENU'
 1. Start   2. Stop   3. Restart   4. Reset admin password
-5. Change port   6. Status   7. Logs   0. Exit
+5. Change port   6. Status   7. Logs   8. Create API token
+9. Set domain/public URL   10. Set custom TLS cert   11. Disable TLS
+12. Core reload   13. Backup DB   0. Exit
 MENU
 }
 
@@ -279,6 +325,12 @@ main() {
       5) change_panel_port ;;
       6) systemctl status shilka.service --no-pager ;;
       7) journalctl -u shilka.service -n 120 --no-pager ;;
+      8) create_api_token ;;
+      9) set_domain ;;
+      10) set_custom_cert ;;
+      11) disable_panel_tls ;;
+      12) core_reload ;;
+      13) backup_db ;;
       0) exit 0 ;;
       *) echo "Unknown option" ;;
     esac
