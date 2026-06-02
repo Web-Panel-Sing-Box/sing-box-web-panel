@@ -34,7 +34,7 @@ export function ClientsTable({ filter, onSelect }: Props) {
     <Card padded={false} className="flex max-h-[calc(100dvh-170px)] flex-col overflow-hidden">
       <div className="flex-1 overflow-auto">
         <div className="min-w-[960px]">
-          <div className={cn("sticky top-0 z-10 grid items-center border-b border-subtle bg-surface px-5 py-3 text-[11px] uppercase tracking-wider text-ink-tertiary", GRID)}>
+          <div className={cn("sticky top-0 z-10 grid items-center border-b border-subtle bg-surface px-5 py-3 text-xs font-medium text-ink-tertiary", GRID)}>
             <span>{t("clients.name")}</span>
             <span>{t("clients.dataUsage")}</span>
             <span className="text-center">{t("clients.expiry")}</span>
@@ -53,7 +53,7 @@ export function ClientsTable({ filter, onSelect }: Props) {
                 <Row
                   key={c.id}
                   client={c}
-                  inboundLabel={inbound?.remark ?? "—"}
+                  inboundLabel={inbound?.remark ?? "-"}
                   pct={pct}
                   total={total}
                   onSelect={onSelect}

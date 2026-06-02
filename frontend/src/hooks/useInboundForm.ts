@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useToast } from "@/components/ui/toast";
+import { ApiError } from "@/api/client";
 import { useI18n } from "@/lib/i18n";
 import {
   useStoreActions,
@@ -210,6 +211,13 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
         push(mode === "clone" ? t("inbounds.cloned") : t("inbounds.created"), "success");
       }
       onClose();
+    } catch (err) {
+      const body = err instanceof ApiError ? err.body : null;
+      const message =
+        body && typeof body === "object" && body !== null && "error" in body
+          ? String((body as { error: unknown }).error)
+          : t("inbounds.saveFailed");
+      push(message, "error");
     } finally {
       setSaving(false);
     }

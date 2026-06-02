@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { LazyMotion, domMax } from "framer-motion";
+import { LazyMotion, MotionConfig, domMax } from "framer-motion";
 import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { RequireAuth } from "@/components/auth/require-auth";
@@ -34,6 +34,7 @@ export function App() {
   return (
     <I18nProvider>
       <LazyMotion features={domMax} strict>
+        <MotionConfig reducedMotion="user">
         <Toaster>
           <AuthProvider>
             <HashRouter>
@@ -59,6 +60,7 @@ export function App() {
             </HashRouter>
           </AuthProvider>
         </Toaster>
+        </MotionConfig>
       </LazyMotion>
     </I18nProvider>
   );

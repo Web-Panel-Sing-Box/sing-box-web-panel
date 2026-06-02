@@ -63,6 +63,8 @@ type StoreActions = {
   setPaused: (v: boolean) => void;
   appendLog: (level: string, message: string) => void;
   setCoreRunning: (v: boolean) => void;
+  startCore: () => Promise<void>;
+  stopCore: () => Promise<void>;
 };
 
 const emptyMetrics: MetricsDTO = {
@@ -129,6 +131,8 @@ export function StoreProvider({ children, seed }: { children: React.ReactNode; s
     setPaused,
     appendLog: () => {},
     setCoreRunning: (v) => setMetrics(prev => ({ ...prev, coreRunning: v })),
+    startCore: async () => { await api.startCore(); await loadAll(); },
+    stopCore: async () => { await api.stopCore(); await loadAll(); },
   }), [metrics, history, inbounds, clients, logs, paused, loadAll]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
@@ -172,7 +176,7 @@ export function useStoreActions() {
       removeInbound: noop, cloneInbound: noop, addClient: noop,
       updateClient: noop, removeClient: noop, resetClientTraffic: noop,
       setClientStatus: noop, setPaused: () => {}, appendLog: () => {},
-      setCoreRunning: () => {},
+      setCoreRunning: () => {}, startCore: noop, stopCore: noop,
     } as StoreActions;
   }
   return ctx;

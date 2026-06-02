@@ -77,7 +77,7 @@ function InboundRowImpl({ inbound, onEdit }: { inbound: Inbound; onEdit: (inboun
 
 export function InboundHeader({ children }: { children: ReactNode }) {
   return (
-    <div className={cn("grid items-center gap-3 border-b border-subtle px-4 py-3 text-[11px] uppercase tracking-wider text-ink-tertiary sm:px-5", ROW_GRID)}>
+    <div className={cn("grid items-center gap-3 border-b border-subtle px-4 py-3 text-xs font-medium text-ink-tertiary sm:px-5", ROW_GRID)}>
       {children}
     </div>
   );
