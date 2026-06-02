@@ -55,6 +55,8 @@ type inboundSettingsDTO struct {
 
 type inboundDTO struct {
 	ID           string              `json:"id"`
+	NodeID       string              `json:"nodeId,omitempty"`
+	RemoteID     string              `json:"remoteId,omitempty"`
 	Remark       string              `json:"remark"`
 	Protocol     string              `json:"protocol"`
 	Port         int                 `json:"port"`
@@ -65,12 +67,14 @@ type inboundDTO struct {
 	Enabled      bool                `json:"enabled"`
 	ClientCount  int                 `json:"clientCount"`
 	CreatedAt    string              `json:"createdAt"`
+	UpdatedAt    string              `json:"updatedAt"`
 	Settings     *inboundSettingsDTO `json:"settings,omitempty"`
 }
 
 func toInboundDTO(ib *domain.Inbound, clientCount int) inboundDTO {
 	dto := inboundDTO{
 		ID:           strconv.FormatInt(ib.ID, 10),
+		RemoteID:     ib.RemoteID,
 		Remark:       ib.Remark,
 		Protocol:     string(ib.Protocol),
 		Port:         ib.Port,
@@ -81,6 +85,10 @@ func toInboundDTO(ib *domain.Inbound, clientCount int) inboundDTO {
 		Enabled:      ib.Enabled,
 		ClientCount:  clientCount,
 		CreatedAt:    ib.CreatedAt.UTC().Format(time.RFC3339),
+		UpdatedAt:    ib.UpdatedAt.UTC().Format(time.RFC3339),
+	}
+	if ib.NodeID != nil {
+		dto.NodeID = strconv.FormatInt(*ib.NodeID, 10)
 	}
 	// Surface only non-secret settings; never expose the Reality private key.
 	s := inboundSettingsDTO{

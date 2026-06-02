@@ -2,16 +2,20 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strings"
 
+	"sing-box-web-panel/internal/domain"
 	"sing-box-web-panel/internal/lib/auth"
+	svcapitoken "sing-box-web-panel/internal/services/apitoken"
 )
 
 type contextKey string
 
 const AdminIDKey contextKey = "admin_id"
+const APITokenIDKey contextKey = "api_token_id"
 
 var publicPaths = map[string]bool{
 	"/api/auth/login":          true,
@@ -22,7 +26,15 @@ var publicPaths = map[string]bool{
 	"/api/health":              true,
 }
 
-func Auth(jwt *auth.JWTManager, log *slog.Logger) func(http.Handler) http.Handler {
+type APITokenVerifier interface {
+	Verify(ctx context.Context, raw, requiredScope string) (*domain.APIToken, error)
+}
+
+func Auth(jwt *auth.JWTManager, log *slog.Logger, apiVerifiers ...APITokenVerifier) func(http.Handler) http.Handler {
+	var apiVerifier APITokenVerifier
+	if len(apiVerifiers) > 0 {
+		apiVerifier = apiVerifiers[0]
+	}
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if publicPaths[r.URL.Path] {
@@ -32,6 +44,31 @@ func Auth(jwt *auth.JWTManager, log *slog.Logger) func(http.Handler) http.Handle
 
 			if isPublicPrefix(r.URL.Path) {
 				next.ServeHTTP(w, r)
+				return
+			}
+
+			if strings.HasPrefix(r.URL.Path, "/api/node/v1/") {
+				if apiVerifier == nil {
+					http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+					return
+				}
+				token := extractBearer(r)
+				apiToken, err := apiVerifier.Verify(r.Context(), token, "node")
+				if err != nil {
+					level := slog.LevelWarn
+					if !errors.Is(err, svcapitoken.ErrUnauthorized) {
+						level = slog.LevelError
+					}
+					log.Log(r.Context(), level, "api token auth failed",
+						slog.String("path", r.URL.Path),
+						slog.String("remote", r.RemoteAddr),
+						slog.String("error", err.Error()),
+					)
+					http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+					return
+				}
+				ctx := context.WithValue(r.Context(), APITokenIDKey, apiToken.ID)
+				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
 
@@ -60,6 +97,14 @@ func Auth(jwt *auth.JWTManager, log *slog.Logger) func(http.Handler) http.Handle
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+func extractBearer(r *http.Request) string {
+	header := r.Header.Get("Authorization")
+	if strings.HasPrefix(header, "Bearer ") {
+		return strings.TrimSpace(strings.TrimPrefix(header, "Bearer "))
+	}
+	return ""
 }
 
 // publicPrefixes are path prefixes served without authentication: the Swagger

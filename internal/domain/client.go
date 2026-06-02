@@ -15,6 +15,8 @@ const (
 // identity used to key per-user traffic statistics, so it is globally unique.
 type Client struct {
 	ID                 int64
+	NodeID             *int64
+	RemoteID           string
 	InboundID          int64
 	Name               string
 	UUID               string // VLESS credential
@@ -28,6 +30,7 @@ type Client struct {
 	StartAfterFirstUse bool
 	Enabled            bool
 	FirstUsedAt        *time.Time
+	LastSyncedAt       *time.Time
 	CreatedAt          time.Time
 	UpdatedAt          time.Time
 }

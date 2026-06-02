@@ -17,7 +17,7 @@ type InboundRepo struct {
 
 func NewInboundRepo(db *sql.DB) *InboundRepo { return &InboundRepo{db: db} }
 
-const inboundColumns = `id, remark, protocol, port, transmission, tls, sni, dest, enabled, settings_json, created_at, updated_at`
+const inboundColumns = `id, node_id, remote_id, remote_version, remark, protocol, port, transmission, tls, sni, dest, enabled, settings_json, last_synced_at, created_at, updated_at`
 
 func (r *InboundRepo) Create(ctx context.Context, ib *domain.Inbound) error {
 	settings, err := json.Marshal(ib.Settings)
@@ -26,9 +26,10 @@ func (r *InboundRepo) Create(ctx context.Context, ib *domain.Inbound) error {
 	}
 
 	result, err := r.db.ExecContext(ctx,
-		`INSERT INTO inbounds (remark, protocol, port, transmission, tls, sni, dest, enabled, settings_json)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		ib.Remark, ib.Protocol, ib.Port, ib.Transmission, ib.TLS, ib.SNI, ib.Dest, ib.Enabled, string(settings),
+		`INSERT INTO inbounds (node_id, remote_id, remote_version, remark, protocol, port, transmission, tls, sni, dest, enabled, settings_json, last_synced_at)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		nullableInt64(ib.NodeID), ib.RemoteID, ib.RemoteVersion, ib.Remark, ib.Protocol, ib.Port, ib.Transmission,
+		ib.TLS, ib.SNI, ib.Dest, ib.Enabled, string(settings), ib.LastSyncedAt,
 	)
 	if err != nil {
 		if isUniqueViolation(err) {
@@ -55,7 +56,7 @@ func (r *InboundRepo) List(ctx context.Context) ([]domain.Inbound, error) {
 }
 
 func (r *InboundRepo) ListEnabled(ctx context.Context) ([]domain.Inbound, error) {
-	return r.query(ctx, `SELECT `+inboundColumns+` FROM inbounds WHERE enabled = 1 ORDER BY id`)
+	return r.query(ctx, `SELECT `+inboundColumns+` FROM inbounds WHERE enabled = 1 AND node_id IS NULL ORDER BY id`)
 }
 
 func (r *InboundRepo) query(ctx context.Context, q string, args ...any) ([]domain.Inbound, error) {
@@ -83,12 +84,14 @@ func (r *InboundRepo) Update(ctx context.Context, ib *domain.Inbound) error {
 	}
 
 	_, err = r.db.ExecContext(ctx,
-		`UPDATE inbounds SET remark = ?, protocol = ?, port = ?, transmission = ?, tls = ?,
+		`UPDATE inbounds SET node_id = ?, remote_id = ?, remote_version = ?,
+		                     remark = ?, protocol = ?, port = ?, transmission = ?, tls = ?,
 		                     sni = ?, dest = ?, enabled = ?, settings_json = ?,
+		                     last_synced_at = ?,
 		                     updated_at = CURRENT_TIMESTAMP
 		 WHERE id = ?`,
-		ib.Remark, ib.Protocol, ib.Port, ib.Transmission, ib.TLS, ib.SNI, ib.Dest, ib.Enabled,
-		string(settings), ib.ID,
+		nullableInt64(ib.NodeID), ib.RemoteID, ib.RemoteVersion, ib.Remark, ib.Protocol, ib.Port,
+		ib.Transmission, ib.TLS, ib.SNI, ib.Dest, ib.Enabled, string(settings), ib.LastSyncedAt, ib.ID,
 	)
 	if err != nil {
 		if isUniqueViolation(err) {
@@ -97,6 +100,45 @@ func (r *InboundRepo) Update(ctx context.Context, ib *domain.Inbound) error {
 		return fmt.Errorf("update inbound: %w", err)
 	}
 	return nil
+}
+
+func (r *InboundRepo) UpsertRemote(ctx context.Context, nodeID int64, remoteID string, ib *domain.Inbound) (int64, error) {
+	if remoteID == "" {
+		return 0, fmt.Errorf("remote inbound id is required")
+	}
+	settings, err := json.Marshal(ib.Settings)
+	if err != nil {
+		return 0, fmt.Errorf("marshal inbound settings: %w", err)
+	}
+	now := "CURRENT_TIMESTAMP"
+	_, err = r.db.ExecContext(ctx,
+		`INSERT INTO inbounds (node_id, remote_id, remote_version, remark, protocol, port, transmission, tls, sni, dest, enabled, settings_json, last_synced_at)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, `+now+`)
+		 ON CONFLICT(node_id, remote_id) WHERE node_id IS NOT NULL AND remote_id <> ''
+		 DO UPDATE SET remote_version = excluded.remote_version,
+		               remark = excluded.remark,
+		               protocol = excluded.protocol,
+		               port = excluded.port,
+		               transmission = excluded.transmission,
+		               tls = excluded.tls,
+		               sni = excluded.sni,
+		               dest = excluded.dest,
+		               enabled = excluded.enabled,
+		               settings_json = excluded.settings_json,
+		               last_synced_at = CURRENT_TIMESTAMP,
+		               updated_at = CURRENT_TIMESTAMP`,
+		nodeID, remoteID, ib.RemoteVersion, ib.Remark, ib.Protocol, ib.Port, ib.Transmission,
+		ib.TLS, ib.SNI, ib.Dest, ib.Enabled, string(settings),
+	)
+	if err != nil {
+		return 0, fmt.Errorf("upsert remote inbound: %w", err)
+	}
+	row := r.db.QueryRowContext(ctx, `SELECT id FROM inbounds WHERE node_id = ? AND remote_id = ?`, nodeID, remoteID)
+	var id int64
+	if err := row.Scan(&id); err != nil {
+		return 0, fmt.Errorf("read remote inbound id: %w", err)
+	}
+	return id, nil
 }
 
 func (r *InboundRepo) SetEnabled(ctx context.Context, id int64, enabled bool) error {
@@ -119,9 +161,12 @@ func (r *InboundRepo) Delete(ctx context.Context, id int64) error {
 func scanInbound(s rowScanner) (*domain.Inbound, error) {
 	var ib domain.Inbound
 	var settingsJSON string
+	var nodeID sql.NullInt64
+	var lastSyncedAt sql.NullTime
 	err := s.Scan(
-		&ib.ID, &ib.Remark, &ib.Protocol, &ib.Port, &ib.Transmission, &ib.TLS,
-		&ib.SNI, &ib.Dest, &ib.Enabled, &settingsJSON, &ib.CreatedAt, &ib.UpdatedAt,
+		&ib.ID, &nodeID, &ib.RemoteID, &ib.RemoteVersion, &ib.Remark, &ib.Protocol, &ib.Port,
+		&ib.Transmission, &ib.TLS, &ib.SNI, &ib.Dest, &ib.Enabled, &settingsJSON,
+		&lastSyncedAt, &ib.CreatedAt, &ib.UpdatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -134,5 +179,7 @@ func scanInbound(s rowScanner) (*domain.Inbound, error) {
 			return nil, fmt.Errorf("unmarshal inbound settings: %w", err)
 		}
 	}
+	ib.NodeID = ptrFromNullInt64(nodeID)
+	ib.LastSyncedAt = ptrFromNullTime(lastSyncedAt)
 	return &ib, nil
 }

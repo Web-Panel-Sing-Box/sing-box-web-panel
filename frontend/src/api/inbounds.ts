@@ -28,6 +28,8 @@ export type InboundSettings = {
 
 export type InboundDTO = {
   id: string;
+  nodeId?: string;
+  remoteId?: string;
   remark: string;
   protocol: Protocol;
   port: number;
@@ -38,6 +40,7 @@ export type InboundDTO = {
   enabled: boolean;
   clientCount: number;
   createdAt: string;
+  updatedAt?: string;
   settings?: InboundSettings;
 };
 

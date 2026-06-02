@@ -13,6 +13,10 @@ export type { PanelInfo, HealthStatus } from "./health";
 export { getPanelInfo, getHealth } from "./health";
 export type { LogEntryDTO } from "./logs";
 export { getPanelLogs } from "./logs";
+export type { APITokenDTO, CreatedAPITokenDTO } from "./apiTokens";
+export { listAPITokens, createAPIToken, setAPITokenEnabled, deleteAPIToken } from "./apiTokens";
+export type { NodeDTO, NodeRequest, NodeSyncResult, NodeStatus } from "./nodes";
+export { listNodes, createNode, updateNode, deleteNode, toggleNode, probeNode, syncNode } from "./nodes";
 export type * from "./types";
 export {
   PROTOCOL_OPTIONS,

@@ -94,7 +94,10 @@ const Row = memo(function Row({
     >
       <div className="min-w-0">
         <div className="truncate text-sm text-ink-primary">{client.name}</div>
-        <div className="truncate font-mono text-[11px] text-ink-tertiary">{truncateMiddle(client.uuid, 8, 6)}</div>
+        <div className="truncate font-mono text-[11px] text-ink-tertiary">
+          {client.nodeId ? `node:${client.nodeId} · ` : "local · "}
+          {truncateMiddle(client.uuid, 8, 6)}
+        </div>
       </div>
       <div className="min-w-0">
         <div className="mb-1 flex justify-between font-mono text-[11px] text-ink-tertiary">
