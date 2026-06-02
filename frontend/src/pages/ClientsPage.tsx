@@ -3,17 +3,24 @@ import { useSearchParams } from "react-router-dom";
 import { Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { ClientFilterBar, type FilterState } from "@/components/clients/client-filter-bar";
+import {
+  ClientFilterBar,
+  type FilterState,
+} from "@/components/clients/client-filter-bar";
 import { ClientsTable } from "@/components/clients/clients-table";
 import { useDisclosure } from "@/hooks/useDisclosure";
-import type { Client } from "@/lib/mock/clients";
+import type { Client } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
 
 const AddClientModal = lazy(() =>
-  import("@/components/clients/add-client-modal").then((m) => ({ default: m.AddClientModal }))
+  import("@/components/clients/add-client-modal").then((m) => ({
+    default: m.AddClientModal,
+  })),
 );
 const ClientDetailModal = lazy(() =>
-  import("@/components/clients/client-detail-modal").then((m) => ({ default: m.ClientDetailModal }))
+  import("@/components/clients/client-detail-modal").then((m) => ({
+    default: m.ClientDetailModal,
+  })),
 );
 
 const prefetchAddClient = () => {
@@ -25,14 +32,20 @@ const prefetchDetailModal = () => {
 
 export function ClientsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [filter, setFilter] = useState<FilterState>({ query: "", inboundId: "all", status: "all" });
+  const [filter, setFilter] = useState<FilterState>({
+    query: "",
+    inboundId: "all",
+    status: "all",
+  });
   const [selected, setSelected] = useState<Client | null>(null);
   const addModal = useDisclosure(false);
   const { t } = useI18n();
 
   useEffect(() => {
     const inboundId = searchParams.get("inbound") ?? "all";
-    setFilter((prev) => (prev.inboundId === inboundId ? prev : { ...prev, inboundId }));
+    setFilter((prev) =>
+      prev.inboundId === inboundId ? prev : { ...prev, inboundId },
+    );
   }, [searchParams]);
 
   const updateFilter = useCallback(
@@ -43,15 +56,20 @@ export function ClientsPage() {
       else params.set("inbound", next.inboundId);
       setSearchParams(params, { replace: true });
     },
-    [searchParams, setSearchParams]
+    [searchParams, setSearchParams],
   );
 
   const closeDetail = useCallback(() => setSelected(null), []);
 
   return (
-    <div className="mx-auto flex max-w-[1320px] flex-col gap-6" onMouseEnter={prefetchDetailModal}>
+    <div
+      className="mx-auto flex max-w-[1320px] flex-col gap-6"
+      onMouseEnter={prefetchDetailModal}
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold text-ink-primary">{t("clients.title")}</h2>
+        <h2 className="text-2xl font-semibold text-ink-primary">
+          {t("clients.title")}
+        </h2>
         <Button
           variant="white"
           onClick={addModal.open}
@@ -76,7 +94,9 @@ export function ClientsPage() {
           <AddClientModal
             open={addModal.isOpen}
             onClose={addModal.close}
-            defaultInboundId={filter.inboundId !== "all" ? filter.inboundId : undefined}
+            defaultInboundId={
+              filter.inboundId !== "all" ? filter.inboundId : undefined
+            }
           />
         </Suspense>
       ) : null}

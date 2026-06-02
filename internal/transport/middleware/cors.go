@@ -62,7 +62,7 @@ func CORS(allowedOrigins []string) func(http.Handler) http.Handler {
 
 				allowed := false
 				for _, o := range allowedOrigins {
-					if o == "*" || o == origin || strings.HasSuffix(origin, o) {
+					if o == "*" || o == origin {
 						allowed = true
 						break
 					}

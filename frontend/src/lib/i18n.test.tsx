@@ -24,7 +24,7 @@ function Probe() {
 
 test("defaults to English and persists Russian selection", async () => {
   const user = userEvent.setup();
-  renderWithProviders(<Probe />, { withStore: false });
+  renderWithProviders(<Probe />);
 
   expect(screen.getByText("en")).toBeInTheDocument();
   expect(screen.getByText("6 total")).toBeInTheDocument();
@@ -32,6 +32,6 @@ test("defaults to English and persists Russian selection", async () => {
   await user.click(screen.getByRole("button", { name: "switch" }));
 
   expect(screen.getByText("ru")).toBeInTheDocument();
-  expect(window.localStorage.getItem("sing-grok:language")).toBe("ru");
+  expect(window.localStorage.getItem("shilka:language")).toBe("ru");
   expect(screen.getByText("всего 6")).toBeInTheDocument();
 });

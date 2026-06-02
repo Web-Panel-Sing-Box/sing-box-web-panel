@@ -2,7 +2,7 @@
 import { useEffect, useRef } from "react";
 import { AnimatePresence, m } from "framer-motion";
 
-import { useLogs } from "@/lib/mock/store";
+import { useLogs } from "@/lib/store";
 import { useLogFilter } from "@/hooks/useLogFilter";
 import { formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";

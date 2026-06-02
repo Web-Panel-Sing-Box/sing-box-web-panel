@@ -15,6 +15,7 @@ type sbConfig struct {
 type sbLog struct {
 	Level     string `json:"level,omitempty"`
 	Timestamp bool   `json:"timestamp,omitempty"`
+	Output    string `json:"output,omitempty"`
 }
 
 type sbOutbound struct {
@@ -73,6 +74,11 @@ type sbVLESSInbound struct {
 	Users      []sbVLESSUser `json:"users"`
 	TLS        *sbInboundTLS `json:"tls,omitempty"`
 	Transport  *sbTransport  `json:"transport,omitempty"`
+	Multiplex  *sbMultiplex  `json:"multiplex,omitempty"`
+}
+
+type sbMultiplex struct {
+	Enabled bool `json:"enabled"`
 }
 
 type sbVLESSUser struct {
@@ -88,6 +94,22 @@ type sbHysteria2Inbound struct {
 	ListenPort int                `json:"listen_port"`
 	Users      []sbHysteria2User  `json:"users"`
 	TLS        *sbInboundTLS      `json:"tls,omitempty"`
+
+	UpMbps                int              `json:"up_mbps,omitempty"`
+	DownMbps              int              `json:"down_mbps,omitempty"`
+	IgnoreClientBandwidth bool             `json:"ignore_client_bandwidth,omitempty"`
+	Obfs                  *sbHysteria2Obfs `json:"obfs,omitempty"`
+	Masquerade            any              `json:"masquerade,omitempty"`
+	Network               string           `json:"network,omitempty"`
+	BrutalDebug           bool             `json:"brutal_debug,omitempty"`
+	BBRProfile            string           `json:"bbr_profile,omitempty"`
+}
+
+type sbHysteria2Obfs struct {
+	Type          string `json:"type"`
+	Password      string `json:"password"`
+	MinPacketSize int    `json:"min_packet_size,omitempty"`
+	MaxPacketSize int    `json:"max_packet_size,omitempty"`
 }
 
 type sbHysteria2User struct {
@@ -102,6 +124,9 @@ type sbNaiveInbound struct {
 	ListenPort int            `json:"listen_port"`
 	Users      []sbNaiveUser  `json:"users"`
 	TLS        *sbInboundTLS  `json:"tls"`
+
+	Network               string `json:"network,omitempty"`
+	QuicCongestionControl string `json:"quic_congestion_control,omitempty"`
 }
 
 type sbNaiveUser struct {

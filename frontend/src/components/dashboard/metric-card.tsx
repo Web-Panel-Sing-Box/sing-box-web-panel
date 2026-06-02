@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { Cpu, Database, HardDrive, Network } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 
-import { useMetrics } from "@/lib/mock/store";
+import { useMetrics } from "@/lib/store";
 import { Card, CardHeader, CardLabel } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { AnimatedNumber } from "@/components/ui/animated-number";

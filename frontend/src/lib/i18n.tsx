@@ -9,7 +9,7 @@ import {
 
 export type Language = "en" | "ru";
 
-const STORAGE_KEY = "sing-grok:language";
+const STORAGE_KEY = "shilka:language";
 
 const en = {
   "nav.dashboard": "Dashboard",

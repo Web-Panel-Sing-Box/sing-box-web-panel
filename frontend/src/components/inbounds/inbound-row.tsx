@@ -4,8 +4,8 @@ import { Link } from "react-router-dom";
 import { Toggle } from "@/components/ui/toggle";
 import { StatusDot } from "@/components/ui/status-dot";
 import { cn } from "@/lib/utils";
-import type { Inbound, Network, Protocol, TlsMode, VlessTransport } from "@/lib/mock/inbounds";
-import { useStoreActions } from "@/lib/mock/store";
+import type { Inbound, Network, Protocol, TlsMode, Transmission } from "@/lib/store";
+import { useStoreActions } from "@/lib/store";
 import { useToast } from "@/components/ui/toast";
 import { useI18n } from "@/lib/i18n";
 
@@ -109,20 +109,19 @@ function TransportChip({ inbound }: { inbound: Inbound }) {
 }
 
 function connectionLabel(inbound: Inbound) {
-  if (inbound.protocol === "vless") return transportLabel(inbound.transport ?? "tcp");
-  if (inbound.protocol === "naive") return networkLabel(inbound.network ?? "both");
+  if (inbound.protocol === "vless") return transmissionLabel(inbound.transmission ?? "tcp");
+  if (inbound.protocol === "naive") return networkLabel((inbound.settings?.naiveNetwork as Network) ?? "both");
   return "QUIC"; // hysteria2
 }
 
-function transportLabel(transport: VlessTransport) {
-  const labels: Record<VlessTransport, string> = {
+function transmissionLabel(transmission: Transmission) {
+  const labels: Record<Transmission, string> = {
     tcp: "TCP",
     ws: "WS",
     grpc: "gRPC",
-    http: "HTTP/2",
     httpupgrade: "HTTPUpgrade"
   };
-  return labels[transport];
+  return labels[transmission] ?? String(transmission).toUpperCase();
 }
 
 function networkLabel(network: Network) {

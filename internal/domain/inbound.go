@@ -58,7 +58,7 @@ type InboundSettings struct {
 	RealityShortID    string `json:"realityShortId,omitempty"`
 	// Flow for VLESS (e.g. "xtls-rprx-vision" with Reality).
 	Flow string `json:"flow,omitempty"`
-	// Transport options.
+	// Transport options (VLESS WS/gRPC).
 	WSPath          string `json:"wsPath,omitempty"`
 	GRPCServiceName string `json:"grpcServiceName,omitempty"`
 	// Standard TLS certificate material (mode = tls, no ACME).
@@ -67,4 +67,23 @@ type InboundSettings struct {
 	// ACME (Let's Encrypt) for the inbound, handled by the sing-box core.
 	ACMEDomain string `json:"acmeDomain,omitempty"`
 	ACMEEmail  string `json:"acmeEmail,omitempty"`
+
+	// Hysteria2.
+	Hy2UpMbps                int    `json:"hy2UpMbps,omitempty"`
+	Hy2DownMbps              int    `json:"hy2DownMbps,omitempty"`
+	Hy2IgnoreClientBandwidth bool   `json:"hy2IgnoreClientBandwidth,omitempty"`
+	Hy2ObfsPassword          string `json:"hy2ObfsPassword,omitempty"`
+	Hy2ObfsMinPacketSize     int    `json:"hy2ObfsMinPacketSize,omitempty"` // gecko only
+	Hy2ObfsMaxPacketSize     int    `json:"hy2ObfsMaxPacketSize,omitempty"` // gecko only
+	Hy2Masquerade            string `json:"hy2Masquerade,omitempty"`
+	Hy2Network               string `json:"hy2Network,omitempty"` // tcp, udp, ""
+	Hy2BrutalDebug           bool   `json:"hy2BrutalDebug,omitempty"`
+	Hy2BBRProfile            string `json:"hy2BbrProfile,omitempty"` // conservative, standard, aggressive
+
+	// Naive.
+	NaiveNetwork             string `json:"naiveNetwork,omitempty"` // tcp, udp, ""
+	NaiveQuicCongestionCtrl  string `json:"naiveQuicCongestionCtrl,omitempty"` // bbr, cubic, reno, etc.
+
+	// VLESS multiplex.
+	MultiplexEnabled bool `json:"multiplexEnabled,omitempty"`
 }

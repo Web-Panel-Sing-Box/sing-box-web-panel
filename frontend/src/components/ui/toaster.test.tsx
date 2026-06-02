@@ -16,7 +16,7 @@ function Probe() {
 
 test("renders a green textual check mark for success toasts", async () => {
   const user = userEvent.setup();
-  renderWithProviders(<Probe />, { withStore: false });
+  renderWithProviders(<Probe />);
 
   await user.click(screen.getByRole("button", { name: "notify" }));
 

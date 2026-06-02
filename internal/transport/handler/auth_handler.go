@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"log/slog"
 	"net/http"
 	"time"
@@ -10,6 +11,8 @@ import (
 	svcauth "sing-box-web-panel/internal/services/auth"
 	"sing-box-web-panel/internal/transport/middleware"
 )
+
+const maxBodySize = 1 << 14
 
 type AuthHandler struct {
 	svc *svcauth.Service
@@ -22,6 +25,7 @@ func NewAuthHandler(svc *svcauth.Service, log *slog.Logger) *AuthHandler {
 
 func (h *AuthHandler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/auth/login", h.Login)
+	mux.HandleFunc("POST /api/auth/login/totp", h.LoginTOTP)
 	mux.HandleFunc("POST /api/auth/login/recovery", h.LoginRecovery)
 	mux.HandleFunc("GET /api/auth/me", h.withAuth(h.Me))
 	mux.HandleFunc("POST /api/auth/logout", h.Logout)
@@ -45,13 +49,12 @@ func (h *AuthHandler) withAuth(next http.HandlerFunc) http.HandlerFunc {
 type loginRequest struct {
 	Username string `json:"username" example:"admin"`
 	Password string `json:"password" example:"admin"`
-	TOTPCode string `json:"totp_code,omitempty" example:"123456"`
 }
 
 // Login godoc
 //
 //	@Summary		Authenticate admin
-//	@Description	Logs in with username and password. If 2FA is enabled and no TOTP code is provided, returns 403 with requires_totp.
+//	@Description	Logs in with username and password. Returns a JWT token, or temp_token + requires_totp if 2FA is enabled.
 //	@Tags			auth
 //	@Accept			json
 //	@Produce		json
@@ -59,11 +62,23 @@ type loginRequest struct {
 //	@Success		200		{object}	map[string]string	"token"
 //	@Failure		400		{object}	map[string]string
 //	@Failure		401		{object}	map[string]string
-//	@Failure		403		{object}	map[string]any		"requires_totp"
+//	@Failure		403		{object}	map[string]any		"requires_totp with temp_token"
 //	@Router			/auth/login [post]
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
+	defer r.Body.Close()
+
 	var req loginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		var maxBytesErr *http.MaxBytesError
+		if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+			return
+		}
+		if errors.As(err, &maxBytesErr) {
+			writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"error": "request body too large"})
+			return
+		}
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
 		return
 	}
@@ -73,14 +88,10 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.svc.Login(r.Context(), req.Username, req.Password, req.TOTPCode)
+	result, err := h.svc.Login(r.Context(), req.Username, req.Password, "")
 	if err != nil {
 		if errors.Is(err, svcauth.ErrInvalidCredentials) {
 			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid credentials"})
-			return
-		}
-		if errors.Is(err, svcauth.ErrInvalidTOTP) {
-			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid totp code"})
 			return
 		}
 		h.log.Error("login", slog.String("error", err.Error()))
@@ -91,12 +102,60 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if result.RequiresTOTP {
 		writeJSON(w, http.StatusForbidden, map[string]any{
 			"requires_totp": true,
+			"temp_token":    result.TempToken,
 		})
 		return
 	}
 
-	h.setTokenCookie(w, result.Token)
+	h.setTokenCookie(w, r, result.Token)
 	writeJSON(w, http.StatusOK, map[string]string{"token": result.Token})
+}
+
+type loginTOTPRequest struct {
+	TempToken string `json:"temp_token" example:"eyJhbG..."`
+	Code      string `json:"code"       example:"123456"`
+}
+
+// LoginTOTP godoc
+//
+//	@Summary		Complete TOTP login
+//	@Description	Completes 2FA login using the temp_token returned by /login and a TOTP code.
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		loginTOTPRequest	true	"TOTP login payload"
+//	@Success		200		{object}	map[string]string
+//	@Failure		400		{object}	map[string]string
+//	@Failure		401		{object}	map[string]string
+//	@Router			/auth/login/totp [post]
+func (h *AuthHandler) LoginTOTP(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
+	defer r.Body.Close()
+
+	var req loginTOTPRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		return
+	}
+
+	if req.TempToken == "" || req.Code == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "temp_token and code required"})
+		return
+	}
+
+	token, err := h.svc.LoginTOTP(r.Context(), req.TempToken, req.Code)
+	if err != nil {
+		if errors.Is(err, svcauth.ErrInvalidTOTP) {
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid totp code"})
+			return
+		}
+		h.log.Error("login totp", slog.String("error", err.Error()))
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	h.setTokenCookie(w, r, token)
+	writeJSON(w, http.StatusOK, map[string]string{"token": token})
 }
 
 type loginRecoveryRequest struct {
@@ -117,6 +176,9 @@ type loginRecoveryRequest struct {
 //	@Failure		401		{object}	map[string]string
 //	@Router			/auth/login/recovery [post]
 func (h *AuthHandler) LoginRecovery(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
+	defer r.Body.Close()
+
 	var req loginRecoveryRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
@@ -139,7 +201,7 @@ func (h *AuthHandler) LoginRecovery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.setTokenCookie(w, token)
+	h.setTokenCookie(w, r, token)
 	writeJSON(w, http.StatusOK, map[string]string{"token": token})
 }
 
@@ -236,6 +298,9 @@ type confirmTOTPRequest struct {
 //	@Failure		400		{object}	map[string]string
 //	@Router			/auth/totp/confirm [post]
 func (h *AuthHandler) ConfirmTOTP(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
+	defer r.Body.Close()
+
 	var req confirmTOTPRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
@@ -245,7 +310,12 @@ func (h *AuthHandler) ConfirmTOTP(w http.ResponseWriter, r *http.Request) {
 	adminID := middleware.AdminID(r)
 	codes, err := h.svc.ConfirmTOTP(r.Context(), adminID, req.Code)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		if errors.Is(err, svcauth.ErrInvalidTOTP) || errors.Is(err, svcauth.ErrTOTPNotSetup) {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return
+		}
+		h.log.Error("confirm totp", slog.String("error", err.Error()))
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -272,6 +342,9 @@ type disableTOTPRequest struct {
 //	@Failure		400		{object}	map[string]string
 //	@Router			/auth/totp/disable [post]
 func (h *AuthHandler) DisableTOTP(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
+	defer r.Body.Close()
+
 	var req disableTOTPRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
@@ -280,7 +353,12 @@ func (h *AuthHandler) DisableTOTP(w http.ResponseWriter, r *http.Request) {
 
 	adminID := middleware.AdminID(r)
 	if err := h.svc.DisableTOTP(r.Context(), adminID, req.Code); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		if errors.Is(err, svcauth.ErrInvalidTOTP) {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return
+		}
+		h.log.Error("disable totp", slog.String("error", err.Error()))
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
@@ -305,6 +383,9 @@ type changePasswordRequest struct {
 //	@Failure		400		{object}	map[string]string
 //	@Router			/auth/change-password [post]
 func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
+	defer r.Body.Close()
+
 	var req changePasswordRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
@@ -313,20 +394,25 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 
 	adminID := middleware.AdminID(r)
 	if err := h.svc.ChangePassword(r.Context(), adminID, req.CurrentPassword, req.NewPassword); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		if errors.Is(err, svcauth.ErrInvalidCredentials) {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid current password"})
+			return
+		}
+		h.log.Error("change password", slog.String("error", err.Error()))
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"message": "password changed"})
 }
 
-func (h *AuthHandler) setTokenCookie(w http.ResponseWriter, token string) {
+func (h *AuthHandler) setTokenCookie(w http.ResponseWriter, r *http.Request, token string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
 		Value:    token,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   false,
+		Secure:   r.TLS != nil,
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   86400,
 	})

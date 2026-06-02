@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import type { LogEntry } from "@/lib/mock/logs";
+import type { LogEntry } from "@/lib/store";
 
 export type LogFilter = {
   query: string;

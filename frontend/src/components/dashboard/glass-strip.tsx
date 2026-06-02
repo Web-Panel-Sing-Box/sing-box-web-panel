@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 
-import { useMetrics, useStoreActions } from "@/lib/mock/store";
+import { useMetrics, useStoreActions } from "@/lib/store";
 import { StatusDot } from "@/components/ui/status-dot";
 import { formatBytes, formatUptime } from "@/lib/format";
 import { Modal, ModalBody, ModalFooter, ModalHeader } from "@/components/ui/modal";
