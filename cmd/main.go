@@ -192,7 +192,14 @@ func main() {
 
 	var httpHandler http.Handler = stack
 	if cfg.HTTP.BasePath != "" {
-		httpHandler = http.StripPrefix(cfg.HTTP.BasePath, stack)
+		base := cfg.HTTP.BasePath
+		httpHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == base {
+				http.Redirect(w, r, base+"/", http.StatusMovedPermanently)
+				return
+			}
+			http.StripPrefix(base, stack).ServeHTTP(w, r)
+		})
 	}
 
 	server := &http.Server{
