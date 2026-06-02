@@ -10,8 +10,23 @@ import type {
   Transmission,
 } from "@/lib/store";
 import { makeUuid, randomHex, randomPort } from "@/lib/random";
+import { ApiError } from "@/api/client";
 
 export type InboundFormMode = "create" | "edit" | "clone";
+
+// Backend validation (internal/services/inbound/service.go): naive requires TLS,
+// reality is vless-only, hysteria2 forbids reality. Keep the form in sync so an
+// invalid protocol/TLS combination can never be submitted.
+const TLS_BY_PROTOCOL: Record<Protocol, TlsMode[]> = {
+  vless: ["none", "tls", "reality"],
+  naive: ["tls"],
+  hysteria2: ["none", "tls"],
+};
+
+function clampTls(protocol: Protocol, tls: TlsMode): TlsMode {
+  const allowed = TLS_BY_PROTOCOL[protocol];
+  return allowed.includes(tls) ? tls : allowed[0];
+}
 
 type Params = {
   open: boolean;
@@ -67,11 +82,12 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
         ? `${inbound.remark}-copy`
         : (inbound?.remark ?? ""),
     );
-    setProtocol(inbound?.protocol ?? "naive");
+    const nextProtocol = inbound?.protocol ?? "naive";
+    setProtocol(nextProtocol);
     setPort(mode === "clone" ? randomPort() : (inbound?.port ?? randomPort()));
     setTrafficReset("never");
     setTransmission(inbound?.transmission ?? "tcp");
-    setTls(inbound?.tls ?? "none");
+    setTls(clampTls(nextProtocol, inbound?.tls ?? "none"));
     setSni(inbound?.sni ?? "www.cloudflare.com");
     setDest(inbound?.dest ?? "www.cloudflare.com:443");
     setUuid(makeUuid());
@@ -91,6 +107,11 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
       }, 50);
     }
   }, [open, mode, inbound]);
+
+  const changeProtocol = useCallback((next: Protocol) => {
+    setProtocol(next);
+    setTls((cur) => clampTls(next, cur));
+  }, []);
 
   const randomizePort = useCallback(() => {
     setDiceSpin((v) => v + 360);
@@ -112,7 +133,6 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
       return;
     }
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 650));
     const payload = {
       remark: remark.trim(),
       protocol,
@@ -122,18 +142,28 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
       sni: tls === "none" ? undefined : sni,
       dest: tls === "reality" ? dest : undefined,
     };
-    if (mode === "edit" && inbound) {
-      updateInbound(inbound.id, payload);
-      push(t("inbounds.updated"), "success");
-    } else {
-      addInbound(payload);
-      push(
-        mode === "clone" ? t("inbounds.cloned") : t("inbounds.created"),
-        "success",
-      );
+    try {
+      if (mode === "edit" && inbound) {
+        await updateInbound(inbound.id, payload);
+        push(t("inbounds.updated"), "success");
+      } else {
+        await addInbound(payload);
+        push(
+          mode === "clone" ? t("inbounds.cloned") : t("inbounds.created"),
+          "success",
+        );
+      }
+      onClose();
+    } catch (err) {
+      const body = err instanceof ApiError ? err.body : null;
+      const message =
+        body && typeof body === "object" && body !== null && "error" in body
+          ? String((body as { error: unknown }).error)
+          : t("inbounds.saveFailed");
+      push(message, "error");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    onClose();
   }, [
     remark,
     protocol,
@@ -170,7 +200,8 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
     remark,
     setRemark,
     protocol,
-    setProtocol,
+    setProtocol: changeProtocol,
+    tlsModes: TLS_BY_PROTOCOL[protocol],
     port,
     setPort,
     trafficReset,

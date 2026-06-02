@@ -89,7 +89,7 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-surface px-4 py-10">
+    <div className="flex min-h-[100dvh] w-full items-center justify-center bg-surface px-4 py-10">
       <Card elevated className="w-full max-w-sm p-7">
         <div className="mb-6 flex justify-center">
           <BrandMark />
@@ -126,12 +126,9 @@ export function LoginPage() {
                 autoComplete="current-password"
               />
 
-              <Button type="submit" variant="white" className="w-full" disabled={loading}>
+              <Button type="submit" variant="white" className="w-full" loading={loading} disabled={loading}>
                 {t("login.submit")}
               </Button>
-              <p className="text-center text-xs text-ink-tertiary">
-                {t("login.credentialsHint")}
-              </p>
             </m.form>
           ) : (
             <m.form
@@ -162,6 +159,7 @@ export function LoginPage() {
                 type="submit"
                 variant="white"
                 className="w-full"
+                loading={loading}
                 disabled={code.length !== 6 || loading}
               >
                 {t("login.verify")}

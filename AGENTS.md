@@ -8,6 +8,13 @@ This repository implements a local-first web panel for `sing-box`. Keep changes 
 - **Frontend** — Vite 8 + React 19 + TypeScript (strict) SPA. Tailwind CSS 4, Framer Motion 12 (via LazyMotion), Recharts 3, React Router DOM 7. Lives in `frontend/`.
 - **Database** — single-file SQLite with WAL mode, embedded `//go:embed` migrations in `internal/repo/migrator/`, idempotent versioned SQL files.
 
+## Task Workflow (mandatory for every new task)
+
+Do this **before** writing any code for a task:
+
+1. **Branch per task.** Never commit to `main` or `develop`. Branch from `main` using `<github-username>/<task-slug>` — e.g. `Vadim-Denisovich/redesign-frontend`. This matches the existing `4444urka/*` convention. Note: git refs cannot nest (a `Vadim-Denisovich` branch and a `Vadim-Denisovich/x` branch conflict), so the username is a path *prefix*, not a standalone branch.
+2. **Linear issue.** Create a Linear issue for the task in the `Sing-box-pannel` team (id `2fa98408-cff3-4f63-80e9-b8fc46adf926`) before starting. Set it to `In Progress` while working. Reference the issue identifier (e.g. `SIN-23`) in the PR title/body.
+
 ## Project Layout
 
 ```
@@ -80,7 +87,7 @@ scripts/install.sh                       # one-command VPS installer
 - Do not log JWT secrets, admin passwords, sing-box API secrets, UUID lists, or generated private keys.
 - Use subprocess argument arrays for host commands; do not build shell strings from user input.
 - Keep SQLite writes batched for traffic updates. Avoid per-poll disk writes from background workers.
-- Frontend style is true black, minimal, mono, and kinetic. Do not copy proprietary assets.
+- Frontend style is charcoal (`#171717` canvas, never true black), minimal, kinetic, with mono reserved for technical data (tokens, UUIDs, IPs, logs). Do not copy proprietary assets.
 - All `.context/` and `AGENTS.md` content must be written in English.
 - Tests live in `tests/` mirroring the `internal/` structure. Use external test packages (`package foo_test`).
 
@@ -166,7 +173,7 @@ Logger → RateLimit (API) → RateLimit (Login) → CORS → Auth → Mux
 
 ## Build
 
-- **Dev**: `go run ./cmd/main.go`
+- **Dev**: `go run ./cmd` (run the whole package — `go run ./cmd/main.go` alone fails because it skips `cmd/embed.go`)
 - **Prod (embedded)**: `cd frontend && pnpm build && cd .. && rsync -a frontend/dist/ cmd/frontend/dist/ && go build -ldflags="-s -w" -o shilka ./cmd/`
 - **Binary released via CD**: linux/amd64 + linux/arm64, attached to GitHub Release by semantic-release.
 - **install.sh**: downloads pre-built binary + sing-box, writes config, installs systemd unit.

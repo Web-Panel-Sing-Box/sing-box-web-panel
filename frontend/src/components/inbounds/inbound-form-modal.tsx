@@ -22,6 +22,12 @@ import { useI18n } from "@/lib/i18n";
 
 export type { InboundFormMode } from "@/hooks/useInboundForm";
 
+const TLS_LABELS: Record<TlsMode, string> = {
+  none: "None",
+  tls: "TLS",
+  reality: "Reality",
+};
+
 type InboundFormModalProps = {
   open: boolean;
   mode?: InboundFormMode;
@@ -191,11 +197,7 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
               <Segmented<TlsMode>
                 value={f.tls}
                 onChange={f.setTls}
-                options={[
-                  { value: "none", label: "None" },
-                  { value: "tls", label: "TLS" },
-                  { value: "reality", label: "Reality" }
-                ]}
+                options={f.tlsModes.map((m) => ({ value: m, label: TLS_LABELS[m] }))}
               />
             </div>
 
@@ -225,11 +227,11 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
                   </div>
                   <div>
                     <Label>{t("inbounds.privateKey")}</Label>
-                    <Input value={f.privateKey} mono readOnly placeholder="—" />
+                    <Input value={f.privateKey} mono readOnly />
                   </div>
                   <div>
                     <Label>{t("inbounds.publicKey")}</Label>
-                    <Input value={f.publicKey} mono readOnly placeholder="—" />
+                    <Input value={f.publicKey} mono readOnly />
                   </div>
                 </div>
               </div>
