@@ -42,8 +42,8 @@ jobs:
       - name: Build binaries
         run: |
           mkdir -p dist
-          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o dist/shilka_linux_amd64 ./cmd/
-          GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="-s -w" -o dist/shilka_linux_arm64 ./cmd/
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o dist/shilka-linux-amd64 ./cmd/
+          GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="-s -w" -o dist/shilka-linux-arm64 ./cmd/
           sha256sum dist/* > dist/checksums.txt
 
       - name: Semantic Release
