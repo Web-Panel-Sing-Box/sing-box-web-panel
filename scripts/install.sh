@@ -117,10 +117,8 @@ write_cert_deploy_hook() {
 set -Eeuo pipefail
 CERT_DIR="${TLS_CERT_DIR}"
 APP_USER="${APP_USER}"
-cat "\${CERT_FILE}" > "\${CERT_DIR}/cert.pem"
-cat "\${CERT_KEY_FILE}" > "\${CERT_DIR}/key.pem"
-chown "\${APP_USER}:\${APP_USER}" "\${CERT_DIR}/cert.pem" "\${CERT_DIR}/key.pem"
-chmod 0600 "\${CERT_DIR}/cert.pem" "\${CERT_DIR}/key.pem"
+chown "\${APP_USER}:\${APP_USER}" "\${CERT_DIR}/cert.pem" "\${CERT_DIR}/key.pem" 2>/dev/null || true
+chmod 0600 "\${CERT_DIR}/cert.pem" "\${CERT_DIR}/key.pem" 2>/dev/null || true
 if systemctl is-active --quiet shilka.service; then
   systemctl restart shilka.service
 fi
@@ -128,15 +126,31 @@ HOOK
   chmod 0755 /usr/local/bin/shilka-cert-deploy
 }
 
+install_cert() {
+  local name="$1"
+  echo "Installing certificate for ${name}..."
+  ~/.acme.sh/acme.sh --installcert -d "${name}" \
+    --key-file "${TLS_CERT_DIR}/key.pem" \
+    --fullchain-file "${TLS_CERT_DIR}/cert.pem" \
+    --reloadcmd "/usr/local/bin/shilka-cert-deploy" \
+    --force
+
+  chown "${APP_USER}:${APP_USER}" "${TLS_CERT_DIR}/cert.pem" "${TLS_CERT_DIR}/key.pem"
+  chmod 0600 "${TLS_CERT_DIR}/cert.pem" "${TLS_CERT_DIR}/key.pem"
+
+  ~/.acme.sh/acme.sh --upgrade --auto-upgrade
+}
+
 issue_domain_cert() {
-  local domain="$1" email="$2"
+  local domain="$1"
   echo "Requesting Let's Encrypt certificate for ${domain}..."
 
   ~/.acme.sh/acme.sh --issue \
     -d "${domain}" \
     --standalone \
     --httpport 80 \
-    --force
+    --force \
+    --accountemail "${ACME_EMAIL}"
 
   if [[ $? -ne 0 ]]; then
     echo "ERROR: failed to issue certificate for ${domain}. Is port 80 open?"
@@ -144,15 +158,11 @@ issue_domain_cert() {
   fi
 
   write_cert_deploy_hook
-  ~/.acme.sh/acme.sh --installcert -d "${domain}" \
-    --key-file "${TLS_CERT_DIR}/key.pem" \
-    --fullchain-file "${TLS_CERT_DIR}/cert.pem" \
-    --reloadcmd "/usr/local/bin/shilka-cert-deploy"
-  ~/.acme.sh/acme.sh --upgrade --auto-upgrade
+  install_cert "${domain}"
 }
 
 issue_ip_cert() {
-  local ip="$1" email="$2"
+  local ip="$1"
   echo "Requesting Let's Encrypt IP certificate for ${ip} (shortlived profile, 6-day validity)..."
 
   ~/.acme.sh/acme.sh --issue \
@@ -162,7 +172,8 @@ issue_ip_cert() {
     --certificate-profile shortlived \
     --days 6 \
     --httpport 80 \
-    --force
+    --force \
+    --accountemail "${ACME_EMAIL}"
 
   if [[ $? -ne 0 ]]; then
     echo "ERROR: failed to issue IP certificate for ${ip}. Is port 80 open?"
@@ -170,11 +181,7 @@ issue_ip_cert() {
   fi
 
   write_cert_deploy_hook
-  ~/.acme.sh/acme.sh --installcert -d "${ip}" \
-    --key-file "${TLS_CERT_DIR}/key.pem" \
-    --fullchain-file "${TLS_CERT_DIR}/cert.pem" \
-    --reloadcmd "/usr/local/bin/shilka-cert-deploy"
-  ~/.acme.sh/acme.sh --upgrade --auto-upgrade
+  install_cert "${ip}"
 }
 
 create_user_and_dirs() {
@@ -554,9 +561,9 @@ main() {
   if [[ "${USE_ACME}" == "true" ]]; then
     install_acme
     if [[ "${CERT_TYPE}" == "domain" ]]; then
-      issue_domain_cert "${PANEL_HOST}" "${ACME_EMAIL}"
+      issue_domain_cert "${PANEL_HOST}"
     else
-      issue_ip_cert "${PANEL_HOST}" "${ACME_EMAIL}"
+      issue_ip_cert "${PANEL_HOST}"
     fi
   fi
   install_sing_box
