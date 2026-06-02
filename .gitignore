@@ -11,6 +11,7 @@ __pycache__/
 .venv/
 venv/
 dist/
+shilka
 build/
 # Embed target for Go: keep PLACEHOLDER so go:embed works, ignore generated dist.
 !cmd/frontend/dist/
