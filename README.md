@@ -51,4 +51,4 @@ cd frontend && pnpm test      # Frontend unit
 
 ## Safety
 
-sing-box management APIs (`Clash API`, `V2Ray API`) bind to `127.0.0.1`. Only the web panel port is exposed.
+sing-box management APIs (`Clash API`, `V2Ray API`) bind  to `127.0.0.1`. Only the web panel port is exposed.
