@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { LazyMotion, MotionConfig, domMax } from "framer-motion";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { RequireAuth } from "@/components/auth/require-auth";
 import { Toaster } from "@/components/ui/toaster";
@@ -20,6 +20,9 @@ const InboundsPage = lazy(() =>
 const ClientsPage = lazy(() =>
   import("@/pages/ClientsPage").then((m) => ({ default: m.ClientsPage })),
 );
+const NodesPage = lazy(() =>
+  import("@/pages/NodesPage").then((m) => ({ default: m.NodesPage })),
+);
 const SettingsPage = lazy(() =>
   import("@/pages/SettingsPage").then((m) => ({ default: m.SettingsPage })),
 );
@@ -34,7 +37,7 @@ export function App() {
         <MotionConfig reducedMotion="user">
         <Toaster>
           <AuthProvider>
-            <BrowserRouter>
+            <HashRouter>
               <Suspense
                 fallback={<div className="min-h-screen w-full bg-surface" />}
               >
@@ -47,13 +50,14 @@ export function App() {
                       <Route path="dashboard" element={<DashboardPage />} />
                       <Route path="inbounds" element={<InboundsPage />} />
                       <Route path="clients" element={<ClientsPage />} />
+                      <Route path="nodes" element={<NodesPage />} />
                       <Route path="settings" element={<SettingsPage />} />
                       <Route path="logs" element={<LogsPage />} />
                     </Route>
                   </Route>
                 </Routes>
               </Suspense>
-            </BrowserRouter>
+            </HashRouter>
           </AuthProvider>
         </Toaster>
         </MotionConfig>

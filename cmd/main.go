@@ -22,16 +22,19 @@ import (
 	"runtime/debug"
 	"strings"
 	"syscall"
+	"time"
 
 	"sing-box-web-panel/docs"
 	"sing-box-web-panel/internal/config"
 	libauth "sing-box-web-panel/internal/lib/auth"
 	"sing-box-web-panel/internal/lib/sl"
 	sqliterepo "sing-box-web-panel/internal/repo/sqlite"
+	svcapitoken "sing-box-web-panel/internal/services/apitoken"
 	"sing-box-web-panel/internal/services/auth"
 	svcclient "sing-box-web-panel/internal/services/client"
 	svcinbound "sing-box-web-panel/internal/services/inbound"
 	"sing-box-web-panel/internal/services/logbuf"
+	svcnode "sing-box-web-panel/internal/services/node"
 	"sing-box-web-panel/internal/services/singbox"
 	"sing-box-web-panel/internal/services/stats"
 	"sing-box-web-panel/internal/services/sysstat"
@@ -43,6 +46,20 @@ import (
 )
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] != "run" {
+		if err := runCLI(os.Args[1:]); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
+	if len(os.Args) > 1 && os.Args[1] == "run" {
+		os.Args = append([]string{os.Args[0]}, os.Args[2:]...)
+	}
+	runServer()
+}
+
+func runServer() {
 	cfg := config.MustLoad()
 	logBuf := logbuf.New(cfg.Logging.MaxMemoryLines)
 	log := setupLogger(cfg.Env, logBuf)
@@ -106,6 +123,8 @@ func main() {
 
 	inboundRepo := sqliterepo.NewInboundRepo(storage)
 	clientRepo := sqliterepo.NewClientRepo(storage)
+	apiTokenRepo := sqliterepo.NewAPITokenRepo(storage)
+	nodeRepo := sqliterepo.NewNodeRepo(storage)
 	configRevRepo := sqliterepo.NewConfigRevisionRepo(storage)
 
 	// Resolve sing-box paths to absolute so the subprocess working dir does not
@@ -150,9 +169,13 @@ func main() {
 	// Inbound and client management; the applier is the (debounced) ConfigTrigger.
 	inboundSvc := svcinbound.NewService(inboundRepo, clientRepo, applier)
 	clientSvc := svcclient.NewService(clientRepo, inboundRepo, applier)
+	apiTokenSvc := svcapitoken.NewService(apiTokenRepo)
+	nodeSvc := svcnode.NewService(nodeRepo, inboundRepo, clientRepo, svcnode.NewHTTPClient())
+	go nodeSvc.Run(rootCtx, 10*time.Second, 15*time.Second)
 
 	settingRepo := sqliterepo.NewSettingRepo(storage)
 	trafficRepo := sqliterepo.NewTrafficRepo(storage)
+	sysReader := sysstat.New()
 
 	// Traffic stats + quota worker. Clash REST is the live dashboard source; the
 	// per-user source (V2Ray gRPC) stays nil unless explicitly enabled.
@@ -173,9 +196,11 @@ func main() {
 
 	handler.NewInboundHandler(inboundSvc, log).Register(mux)
 	handler.NewClientHandler(clientSvc, cfg.Sub.PublicURL, log).Register(mux)
+	handler.NewAPITokenHandler(apiTokenSvc, log).Register(mux)
 	handler.NewCoreHandler(processMgr, applier, log, absCoreLogPath).Register(mux)
+	handler.NewNodeHandler(nodeSvc, inboundSvc, clientSvc, sysReader, processMgr, log).Register(mux)
 	handler.NewSubscriptionHandler(clientRepo, inboundRepo, settingRepo, cfg.Sub.PublicURL, "", log).Register(mux)
-	handler.NewDashboardHandler(sysstat.New(), liveHolder, clientRepo, inboundRepo, trafficRepo, processMgr, log).Register(mux)
+	handler.NewDashboardHandler(sysReader, liveHolder, clientRepo, inboundRepo, trafficRepo, processMgr, log).Register(mux)
 	handler.NewLogsHandler(logBuf).Register(mux)
 
 	frontendHandler := handler.NewFrontendHandler(cfg.Frontend.ServeMode, cfg.Frontend.DiskPath, cfg.Frontend.CacheTTL, frontendDist)
@@ -183,16 +208,28 @@ func main() {
 
 	corsOrigins := []string{"http://localhost:3000", "http://127.0.0.1:3000"}
 
-	stack := middleware.Auth(jwtMgr, log)(mux)
+	stack := middleware.Auth(jwtMgr, log, apiTokenSvc)(mux)
 	stack = middleware.CORS(corsOrigins)(stack)
 	// Stricter brute-force limit on login, then a general per-IP API limit.
 	stack = middleware.RateLimit(cfg.Auth.LoginRateLimit, middleware.LoginPathMatcher, log)(stack)
 	stack = middleware.RateLimit(cfg.Auth.APIRateLimit, middleware.APIPathMatcher, log)(stack)
 	stack = middleware.Logger(log)(stack)
 
+	var httpHandler http.Handler = stack
+	if cfg.HTTP.BasePath != "" {
+		base := cfg.HTTP.BasePath
+		httpHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == base {
+				http.Redirect(w, r, base+"/", http.StatusMovedPermanently)
+				return
+			}
+			http.StripPrefix(base, stack).ServeHTTP(w, r)
+		})
+	}
+
 	server := &http.Server{
 		Addr:           cfg.HTTP.Address,
-		Handler:        stack,
+		Handler:        httpHandler,
 		ReadTimeout:    cfg.HTTP.ReadTimeout,
 		WriteTimeout:   cfg.HTTP.WriteTimeout,
 		IdleTimeout:    cfg.HTTP.IdleTimeout,

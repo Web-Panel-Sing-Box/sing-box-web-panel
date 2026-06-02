@@ -1,32 +1,27 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useToast } from "@/components/ui/toast";
+import { ApiError } from "@/api/client";
 import { useI18n } from "@/lib/i18n";
-import { useStoreActions } from "@/lib/store";
+import {
+  useStoreActions,
+  DEFAULT_NETWORK,
+  DEFAULT_QUIC_CC,
+  DEFAULT_TRANSMISSION,
+} from "@/lib/store";
 import type {
   Inbound,
+  InboundCreateRequest,
+  Network,
+  ObfsType,
   Protocol,
+  QuicCc,
   TlsMode,
   Transmission,
 } from "@/lib/store";
 import { makeUuid, randomHex, randomPort } from "@/lib/random";
-import { ApiError } from "@/api/client";
 
 export type InboundFormMode = "create" | "edit" | "clone";
-
-// Backend validation (internal/services/inbound/service.go): naive requires TLS,
-// reality is vless-only, hysteria2 forbids reality. Keep the form in sync so an
-// invalid protocol/TLS combination can never be submitted.
-const TLS_BY_PROTOCOL: Record<Protocol, TlsMode[]> = {
-  vless: ["none", "tls", "reality"],
-  naive: ["tls"],
-  hysteria2: ["none", "tls"],
-};
-
-function clampTls(protocol: Protocol, tls: TlsMode): TlsMode {
-  const allowed = TLS_BY_PROTOCOL[protocol];
-  return allowed.includes(tls) ? tls : allowed[0];
-}
 
 type Params = {
   open: boolean;
@@ -34,6 +29,12 @@ type Params = {
   inbound: Inbound | null | undefined;
   onClose: () => void;
 };
+
+// naive + hysteria2 always run over TLS; only vless can be plain / reality.
+function tlsForProtocol(protocol: Protocol, current: TlsMode): TlsMode {
+  if (protocol === "naive" || protocol === "hysteria2") return "tls";
+  return current;
+}
 
 export function useInboundForm({ open, mode, inbound, onClose }: Params) {
   const { addInbound, updateInbound, removeInbound } = useStoreActions();
@@ -43,10 +44,12 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [remark, setRemark] = useState("");
-  const [protocol, setProtocol] = useState<Protocol>("naive");
+  const [protocol, setProtocolState] = useState<Protocol>("naive");
   const [port, setPort] = useState<number | string>(() => randomPort());
   const [trafficReset, setTrafficReset] = useState("never");
-  const [transmission, setTransmission] = useState<Transmission>("tcp");
+
+  // vless transport
+  const [transmission, setTransmission] = useState<Transmission>(DEFAULT_TRANSMISSION);
 
   const [sniffing, setSniffing] = useState(true);
   const [snifHttp, setSnifHttp] = useState(true);
@@ -65,6 +68,17 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
   const [privateKey, setPrivateKey] = useState("");
   const [publicKey, setPublicKey] = useState("");
 
+  // naive transport-level
+  const [network, setNetwork] = useState<Network>(DEFAULT_NETWORK);
+  const [quicCc, setQuicCc] = useState<QuicCc>(DEFAULT_QUIC_CC);
+
+  // hysteria2
+  const [obfsType, setObfsType] = useState<ObfsType>("none");
+  const [obfsPassword, setObfsPassword] = useState("");
+  const [upMbps, setUpMbps] = useState<string>("100");
+  const [downMbps, setDownMbps] = useState<string>("100");
+
+  // vless user template (starter client)
   const [userId, setUserId] = useState("user-001");
   const [uuid, setUuid] = useState(makeUuid());
   const [subscription, setSubscription] = useState("");
@@ -77,27 +91,30 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
 
   useEffect(() => {
     if (!open) return;
-    setRemark(
-      mode === "clone" && inbound
-        ? `${inbound.remark}-copy`
-        : (inbound?.remark ?? ""),
-    );
     const nextProtocol = inbound?.protocol ?? "naive";
-    setProtocol(nextProtocol);
+    const s = inbound?.settings;
+    setRemark(mode === "clone" && inbound ? `${inbound.remark}-copy` : (inbound?.remark ?? ""));
+    setProtocolState(nextProtocol);
     setPort(mode === "clone" ? randomPort() : (inbound?.port ?? randomPort()));
     setTrafficReset("never");
-    setTransmission(inbound?.transmission ?? "tcp");
-    setTls(clampTls(nextProtocol, inbound?.tls ?? "none"));
+    setTransmission(inbound?.transmission ?? DEFAULT_TRANSMISSION);
+    setTls(tlsForProtocol(nextProtocol, inbound?.tls ?? "none"));
     setSni(inbound?.sni ?? "www.cloudflare.com");
     setDest(inbound?.dest ?? "www.cloudflare.com:443");
+    setNetwork((s?.naiveNetwork as Network) ?? DEFAULT_NETWORK);
+    setQuicCc((s?.naiveQuicCongestionCtrl as QuicCc) ?? DEFAULT_QUIC_CC);
+    setObfsType(s?.hy2ObfsPassword ? "salamander" : "none");
+    setObfsPassword(s?.hy2ObfsPassword ?? randomHex(12));
+    setUpMbps(s?.hy2UpMbps != null ? String(s.hy2UpMbps) : "100");
+    setDownMbps(s?.hy2DownMbps != null ? String(s.hy2DownMbps) : "100");
     setUuid(makeUuid());
     setUserId("user-001");
     setSubscription("");
     setTotalFlowGb("100");
     setExpiry("");
     setPrivateKey("");
-    setPublicKey("");
-    setShortIds("");
+    setPublicKey(s?.publicKey ?? "");
+    setShortIds(s?.shortId ?? "");
     setStartAfterFirstUse(false);
     setConfirmDelete(false);
     if (mode === "clone") {
@@ -108,9 +125,10 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
     }
   }, [open, mode, inbound]);
 
-  const changeProtocol = useCallback((next: Protocol) => {
-    setProtocol(next);
-    setTls((cur) => clampTls(next, cur));
+  // Switching protocol normalizes invalid combinations (naive/hy2 require TLS).
+  const setProtocol = useCallback((next: Protocol) => {
+    setProtocolState(next);
+    setTls((current) => tlsForProtocol(next, current));
   }, []);
 
   const randomizePort = useCallback(() => {
@@ -122,10 +140,60 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
     setUuid(makeUuid());
   }, []);
 
+  const regenerateObfsPassword = useCallback(() => {
+    setObfsPassword(randomHex(12));
+  }, []);
+
   const generateKeypair = useCallback(() => {
     setPrivateKey(randomHex(64));
     setPublicKey(randomHex(64));
   }, []);
+
+  const buildPayload = useCallback((): InboundCreateRequest => {
+    const safePort = Number(port) || randomPort();
+    const base = { remark: remark.trim(), protocol, port: safePort };
+    if (protocol === "vless") {
+      return {
+        ...base,
+        transmission,
+        tls,
+        sni: tls === "none" ? undefined : sni,
+        dest: tls === "reality" ? dest : undefined,
+      };
+    }
+    if (protocol === "naive") {
+      return {
+        ...base,
+        tls: "tls",
+        sni,
+        naiveNetwork: network,
+        naiveQuicCongestionCtrl: quicCc,
+      };
+    }
+    // hysteria2
+    return {
+      ...base,
+      tls: "tls",
+      sni,
+      hy2UpMbps: Number(upMbps) || undefined,
+      hy2DownMbps: Number(downMbps) || undefined,
+      hy2ObfsPassword: obfsType === "salamander" ? obfsPassword : undefined,
+    };
+  }, [
+    remark,
+    protocol,
+    port,
+    transmission,
+    tls,
+    sni,
+    dest,
+    network,
+    quicCc,
+    obfsType,
+    obfsPassword,
+    upMbps,
+    downMbps,
+  ]);
 
   const handleSave = useCallback(async () => {
     if (!remark.trim()) {
@@ -133,25 +201,14 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
       return;
     }
     setSaving(true);
-    const payload = {
-      remark: remark.trim(),
-      protocol,
-      port: Number(port) || randomPort(),
-      transmission,
-      tls,
-      sni: tls === "none" ? undefined : sni,
-      dest: tls === "reality" ? dest : undefined,
-    };
+    const payload = buildPayload();
     try {
       if (mode === "edit" && inbound) {
-        await updateInbound(inbound.id, payload);
+        await updateInbound(inbound.id, payload as never);
         push(t("inbounds.updated"), "success");
       } else {
-        await addInbound(payload);
-        push(
-          mode === "clone" ? t("inbounds.cloned") : t("inbounds.created"),
-          "success",
-        );
+        await addInbound(payload as never);
+        push(mode === "clone" ? t("inbounds.cloned") : t("inbounds.created"), "success");
       }
       onClose();
     } catch (err) {
@@ -164,22 +221,7 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
     } finally {
       setSaving(false);
     }
-  }, [
-    remark,
-    protocol,
-    port,
-    transmission,
-    tls,
-    sni,
-    dest,
-    mode,
-    inbound,
-    push,
-    t,
-    addInbound,
-    updateInbound,
-    onClose,
-  ]);
+  }, [remark, buildPayload, mode, inbound, push, t, addInbound, updateInbound, onClose]);
 
   const handleDelete = useCallback(() => {
     if (!inbound) return;
@@ -197,62 +239,38 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
     confirmDelete,
     openConfirmDelete,
     closeConfirmDelete,
-    remark,
-    setRemark,
-    protocol,
-    setProtocol: changeProtocol,
-    tlsModes: TLS_BY_PROTOCOL[protocol],
-    port,
-    setPort,
-    trafficReset,
-    setTrafficReset,
-    transmission,
-    setTransmission,
-    sniffing,
-    setSniffing,
-    snifHttp,
-    setSnifHttp,
-    snifTls,
-    setSnifTls,
-    snifQuic,
-    setSnifQuic,
-    snifFakedns,
-    setSnifFakedns,
-    metadataOnly,
-    setMetadataOnly,
-    routeOnly,
-    setRouteOnly,
-    ipsExcluded,
-    setIpsExcluded,
-    domainsExcluded,
-    setDomainsExcluded,
-    tls,
-    setTls,
-    dest,
-    setDest,
-    sni,
-    setSni,
-    shortIds,
-    setShortIds,
-    privateKey,
-    publicKey,
-    generateKeypair,
-    userId,
-    setUserId,
-    uuid,
-    regenerateUuid,
-    subscription,
-    setSubscription,
-    totalFlowGb,
-    setTotalFlowGb,
-    expiry,
-    setExpiry,
-    startAfterFirstUse,
-    setStartAfterFirstUse,
-    diceSpin,
-    randomizePort,
-    saving,
-    handleSave,
-    handleDelete,
+    remark, setRemark,
+    protocol, setProtocol,
+    port, setPort,
+    trafficReset, setTrafficReset,
+    transmission, setTransmission,
+    sniffing, setSniffing,
+    snifHttp, setSnifHttp,
+    snifTls, setSnifTls,
+    snifQuic, setSnifQuic,
+    snifFakedns, setSnifFakedns,
+    metadataOnly, setMetadataOnly,
+    routeOnly, setRouteOnly,
+    ipsExcluded, setIpsExcluded,
+    domainsExcluded, setDomainsExcluded,
+    tls, setTls,
+    dest, setDest,
+    sni, setSni,
+    shortIds, setShortIds,
+    privateKey, publicKey, generateKeypair,
+    network, setNetwork,
+    quicCc, setQuicCc,
+    obfsType, setObfsType,
+    obfsPassword, setObfsPassword, regenerateObfsPassword,
+    upMbps, setUpMbps,
+    downMbps, setDownMbps,
+    userId, setUserId,
+    uuid, regenerateUuid,
+    subscription, setSubscription,
+    totalFlowGb, setTotalFlowGb,
+    expiry, setExpiry,
+    startAfterFirstUse, setStartAfterFirstUse,
+    diceSpin, randomizePort,
+    saving, handleSave, handleDelete,
   };
 }

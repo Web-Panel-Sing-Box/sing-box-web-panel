@@ -16,6 +16,7 @@ database:
 
 http:
   address: "127.0.0.1:8080"
+  base_path: ""
   read_timeout: "10s"
   write_timeout: "15s"
   idle_timeout: "120s"

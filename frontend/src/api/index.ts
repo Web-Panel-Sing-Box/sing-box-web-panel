@@ -13,5 +13,20 @@ export type { PanelInfo, HealthStatus } from "./health";
 export { getPanelInfo, getHealth } from "./health";
 export type { LogEntryDTO } from "./logs";
 export { getPanelLogs } from "./logs";
+export type { APITokenDTO, CreatedAPITokenDTO } from "./apiTokens";
+export { listAPITokens, createAPIToken, setAPITokenEnabled, deleteAPIToken } from "./apiTokens";
+export type { NodeDTO, NodeRequest, NodeSyncResult, NodeStatus } from "./nodes";
+export { listNodes, createNode, updateNode, deleteNode, toggleNode, probeNode, syncNode } from "./nodes";
 export type * from "./types";
-export { PROTOCOL_OPTIONS, TRANSMISSION_OPTIONS, TRAFFIC_RESET_OPTIONS } from "./types";
+export {
+  PROTOCOL_OPTIONS,
+  TRANSMISSION_OPTIONS,
+  TRAFFIC_RESET_OPTIONS,
+  NETWORK_OPTIONS,
+  FLOW_OPTIONS,
+  QUIC_CC_OPTIONS,
+  OBFS_OPTIONS,
+  DEFAULT_TRANSMISSION,
+  DEFAULT_NETWORK,
+  DEFAULT_QUIC_CC,
+} from "./types";

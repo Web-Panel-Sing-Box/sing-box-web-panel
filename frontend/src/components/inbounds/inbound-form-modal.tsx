@@ -1,7 +1,7 @@
 
 import { useMemo } from "react";
 import { m } from "framer-motion";
-import { Copy, Dices, RefreshCw, Trash2 } from "lucide-react";
+import { Copy, Dices, RefreshCw, ShieldCheck, Trash2 } from "lucide-react";
 
 import { Accordion } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,10 @@ import { Select } from "@/components/ui/select";
 import { Toggle } from "@/components/ui/toggle";
 import { useInboundForm, type InboundFormMode } from "@/hooks/useInboundForm";
 import {
+  NETWORK_OPTIONS,
+  OBFS_OPTIONS,
   PROTOCOL_OPTIONS,
+  QUIC_CC_OPTIONS,
   TRAFFIC_RESET_OPTIONS,
   TRANSMISSION_OPTIONS,
   type Inbound,
@@ -21,12 +24,6 @@ import {
 import { useI18n } from "@/lib/i18n";
 
 export type { InboundFormMode } from "@/hooks/useInboundForm";
-
-const TLS_LABELS: Record<TlsMode, string> = {
-  none: "None",
-  tls: "TLS",
-  reality: "Reality",
-};
 
 type InboundFormModalProps = {
   open: boolean;
@@ -40,7 +37,13 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
   const { t } = useI18n();
   const f = useInboundForm({ open, mode, inbound, onClose });
 
+  const isVless = f.protocol === "vless";
+  const isNaive = f.protocol === "naive";
+  const isHy2 = f.protocol === "hysteria2";
+
+  // Transport-specific extra fields — VLESS only (naive/hysteria2 have no v2ray transport).
   const transportFields = useMemo(() => {
+    if (f.protocol !== "vless") return null;
     switch (f.transmission) {
       case "ws":
         return (
@@ -62,23 +65,6 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
             <Input placeholder="grpc-svc" mono />
           </div>
         );
-      case "mkcp":
-        return (
-          <div>
-            <Label>Header type</Label>
-            <Select
-              value="none"
-              onChange={() => undefined}
-              options={[
-                { value: "none", label: "none" },
-                { value: "srtp", label: "srtp" },
-                { value: "wechat-video", label: "wechat-video" },
-                { value: "wireguard", label: "wireguard" }
-              ]}
-            />
-          </div>
-        );
-      case "xhttp":
       case "httpupgrade":
         return (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -93,9 +79,27 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
           </div>
         );
       default:
-        return null;
+        return null; // tcp / raw
     }
-  }, [f.transmission]);
+  }, [f.protocol, f.transmission]);
+
+  // Second column of the "traffic reset" row: transport (vless) / network (naive) / QUIC (hysteria2).
+  const connectionControl = isVless ? (
+    <div>
+      <Label>{t("inbounds.transport")}</Label>
+      <Select value={f.transmission} options={TRANSMISSION_OPTIONS} onChange={f.setTransmission} />
+    </div>
+  ) : isNaive ? (
+    <div>
+      <Label>{t("inbounds.network")}</Label>
+      <Select value={f.network} options={NETWORK_OPTIONS} onChange={f.setNetwork} />
+    </div>
+  ) : (
+    <div>
+      <Label>{t("inbounds.transport")}</Label>
+      <Input value="QUIC" mono readOnly />
+    </div>
+  );
 
   const title =
     mode === "edit"
@@ -153,10 +157,7 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
                 <Label>{t("inbounds.trafficReset")}</Label>
                 <Select value={f.trafficReset} options={TRAFFIC_RESET_OPTIONS} onChange={f.setTrafficReset} />
               </div>
-              <div>
-                <Label>{t("inbounds.transmission")}</Label>
-                <Select value={f.transmission} options={TRANSMISSION_OPTIONS} onChange={f.setTransmission} />
-              </div>
+              {connectionControl}
             </div>
             {transportFields ? <div className="rounded-lg border border-subtle bg-canvas/60 p-3">{transportFields}</div> : null}
           </div>
@@ -194,14 +195,25 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
 
             <div>
               <Label>TLS</Label>
-              <Segmented<TlsMode>
-                value={f.tls}
-                onChange={f.setTls}
-                options={f.tlsModes.map((m) => ({ value: m, label: TLS_LABELS[m] }))}
-              />
+              {isVless ? (
+                <Segmented<TlsMode>
+                  value={f.tls}
+                  onChange={f.setTls}
+                  options={[
+                    { value: "none", label: "None" },
+                    { value: "tls", label: "TLS" },
+                    { value: "reality", label: "Reality" }
+                  ]}
+                />
+              ) : (
+                <div className="flex items-center gap-2 rounded-lg border border-subtle bg-canvas/60 px-3 py-2 text-xs text-ink-secondary">
+                  <ShieldCheck size={14} className="text-success" />
+                  {t("inbounds.tlsRequired")}
+                </div>
+              )}
             </div>
 
-            {f.tls === "reality" ? (
+            {isVless && f.tls === "reality" ? (
               <div className="grid grid-cols-1 gap-3">
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
@@ -227,11 +239,11 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
                   </div>
                   <div>
                     <Label>{t("inbounds.privateKey")}</Label>
-                    <Input value={f.privateKey} mono readOnly />
+                    <Input value={f.privateKey} mono readOnly placeholder="—" />
                   </div>
                   <div>
                     <Label>{t("inbounds.publicKey")}</Label>
-                    <Input value={f.publicKey} mono readOnly />
+                    <Input value={f.publicKey} mono readOnly placeholder="—" />
                   </div>
                 </div>
               </div>
@@ -240,6 +252,56 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
                 <div>
                   <Label>SNI</Label>
                   <Input value={f.sni} onChange={(e) => f.setSni(e.target.value)} mono />
+                </div>
+              </div>
+            ) : null}
+
+            {isNaive ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <Label>{t("inbounds.quicCc")}</Label>
+                  <Select value={f.quicCc} options={QUIC_CC_OPTIONS} onChange={f.setQuicCc} />
+                </div>
+              </div>
+            ) : null}
+
+            {isHy2 ? (
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label>{t("inbounds.upMbps")}</Label>
+                    <NumberInput value={f.upMbps} onChange={f.setUpMbps} min={0} mono placeholder="0" />
+                  </div>
+                  <div>
+                    <Label>{t("inbounds.downMbps")}</Label>
+                    <NumberInput value={f.downMbps} onChange={f.setDownMbps} min={0} mono placeholder="0" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label>{t("inbounds.obfs")}</Label>
+                    <Select value={f.obfsType} options={OBFS_OPTIONS} onChange={f.setObfsType} />
+                  </div>
+                  {f.obfsType === "salamander" ? (
+                    <div>
+                      <Label>{t("inbounds.obfsPassword")}</Label>
+                      <Input
+                        value={f.obfsPassword}
+                        onChange={(e) => f.setObfsPassword(e.target.value)}
+                        mono
+                        trailing={
+                          <button
+                            type="button"
+                            onClick={f.regenerateObfsPassword}
+                            className="grid size-7 place-items-center rounded-md text-ink-secondary transition-colors duration-150 hover:bg-hover hover:text-ink-primary"
+                            title="Regenerate"
+                          >
+                            <RefreshCw size={14} />
+                          </button>
+                        }
+                      />
+                    </div>
+                  ) : null}
                 </div>
               </div>
             ) : null}

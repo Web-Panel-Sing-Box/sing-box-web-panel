@@ -25,8 +25,20 @@ export type { ClientStatus } from "@/api/types";
 export type { MetricsDTO as Metrics } from "@/api/dashboard";
 export type { TrafficPoint } from "@/api/dashboard";
 export type { LogEntryDTO as LogEntry } from "@/api/logs";
-export type { LogLevel, Protocol, Transmission, TlsMode } from "@/api/types";
-export { PROTOCOL_OPTIONS, TRANSMISSION_OPTIONS, TRAFFIC_RESET_OPTIONS } from "@/api/types";
+export type { LogLevel, Protocol, Transmission, TlsMode, Network, Flow, ObfsType, QuicCc } from "@/api/types";
+export type { InboundSettings, InboundCreateRequest } from "@/api/inbounds";
+export {
+  PROTOCOL_OPTIONS,
+  TRANSMISSION_OPTIONS,
+  TRAFFIC_RESET_OPTIONS,
+  NETWORK_OPTIONS,
+  FLOW_OPTIONS,
+  QUIC_CC_OPTIONS,
+  OBFS_OPTIONS,
+  DEFAULT_TRANSMISSION,
+  DEFAULT_NETWORK,
+  DEFAULT_QUIC_CC,
+} from "@/api/types";
 
 type StoreState = {
   metrics: MetricsDTO;
