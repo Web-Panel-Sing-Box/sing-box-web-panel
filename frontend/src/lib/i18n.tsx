@@ -4,7 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState
+  useState,
 } from "react";
 
 export type Language = "en" | "ru";
@@ -52,7 +52,8 @@ const en = {
   "common.keepRunning": "Keep running",
 
   "core.stopQuestion": "Are you sure you want to stop the core?",
-  "core.stopBody": "The sing-box core will be marked as stopped until you start it again.",
+  "core.stopBody":
+    "The sing-box core will be marked as stopped until you start it again.",
   "core.stopConfirm": "Stop core",
   "core.started": "Core started",
   "core.stopped": "Core stopped",
@@ -101,7 +102,8 @@ const en = {
   "inbounds.modalCreate": "New inbound connection",
   "inbounds.modalEdit": "Edit inbound connection",
   "inbounds.modalClone": "Clone inbound connection",
-  "inbounds.modalSubtitle": "Configure protocol, transport, security, and a starter client.",
+  "inbounds.modalSubtitle":
+    "Configure protocol, transport, security, and a starter client.",
   "inbounds.cloneHint": "Change the remark before saving the cloned inbound.",
   "inbounds.basics": "Basics",
   "inbounds.basicsDesc": "Protocol, port, traffic reset, transport",
@@ -139,7 +141,8 @@ const en = {
   "inbounds.totalFlow": "Total flow (GB)",
   "inbounds.expiryDate": "Expiry date",
   "inbounds.startAfterFirstUse": "Start after first use",
-  "inbounds.startAfterFirstUseDesc": "Quota timer begins on the first connection rather than at creation",
+  "inbounds.startAfterFirstUseDesc":
+    "Quota timer begins on the first connection rather than at creation",
   "inbounds.deleteQuestion": "Delete this inbound?",
   "inbounds.deleteBody": "{{remark}} will be permanently removed.",
 
@@ -147,7 +150,8 @@ const en = {
   "clients.description": "Manage user quotas, expiry, and subscription links",
   "clients.add": "Add client",
   "clients.addTitle": "New client",
-  "clients.addHint": "Use 'New configuration' on Inbounds to provision the first client",
+  "clients.addHint":
+    "Use 'New configuration' on Inbounds to provision the first client",
   "clients.nameRequired": "Name is required",
   "clients.inboundRequired": "Select an inbound",
   "clients.created": "Client created",
@@ -170,6 +174,8 @@ const en = {
   "settings.title": "Settings",
   "settings.description": "Panel configuration",
   "settings.saved": "Settings saved",
+  "settings.loadError": "Failed to load settings",
+  "settings.saveError": "Failed to save settings",
   "settings.general": "General",
   "settings.security": "Security",
   "settings.singBox": "Sing-box",
@@ -209,7 +215,7 @@ const en = {
   "logs.allLevels": "All levels",
   "logs.resume": "Resume",
   "logs.pause": "Pause",
-  "logs.noMatch": "No log lines match the current filter."
+  "logs.noMatch": "No log lines match the current filter.",
 };
 
 const ru: Record<keyof typeof en, string> = {
@@ -253,7 +259,8 @@ const ru: Record<keyof typeof en, string> = {
   "common.keepRunning": "Оставить включенным",
 
   "core.stopQuestion": "Вы уверены, что хотите выключить ядро?",
-  "core.stopBody": "Ядро sing-box будет отмечено как остановленное, пока вы не включите его снова.",
+  "core.stopBody":
+    "Ядро sing-box будет отмечено как остановленное, пока вы не включите его снова.",
   "core.stopConfirm": "Выключить ядро",
   "core.started": "Ядро включено",
   "core.stopped": "Ядро выключено",
@@ -271,7 +278,8 @@ const ru: Record<keyof typeof en, string> = {
   "dashboard.swap": "Swap",
   "dashboard.disk": "Диск",
   "dashboard.traffic": "Трафик",
-  "dashboard.trafficSubtitle": "Входящая · исходящая скорость за последние 60 секунд",
+  "dashboard.trafficSubtitle":
+    "Входящая · исходящая скорость за последние 60 секунд",
   "dashboard.incoming": "Входящий",
   "dashboard.outgoing": "Исходящий",
   "dashboard.today": "Сегодня",
@@ -302,7 +310,8 @@ const ru: Record<keyof typeof en, string> = {
   "inbounds.modalCreate": "Новое входящее соединение",
   "inbounds.modalEdit": "Редактирование инбаунда",
   "inbounds.modalClone": "Клонирование инбаунда",
-  "inbounds.modalSubtitle": "Настройте протокол, транспорт, безопасность и стартового клиента.",
+  "inbounds.modalSubtitle":
+    "Настройте протокол, транспорт, безопасность и стартового клиента.",
   "inbounds.cloneHint": "Поменяйте примечание перед сохранением клона.",
   "inbounds.basics": "Основное",
   "inbounds.basicsDesc": "Протокол, порт, сброс трафика, транспорт",
@@ -340,7 +349,8 @@ const ru: Record<keyof typeof en, string> = {
   "inbounds.totalFlow": "Общий трафик (GB)",
   "inbounds.expiryDate": "Дата истечения",
   "inbounds.startAfterFirstUse": "Start after first use",
-  "inbounds.startAfterFirstUseDesc": "Срок начинает идти после первого подключения, а не при создании",
+  "inbounds.startAfterFirstUseDesc":
+    "Срок начинает идти после первого подключения, а не при создании",
   "inbounds.deleteQuestion": "Удалить этот инбаунд?",
   "inbounds.deleteBody": "{{remark}} будет удален безвозвратно.",
 
@@ -348,7 +358,8 @@ const ru: Record<keyof typeof en, string> = {
   "clients.description": "Управление квотами, сроками и ссылками подписки",
   "clients.add": "Добавить клиента",
   "clients.addTitle": "Новый клиент",
-  "clients.addHint": "Используйте 'Новая конфигурация' на странице инбаундов, чтобы создать первого клиента",
+  "clients.addHint":
+    "Используйте 'Новая конфигурация' на странице инбаундов, чтобы создать первого клиента",
   "clients.nameRequired": "Нужно заполнить имя",
   "clients.inboundRequired": "Выберите инбаунд",
   "clients.created": "Клиент создан",
@@ -371,12 +382,15 @@ const ru: Record<keyof typeof en, string> = {
   "settings.title": "Настройки",
   "settings.description": "Конфигурация панели",
   "settings.saved": "Настройки сохранены",
+  "settings.loadError": "Не удалось загрузить настройки",
+  "settings.saveError": "Не удалось сохранить настройки",
   "settings.general": "Общие",
   "settings.security": "Безопасность",
   "settings.singBox": "Sing-box",
   "settings.subscriptions": "Подписки",
   "settings.panelName": "Название панели",
-  "settings.panelNameHint": "Показывается во вкладке браузера и на экране входа",
+  "settings.panelNameHint":
+    "Показывается во вкладке браузера и на экране входа",
   "settings.language": "Язык",
   "settings.languageHint": "Язык интерфейса для новых сессий",
   "settings.adminUsername": "Имя администратора",
@@ -392,7 +406,7 @@ const ru: Record<keyof typeof en, string> = {
   "settings.twoFactorDisabled": "Двухфакторная авторизация отключена",
   "settings.changePassword": "Сменить пароль",
   "settings.changePasswordHint": "Пока недоступно",
-  "settings.binaryPath": "Путь к бинарю",
+  "settings.binaryPath": "Путь к бинарнику",
   "settings.binaryPathHint": "Путь, который использует ProcessManager",
   "settings.logLevel": "Уровень логов",
   "settings.logLevelHint": "Управляет подробностью stdout sing-box",
@@ -410,7 +424,7 @@ const ru: Record<keyof typeof en, string> = {
   "logs.allLevels": "Все уровни",
   "logs.resume": "Возобновить",
   "logs.pause": "Пауза",
-  "logs.noMatch": "Нет строк логов под текущий фильтр."
+  "logs.noMatch": "Нет строк логов под текущий фильтр.",
 };
 
 const dictionaries = { en, ru };
@@ -432,7 +446,9 @@ function isLanguage(value: string | null): value is Language {
 
 function interpolate(template: string, params?: Params) {
   if (!params) return template;
-  return template.replace(/\{\{(\w+)\}\}/g, (_, key: string) => String(params[key] ?? ""));
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key: string) =>
+    String(params[key] ?? ""),
+  );
 }
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
@@ -452,11 +468,15 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const t = useCallback(
-    (key: TranslationKey, params?: Params) => interpolate(dictionaries[language][key] ?? en[key], params),
-    [language]
+    (key: TranslationKey, params?: Params) =>
+      interpolate(dictionaries[language][key] ?? en[key], params),
+    [language],
   );
 
-  const value = useMemo(() => ({ language, setLanguage, t }), [language, setLanguage, t]);
+  const value = useMemo(
+    () => ({ language, setLanguage, t }),
+    [language, setLanguage, t],
+  );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }

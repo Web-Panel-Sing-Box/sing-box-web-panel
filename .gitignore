@@ -10,6 +10,7 @@ __pycache__/
 .mypy_cache/
 .venv/
 venv/
+shilka
 dist/
 build/
 # Embed target for Go: keep PLACEHOLDER so go:embed works, ignore generated dist.

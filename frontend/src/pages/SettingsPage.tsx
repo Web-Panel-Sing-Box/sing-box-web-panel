@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import { getSettings, saveSettings } from "@/api";
 import { TwoFactorSetupModal } from "@/components/auth/two-factor-setup-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,14 +29,39 @@ export function SettingsPage() {
   const { language, setLanguage, t } = useI18n();
   const { twoFactorEnabled, setTwoFactorEnabled } = useAuth();
   const twoFactorSetup = useDisclosure();
-  const [panelName, setPanelName] = useState("Sing box");
+  const [panelName, setPanelName] = useState("Shilka");
   const [binaryPath, setBinaryPath] = useState("/usr/local/bin/sing-box");
   const [logLevel, setLogLevel] = useState("info");
-  const [publicHost, setPublicHost] = useState("panel.example");
+  const [publicHost, setPublicHost] = useState("");
   const [ttl, setTtl] = useState("72h");
 
-  const save = () => {
-    push(t("settings.saved"), "success");
+  useEffect(() => {
+    getSettings()
+      .then((s) => {
+        if (s.panel_name) setPanelName(s.panel_name);
+        if (s.binary_path) setBinaryPath(s.binary_path);
+        if (s.log_level) setLogLevel(s.log_level);
+        if (s.sub_public_url) setPublicHost(s.sub_public_url);
+        if (s.token_ttl) setTtl(s.token_ttl);
+      })
+      .catch(() => {
+        push(t("settings.loadError"), "error");
+      });
+  }, []);
+
+  const save = async () => {
+    try {
+      await saveSettings({
+        panel_name: panelName,
+        binary_path: binaryPath,
+        log_level: logLevel,
+        sub_public_url: publicHost,
+        token_ttl: ttl,
+      });
+      push(t("settings.saved"), "success");
+    } catch {
+      push(t("settings.saveError"), "error");
+    }
   };
 
   const handleTwoFactorToggle = (next: boolean) => {

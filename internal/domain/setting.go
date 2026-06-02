@@ -9,6 +9,10 @@ type Setting struct {
 
 // Panel setting keys.
 const (
+	SettingPanelName    = "panel_name"
+	SettingBinaryPath   = "binary_path"
+	SettingLogLevel     = "log_level"
 	SettingSubPublicURL = "sub_public_url"
 	SettingInboundHost  = "inbound_host" // host/IP advertised in generated client links
+	SettingTokenTTL     = "token_ttl"
 )

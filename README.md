@@ -12,7 +12,7 @@ Shilka is a local-first web panel for managing a local `sing-box` process. Singl
 ## Quick Start (VPS)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Web-Panel-Sing-Box/sing-box-web-panel/main/scripts/install.sh | bash
+bash <(curl -Ls https://raw.githubusercontent.com/Web-Panel-Sing-Box/sing-box-web-panel/main/scripts/install.sh)
 ```
 
 ## Local Development
@@ -51,4 +51,4 @@ cd frontend && pnpm test      # Frontend unit
 
 ## Safety
 
-sing-box management APIs (`Clash API`, `V2Ray API`) bind  to `127.0.0.1`. Only the web panel port is exposed.
+sing-box management APIs (`Clash API`, `V2Ray API`) bind to `127.0.0.1`. Only the web panel port is exposed.
