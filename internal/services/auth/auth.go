@@ -38,6 +38,7 @@ type TokenManager interface {
 
 type TOTPProvider interface {
 	GenerateSecret(username string) (*otpKey, error)
+	BuildKeyURI(username, secret string) string
 	Validate(code, secret string) bool
 }
 
@@ -149,15 +150,15 @@ func (s *Service) LoginTOTP(ctx context.Context, tempToken, code string) (string
 	return token, nil
 }
 
-func (s *Service) SetupTOTP(ctx context.Context, adminID int64) (string, error) {
+func (s *Service) SetupTOTP(ctx context.Context, adminID int64) (qrURI string, secret string, _ error) {
 	admin, err := s.admins.GetByID(ctx, adminID)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	key, err := s.totp.GenerateSecret(admin.Username)
 	if err != nil {
-		return "", fmt.Errorf("generate totp secret: %w", err)
+		return "", "", fmt.Errorf("generate totp secret: %w", err)
 	}
 
 	admin.TOTPSecret = key.Secret
@@ -165,10 +166,10 @@ func (s *Service) SetupTOTP(ctx context.Context, adminID int64) (string, error) 
 	admin.TOTPConfirmedAt = nil
 
 	if err := s.admins.Update(ctx, admin); err != nil {
-		return "", fmt.Errorf("save totp secret: %w", err)
+		return "", "", fmt.Errorf("save totp secret: %w", err)
 	}
 
-	return key.URL, nil
+	return key.URL, key.Secret, nil
 }
 
 func (s *Service) ConfirmTOTP(ctx context.Context, adminID int64, code string) ([]string, error) {
@@ -276,6 +277,10 @@ func (s *Service) SeedAdmin(ctx context.Context, username, password string) erro
 	}
 
 	return s.admins.Create(ctx, admin)
+}
+
+func (s *Service) BuildTOTPURI(username, secret string) string {
+	return s.totp.BuildKeyURI(username, secret)
 }
 
 func (s *Service) GetAdmin(ctx context.Context, adminID int64) (*domain.Admin, error) {

@@ -196,7 +196,7 @@ func TestSetupTOTP(t *testing.T) {
 
 	svc.SeedAdmin(context.Background(), "admin", "password")
 
-	qrURI, err := svc.SetupTOTP(context.Background(), 1)
+	qrURI, _, err := svc.SetupTOTP(context.Background(), 1)
 	if err != nil {
 		t.Fatalf("SetupTOTP() error: %v", err)
 	}

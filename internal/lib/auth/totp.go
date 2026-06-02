@@ -68,6 +68,18 @@ func (m *TOTPManager) SecretFromURI(uri string) (string, error) {
 	return secret, nil
 }
 
+func (m *TOTPManager) BuildKeyURI(username, secret string) string {
+	params := url.Values{}
+	params.Set("secret", secret)
+	params.Set("issuer", m.issuer)
+	params.Set("algorithm", "SHA1")
+	params.Set("digits", "6")
+	params.Set("period", "30")
+
+	label := url.PathEscape(fmt.Sprintf("%s:%s", m.issuer, username))
+	return fmt.Sprintf("otpauth://totp/%s?%s", label, params.Encode())
+}
+
 func (m *TOTPManager) IsValidSecret(secret string) bool {
 	if secret == "" {
 		return false
