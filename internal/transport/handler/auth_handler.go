@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	qrcode "github.com/skip2/go-qrcode"
+
 	svcauth "sing-box-web-panel/internal/services/auth"
 	"sing-box-web-panel/internal/transport/middleware"
 )
@@ -30,6 +32,7 @@ func (h *AuthHandler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/auth/me", h.withAuth(h.Me))
 	mux.HandleFunc("POST /api/auth/logout", h.Logout)
 	mux.HandleFunc("POST /api/auth/totp/setup", h.withAuth(h.SetupTOTP))
+	mux.HandleFunc("GET /api/auth/totp/qr", h.withAuth(h.TOTPQR))
 	mux.HandleFunc("POST /api/auth/totp/confirm", h.withAuth(h.ConfirmTOTP))
 	mux.HandleFunc("POST /api/auth/totp/disable", h.withAuth(h.DisableTOTP))
 	mux.HandleFunc("POST /api/auth/change-password", h.withAuth(h.ChangePassword))
@@ -272,13 +275,45 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, _ *http.Request) {
 //	@Router			/auth/totp/setup [post]
 func (h *AuthHandler) SetupTOTP(w http.ResponseWriter, r *http.Request) {
 	adminID := middleware.AdminID(r)
-	qrURI, err := h.svc.SetupTOTP(r.Context(), adminID)
+	qrURI, secret, err := h.svc.SetupTOTP(r.Context(), adminID)
 	if err != nil {
 		h.log.Error("setup totp", slog.String("error", err.Error()))
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]string{"qr_uri": qrURI})
+	writeJSON(w, http.StatusOK, map[string]string{"qr_uri": qrURI, "secret": secret})
+}
+
+// TOTPQR godoc
+//
+//	@Summary		Get TOTP QR code
+//	@Description	Returns a PNG QR code for the current admin's configured TOTP secret.
+//	@Tags			auth
+//	@Produce		png
+//	@Security		BearerAuth
+//	@Success		200	{file}	png
+//	@Failure		404	{object}	map[string]string
+//	@Router			/auth/totp/qr [get]
+func (h *AuthHandler) TOTPQR(w http.ResponseWriter, r *http.Request) {
+	adminID := middleware.AdminID(r)
+	admin, err := h.svc.GetAdmin(r.Context(), adminID)
+	if err != nil || admin.TOTPSecret == "" {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "totp not configured"})
+		return
+	}
+
+	uri := h.svc.BuildTOTPURI(admin.Username, admin.TOTPSecret)
+	png, err := qrcode.Encode(uri, qrcode.Medium, 256)
+	if err != nil {
+		h.log.Error("qr encode", slog.String("error", err.Error()))
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
+	}
+
+	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Cache-Control", "no-store")
+	w.WriteHeader(http.StatusOK)
+	w.Write(png)
 }
 
 type confirmTOTPRequest struct {

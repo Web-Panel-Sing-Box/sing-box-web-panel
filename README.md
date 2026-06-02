@@ -40,7 +40,7 @@ Shilka is a **local-first web panel** for managing a `sing-box` proxy server. It
 One command. Handles everything: user, directories, sing-box binary, TLS cert, systemd unit.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Web-Panel-Sing-Box/sing-box-web-panel/main/scripts/install.sh | bash
+bash <(curl -Ls https://raw.githubusercontent.com/Web-Panel-Sing-Box/sing-box-web-panel/main/scripts/install.sh)
 ```
 
 The script will ask:
@@ -142,15 +142,40 @@ go run ./cmd/
 cd frontend
 pnpm install
 pnpm dev
+# Dev server at http://127.0.0.1:3000, proxies /api to :8080
+```
+
+### Build (embedded)
+
+```bash
+cd frontend && pnpm build
+cd .. && rsync -a frontend/dist/ cmd/frontend/dist/
+go build -o shilka ./cmd/
+```
+
+### Tests
+
+```bash
+go test ./tests/...           # Backend unit + integration
+cd frontend && pnpm test      # Frontend unit
+```
+
+## Safety
+
+sing-box management APIs (`Clash API`, `V2Ray API`) bind to `127.0.0.1`. Only the web panel port is exposed.
+
 # http://127.0.0.1:3000
 
 # Tests
-go test ./tests/...          # backend (11 packages)
-cd frontend && pnpm test     # frontend (8 files / 10 tests)
+
+go test ./tests/... # backend (11 packages)
+cd frontend && pnpm test # frontend (8 files / 10 tests)
 
 # Lint
+
 cd frontend && pnpm typecheck
 go vet ./...
+
 ```
 
 ---
@@ -160,14 +185,16 @@ go vet ./...
 After installing via [Quick Start](#quick-start-vps), or for a binary configured with the right paths, the `shilka` binary exposes these subcommands:
 
 ```
-shilka run                   Start the server (used by systemd)
-shilka admin reset-password  Reset admin password interactively
-shilka setting -port PORT    Change the panel port
-shilka setting -domain DOM   Set domain and public URL
-shilka api-token create      Create an API token for nodes
-shilka cert set-files        Set custom TLS certificate files
-shilka cert reset            Disable panel TLS
-shilka core reload           Reload sing-box config
+
+shilka run Start the server (used by systemd)
+shilka admin reset-password Reset admin password interactively
+shilka setting -port PORT Change the panel port
+shilka setting -domain DOM Set domain and public URL
+shilka api-token create Create an API token for nodes
+shilka cert set-files Set custom TLS certificate files
+shilka cert reset Disable panel TLS
+shilka core reload Reload sing-box config
+
 ```
 
 ---
@@ -191,3 +218,4 @@ shilka core reload           Reload sing-box config
 - Per-IP login rate limiting (5/min) and general API rate limit (100/s)
 - Request body capped at 16 KiB
 - TLS config supports 4 modes: off, file (pre-generated certs), self-signed, acme (auto-cert + auto-renew)
+```

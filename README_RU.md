@@ -40,7 +40,7 @@ Shilka — это **локальная веб-панель** для управл
 Одна команда. Устанавливает всё: пользователя, директории, бинарник sing-box, TLS-сертификат, systemd юнит.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Web-Panel-Sing-Box/sing-box-web-panel/main/scripts/install.sh | bash
+bash <(curl -Ls https://raw.githubusercontent.com/Web-Panel-Sing-Box/sing-box-web-panel/main/scripts/install.sh)
 ```
 
 Скрипт запросит:
