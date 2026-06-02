@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { getSettings, saveSettings } from "@/api";
+import { disableTOTP, getSettings, saveSettings } from "@/api";
 import { TwoFactorSetupModal } from "@/components/auth/two-factor-setup-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,8 +69,14 @@ export function SettingsPage() {
       twoFactorSetup.open();
       return;
     }
-    setTwoFactorEnabled(false);
-    push(t("settings.twoFactorDisabled"), "success");
+    const otpCode = window.prompt(t("settings.twoFactorEnterCode"));
+    if (!otpCode) return;
+    disableTOTP({ code: otpCode })
+      .then(() => {
+        setTwoFactorEnabled(false);
+        push(t("settings.twoFactorDisabled"), "success");
+      })
+      .catch(() => push(t("settings.twoFactorInvalidCode"), "error"));
   };
 
   return (

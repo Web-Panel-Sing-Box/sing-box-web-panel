@@ -29,6 +29,7 @@ export type LoginRecoveryRequest = {
 
 export type SetupTOTPResponse = {
   qr_uri: string;
+  secret: string;
 };
 
 export type ConfirmTOTPRequest = {
