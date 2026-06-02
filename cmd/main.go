@@ -13,6 +13,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -36,6 +37,7 @@ import (
 	svcinbound "sing-box-web-panel/internal/services/inbound"
 	"sing-box-web-panel/internal/services/logbuf"
 	svcnode "sing-box-web-panel/internal/services/node"
+	"sing-box-web-panel/internal/services/scheduler"
 	svcsettings "sing-box-web-panel/internal/services/settings"
 	"sing-box-web-panel/internal/services/singbox"
 	"sing-box-web-panel/internal/services/stats"
@@ -185,6 +187,61 @@ func runServer() {
 	go nodeSvc.Run(rootCtx, 10*time.Second, 15*time.Second)
 
 	settingSvc := svcsettings.New(settingRepo, applier)
+	taskRepo := sqliterepo.NewScheduledTaskRepo(storage)
+
+	schedulerSvc := scheduler.New(taskRepo, log)
+	schedulerSvc.RegisterAction(domain.ActionResetTrafficAll, func(ctx context.Context, params json.RawMessage) error {
+		clients, err := clientRepo.List(ctx)
+		if err != nil {
+			return err
+		}
+		for _, c := range clients {
+			if err := clientRepo.ResetTraffic(ctx, c.ID); err != nil {
+				log.Warn("reset traffic", slog.Int64("client", c.ID), slog.String("error", err.Error()))
+			}
+		}
+		log.Info("scheduled: reset all traffic", slog.Int("clients", len(clients)))
+		return nil
+	})
+	schedulerSvc.RegisterAction(domain.ActionDeleteExpired, func(ctx context.Context, params json.RawMessage) error {
+		clients, err := clientRepo.List(ctx)
+		if err != nil {
+			return err
+		}
+		now := time.Now()
+		deleted := 0
+		for _, c := range clients {
+			if c.IsExpired(now) {
+				if err := clientRepo.Delete(ctx, c.ID); err != nil {
+					log.Warn("delete expired", slog.Int64("client", c.ID), slog.String("error", err.Error()))
+					continue
+				}
+				deleted++
+			}
+		}
+		log.Info("scheduled: delete expired clients", slog.Int("deleted", deleted))
+		return nil
+	})
+	schedulerSvc.RegisterAction(domain.ActionBackupDB, func(ctx context.Context, params json.RawMessage) error {
+		backupPath := cfg.Database.Path + ".backup"
+		src, err := os.ReadFile(cfg.Database.Path)
+		if err != nil {
+			return fmt.Errorf("read db: %w", err)
+		}
+		if err := os.WriteFile(backupPath, src, 0o600); err != nil {
+			return fmt.Errorf("write backup: %w", err)
+		}
+		log.Info("scheduled: database backup", slog.String("path", backupPath))
+		return nil
+	})
+	schedulerSvc.RegisterAction(domain.ActionRotateRealityKeys, func(ctx context.Context, params json.RawMessage) error {
+		log.Info("scheduled: rotate reality keys is not implemented yet")
+		return nil
+	})
+	if err := schedulerSvc.Start(); err != nil {
+		log.Error("start scheduler", sl.Error(err))
+	}
+
 	trafficRepo := sqliterepo.NewTrafficRepo(storage)
 	sysReader := sysstat.New()
 
@@ -214,6 +271,7 @@ func runServer() {
 	handler.NewDashboardHandler(sysReader, liveHolder, clientRepo, inboundRepo, trafficRepo, processMgr, log).Register(mux)
 	handler.NewLogsHandler(logBuf).Register(mux)
 	handler.NewSettingsHandler(settingSvc, log).Register(mux)
+	handler.NewSchedulerHandler(schedulerSvc, log).Register(mux)
 
 	frontendHandler := handler.NewFrontendHandler(cfg.Frontend.ServeMode, cfg.Frontend.DiskPath, cfg.Frontend.CacheTTL, frontendDist)
 	mux.Handle("/", frontendHandler)
@@ -300,6 +358,8 @@ func runServer() {
 	if err := processMgr.Stop(context.Background()); err != nil {
 		log.Warn("stop core", sl.Error(err))
 	}
+
+	<-schedulerSvc.Stop().Done()
 
 	shutdown(storage, log, cfg)
 	log.Info("stopped")

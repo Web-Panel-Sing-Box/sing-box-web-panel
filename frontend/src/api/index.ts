@@ -15,6 +15,8 @@ export type { LogEntryDTO } from "./logs";
 export { getPanelLogs } from "./logs";
 export type { SettingsDTO } from "./settings";
 export { getSettings, saveSettings } from "./settings";
+export type { ScheduledTaskDTO, ScheduledTaskCreateRequest, ScheduledTaskUpdateRequest } from "./scheduled-tasks";
+export { listScheduledTasks, createScheduledTask, updateScheduledTask, deleteScheduledTask } from "./scheduled-tasks";
 export type { APITokenDTO, CreatedAPITokenDTO } from "./apiTokens";
 export { listAPITokens, createAPIToken, setAPITokenEnabled, deleteAPIToken } from "./apiTokens";
 export type { NodeDTO, NodeRequest, NodeSyncResult, NodeStatus } from "./nodes";
