@@ -145,14 +145,12 @@ issue_domain_cert() {
   local domain="$1"
   echo "Requesting Let's Encrypt certificate for ${domain}..."
 
-  ~/.acme.sh/acme.sh --issue \
+  if ! ~/.acme.sh/acme.sh --issue \
     -d "${domain}" \
     --standalone \
     --httpport 80 \
     --force \
-    --accountemail "${ACME_EMAIL}"
-
-  if [[ $? -ne 0 ]]; then
+    --accountemail "${ACME_EMAIL}"; then
     echo "ERROR: failed to issue certificate for ${domain}. Is port 80 open?"
     return 1
   fi
@@ -165,7 +163,7 @@ issue_ip_cert() {
   local ip="$1"
   echo "Requesting Let's Encrypt IP certificate for ${ip} (shortlived profile, 6-day validity)..."
 
-  ~/.acme.sh/acme.sh --issue \
+  if ! ~/.acme.sh/acme.sh --issue \
     -d "${ip}" \
     --standalone \
     --server letsencrypt \
@@ -173,9 +171,7 @@ issue_ip_cert() {
     --days 6 \
     --httpport 80 \
     --force \
-    --accountemail "${ACME_EMAIL}"
-
-  if [[ $? -ne 0 ]]; then
+    --accountemail "${ACME_EMAIL}"; then
     echo "ERROR: failed to issue IP certificate for ${ip}. Is port 80 open?"
     return 1
   fi
