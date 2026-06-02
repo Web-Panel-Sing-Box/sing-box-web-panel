@@ -84,6 +84,28 @@
   ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.14);
   }
+
+  /* Keyboard focus only — never on mouse/touch. Brand-tinted ring, no neon bloom. */
+  :focus-visible {
+    outline: 2px solid rgba(16, 163, 127, 0.7);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+/*
+ * Reduced-motion fallback. Framer Motion is handled by <MotionConfig reducedMotion="user">;
+ * this neutralizes plain CSS transitions/animations for users who ask for less motion.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @layer components {

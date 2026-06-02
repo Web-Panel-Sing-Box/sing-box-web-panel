@@ -20,6 +20,13 @@ type ClientLister interface {
 	ListEnabled(ctx context.Context) ([]domain.Client, error)
 }
 
+// SettingReader provides on-demand access to panel settings that affect config
+// generation (e.g. log_level). It is read during every Render call so that
+// runtime setting changes take effect without restarting the generator.
+type SettingReader interface {
+	Get(ctx context.Context, key string) (string, error)
+}
+
 // GeneratorConfig holds the static, rarely-changing knobs for config rendering.
 type GeneratorConfig struct {
 	LogLevel        string
@@ -29,6 +36,11 @@ type GeneratorConfig struct {
 	CacheFilePath   string
 	StatsSource     string // "auto" | "clash" | "v2ray"
 	V2RayAPIListen  string
+	CoreLogPath     string // sing-box log output file path
+
+	// Settings are the database-backed panel settings used to override hardcoded
+	// defaults at render time. When nil, static GeneratorConfig fields are used.
+	Settings SettingReader
 }
 
 type Generator struct {
@@ -84,12 +96,23 @@ func (g *Generator) Render(ctx context.Context) ([]byte, error) {
 		}
 	}
 
+	// Resolve log level: DB setting takes precedence, then config struct, then default.
+	logLevel := g.cfg.LogLevel
+	if g.cfg.Settings != nil {
+		if v, err := g.cfg.Settings.Get(ctx, domain.SettingLogLevel); err == nil && v != "" {
+			logLevel = v
+		}
+	}
+	if logLevel == "" {
+		logLevel = "info"
+	}
+
 	// Note: the DNS block is intentionally omitted. No single DNS form is valid
 	// across sing-box 1.11 (legacy only) and 1.14 (new format only), so the core
 	// default is used. Blocking uses the 1.11+ "reject" rule action rather than a
 	// block outbound (removed in 1.14).
 	cfg := &sbConfig{
-		Log:      &sbLog{Level: g.cfg.LogLevel, Timestamp: true},
+		Log:      &sbLog{Level: logLevel, Timestamp: true, Output: g.cfg.CoreLogPath},
 		Inbounds: built,
 		Outbounds: []sbOutbound{
 			{Type: "direct", Tag: "direct"},
@@ -139,7 +162,7 @@ func (g *Generator) buildInbound(ib *domain.Inbound, clients []domain.Client) (a
 		for _, c := range clients {
 			users = append(users, sbVLESSUser{Name: c.Name, UUID: c.UUID, Flow: ib.Settings.Flow})
 		}
-		return sbVLESSInbound{
+		entry := sbVLESSInbound{
 			Type:       "vless",
 			Tag:        tag,
 			Listen:     g.cfg.InboundListen,
@@ -147,21 +170,43 @@ func (g *Generator) buildInbound(ib *domain.Inbound, clients []domain.Client) (a
 			Users:      users,
 			TLS:        buildTLS(ib, nil),
 			Transport:  buildTransport(ib),
-		}, nil
+		}
+		if ib.Settings.MultiplexEnabled {
+			entry.Multiplex = &sbMultiplex{Enabled: true}
+		}
+		return entry, nil
 
 	case domain.ProtocolHysteria2:
 		users := make([]sbHysteria2User, 0, len(clients))
 		for _, c := range clients {
 			users = append(users, sbHysteria2User{Name: c.Name, Password: c.Password})
 		}
-		return sbHysteria2Inbound{
-			Type:       "hysteria2",
-			Tag:        tag,
-			Listen:     g.cfg.InboundListen,
-			ListenPort: ib.Port,
-			Users:      users,
-			TLS:        buildTLS(ib, []string{"h3"}),
-		}, nil
+		hy2 := sbHysteria2Inbound{
+			Type:                   "hysteria2",
+			Tag:                    tag,
+			Listen:                 g.cfg.InboundListen,
+			ListenPort:             ib.Port,
+			Users:                  users,
+			TLS:                    buildTLS(ib, []string{"h3"}),
+			UpMbps:                 ib.Settings.Hy2UpMbps,
+			DownMbps:               ib.Settings.Hy2DownMbps,
+			IgnoreClientBandwidth:  ib.Settings.Hy2IgnoreClientBandwidth,
+			Network:                ib.Settings.Hy2Network,
+			BrutalDebug:            ib.Settings.Hy2BrutalDebug,
+			BBRProfile:             ib.Settings.Hy2BBRProfile,
+		}
+		if ib.Settings.Hy2ObfsPassword != "" {
+			hy2.Obfs = &sbHysteria2Obfs{
+				Type:          "salamander",
+				Password:      ib.Settings.Hy2ObfsPassword,
+				MinPacketSize: ib.Settings.Hy2ObfsMinPacketSize,
+				MaxPacketSize: ib.Settings.Hy2ObfsMaxPacketSize,
+			}
+		}
+		if ib.Settings.Hy2Masquerade != "" {
+			hy2.Masquerade = ib.Settings.Hy2Masquerade
+		}
+		return hy2, nil
 
 	case domain.ProtocolNaive:
 		users := make([]sbNaiveUser, 0, len(clients))
@@ -169,12 +214,14 @@ func (g *Generator) buildInbound(ib *domain.Inbound, clients []domain.Client) (a
 			users = append(users, sbNaiveUser{Username: c.Name, Password: c.Password})
 		}
 		return sbNaiveInbound{
-			Type:       "naive",
-			Tag:        tag,
-			Listen:     g.cfg.InboundListen,
-			ListenPort: ib.Port,
-			Users:      users,
-			TLS:        buildTLS(ib, []string{"h2", "http/1.1"}),
+			Type:                  "naive",
+			Tag:                   tag,
+			Listen:                g.cfg.InboundListen,
+			ListenPort:            ib.Port,
+			Users:                 users,
+			TLS:                   buildTLS(ib, []string{"h2", "http/1.1"}),
+			Network:               ib.Settings.NaiveNetwork,
+			QuicCongestionControl: ib.Settings.NaiveQuicCongestionCtrl,
 		}, nil
 
 	default:

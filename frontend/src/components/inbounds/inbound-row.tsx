@@ -4,13 +4,13 @@ import { Link } from "react-router-dom";
 import { Toggle } from "@/components/ui/toggle";
 import { StatusDot } from "@/components/ui/status-dot";
 import { cn } from "@/lib/utils";
-import type { Inbound, Protocol, TlsMode, Transmission } from "@/lib/mock/inbounds";
-import { useStoreActions } from "@/lib/mock/store";
+import type { Inbound, Network, Protocol, TlsMode, Transmission } from "@/lib/store";
+import { useStoreActions } from "@/lib/store";
 import { useToast } from "@/components/ui/toast";
 import { useI18n } from "@/lib/i18n";
 
 const ROW_GRID =
-  "grid-cols-[minmax(96px,1fr)_minmax(90px,0.8fr)_minmax(180px,1.5fr)_minmax(150px,1.2fr)_minmax(100px,0.8fr)_minmax(90px,0.7fr)_minmax(110px,0.8fr)]";
+  "grid-cols-[minmax(96px,1fr)_minmax(90px,0.8fr)_minmax(180px,1.5fr)_minmax(110px,0.8fr)_minmax(150px,1.2fr)_minmax(100px,0.8fr)_minmax(90px,0.7fr)_minmax(110px,0.8fr)]";
 
 function InboundRowImpl({ inbound, onEdit }: { inbound: Inbound; onEdit: (inbound: Inbound) => void }) {
   const { toggleInbound } = useStoreActions();
@@ -48,7 +48,10 @@ function InboundRowImpl({ inbound, onEdit }: { inbound: Inbound; onEdit: (inboun
       <ProtocolChip protocol={inbound.protocol} />
       <span className="font-mono text-sm text-ink-secondary">{inbound.port}</span>
       <span className="truncate text-sm text-ink-primary">{inbound.remark}</span>
-      <TransportChip transmission={inbound.transmission} tls={inbound.tls} />
+      <span className="w-fit rounded-full border border-subtle bg-canvas px-2.5 py-1 font-mono text-[11px] text-ink-tertiary">
+        {inbound.nodeId ? `node:${inbound.nodeId}` : "local"}
+      </span>
+      <TransportChip inbound={inbound} />
       <Link
         to={`/clients?inbound=${inbound.id}`}
         onClick={(event) => event.stopPropagation()}
@@ -74,7 +77,7 @@ function InboundRowImpl({ inbound, onEdit }: { inbound: Inbound; onEdit: (inboun
 
 export function InboundHeader({ children }: { children: ReactNode }) {
   return (
-    <div className={cn("grid items-center gap-3 border-b border-subtle px-4 py-3 text-[11px] uppercase tracking-wider text-ink-tertiary sm:px-5", ROW_GRID)}>
+    <div className={cn("grid items-center gap-3 border-b border-subtle px-4 py-3 text-xs font-medium text-ink-tertiary sm:px-5", ROW_GRID)}>
       {children}
     </div>
   );
@@ -100,24 +103,37 @@ export function ProtocolChip({ protocol }: { protocol: Inbound["protocol"] }) {
   );
 }
 
-function TransportChip({ transmission, tls }: { transmission: Transmission; tls: TlsMode }) {
+function TransportChip({ inbound }: { inbound: Inbound }) {
   return (
     <span className="inline-flex h-7 w-fit items-center rounded-full border border-white/15 bg-canvas px-2.5 font-mono text-[11px] uppercase tracking-wider text-ink-secondary">
-      {transportLabel(transmission)} · {tlsLabel(tls)}
+      {connectionLabel(inbound)} · {tlsLabel(inbound.tls)}
     </span>
   );
 }
 
-function transportLabel(transmission: Transmission) {
+function connectionLabel(inbound: Inbound) {
+  if (inbound.protocol === "vless") return transmissionLabel(inbound.transmission ?? "tcp");
+  if (inbound.protocol === "naive") return networkLabel((inbound.settings?.naiveNetwork as Network) ?? "both");
+  return "QUIC"; // hysteria2
+}
+
+function transmissionLabel(transmission: Transmission) {
   const labels: Record<Transmission, string> = {
     tcp: "TCP",
-    mkcp: "mKCP",
-    grpc: "gRPC",
     ws: "WS",
-    xhttp: "XHTTP",
+    grpc: "gRPC",
     httpupgrade: "HTTPUpgrade"
   };
-  return labels[transmission];
+  return labels[transmission] ?? String(transmission).toUpperCase();
+}
+
+function networkLabel(network: Network) {
+  const labels: Record<Network, string> = {
+    tcp: "TCP",
+    udp: "UDP",
+    both: "TCP+UDP"
+  };
+  return labels[network];
 }
 
 function tlsLabel(tls: TlsMode) {

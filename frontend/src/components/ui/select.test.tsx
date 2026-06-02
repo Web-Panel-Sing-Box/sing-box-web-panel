@@ -24,7 +24,7 @@ function Probe() {
 
 test("renders dropdown options in a high z-index portal", async () => {
   const user = userEvent.setup();
-  renderWithProviders(<Probe />, { withStore: false });
+  renderWithProviders(<Probe />);
 
   await user.click(screen.getByRole("button", { name: /one/i }));
 

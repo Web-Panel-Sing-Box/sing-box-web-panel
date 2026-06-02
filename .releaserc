@@ -3,6 +3,12 @@
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
-    "@semantic-release/github"
+    ["@semantic-release/github", {
+      "assets": [
+        {"path": "dist/shilka-linux-amd64", "label": "shilka linux amd64"},
+        {"path": "dist/shilka-linux-arm64", "label": "shilka linux arm64"},
+        {"path": "dist/checksums.txt", "label": "checksums"}
+      ]
+    }]
   ]
 }

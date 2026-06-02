@@ -35,10 +35,28 @@ type inboundSettingsDTO struct {
 	Flow            string `json:"flow,omitempty"`
 	WSPath          string `json:"wsPath,omitempty"`
 	GRPCServiceName string `json:"grpcServiceName,omitempty"`
+	// VLESS multiplex.
+	MultiplexEnabled bool `json:"multiplexEnabled,omitempty"`
+	// Hysteria2.
+	Hy2UpMbps                int    `json:"hy2UpMbps,omitempty"`
+	Hy2DownMbps              int    `json:"hy2DownMbps,omitempty"`
+	Hy2IgnoreClientBandwidth bool   `json:"hy2IgnoreClientBandwidth,omitempty"`
+	Hy2ObfsPassword          string `json:"hy2ObfsPassword,omitempty"`
+	Hy2ObfsMinPacketSize     int    `json:"hy2ObfsMinPacketSize,omitempty"`
+	Hy2ObfsMaxPacketSize     int    `json:"hy2ObfsMaxPacketSize,omitempty"`
+	Hy2Masquerade            string `json:"hy2Masquerade,omitempty"`
+	Hy2Network               string `json:"hy2Network,omitempty"`
+	Hy2BrutalDebug           bool   `json:"hy2BrutalDebug,omitempty"`
+	Hy2BBRProfile            string `json:"hy2BbrProfile,omitempty"`
+	// Naive.
+	NaiveNetwork            string `json:"naiveNetwork,omitempty"`
+	NaiveQuicCongestionCtrl string `json:"naiveQuicCongestionCtrl,omitempty"`
 }
 
 type inboundDTO struct {
 	ID           string              `json:"id"`
+	NodeID       string              `json:"nodeId,omitempty"`
+	RemoteID     string              `json:"remoteId,omitempty"`
 	Remark       string              `json:"remark"`
 	Protocol     string              `json:"protocol"`
 	Port         int                 `json:"port"`
@@ -49,12 +67,14 @@ type inboundDTO struct {
 	Enabled      bool                `json:"enabled"`
 	ClientCount  int                 `json:"clientCount"`
 	CreatedAt    string              `json:"createdAt"`
+	UpdatedAt    string              `json:"updatedAt"`
 	Settings     *inboundSettingsDTO `json:"settings,omitempty"`
 }
 
 func toInboundDTO(ib *domain.Inbound, clientCount int) inboundDTO {
 	dto := inboundDTO{
 		ID:           strconv.FormatInt(ib.ID, 10),
+		RemoteID:     ib.RemoteID,
 		Remark:       ib.Remark,
 		Protocol:     string(ib.Protocol),
 		Port:         ib.Port,
@@ -65,14 +85,30 @@ func toInboundDTO(ib *domain.Inbound, clientCount int) inboundDTO {
 		Enabled:      ib.Enabled,
 		ClientCount:  clientCount,
 		CreatedAt:    ib.CreatedAt.UTC().Format(time.RFC3339),
+		UpdatedAt:    ib.UpdatedAt.UTC().Format(time.RFC3339),
+	}
+	if ib.NodeID != nil {
+		dto.NodeID = strconv.FormatInt(*ib.NodeID, 10)
 	}
 	// Surface only non-secret settings; never expose the Reality private key.
 	s := inboundSettingsDTO{
-		PublicKey:       ib.Settings.RealityPublicKey,
-		ShortID:         ib.Settings.RealityShortID,
-		Flow:            ib.Settings.Flow,
-		WSPath:          ib.Settings.WSPath,
-		GRPCServiceName: ib.Settings.GRPCServiceName,
+		PublicKey:                ib.Settings.RealityPublicKey,
+		ShortID:                  ib.Settings.RealityShortID,
+		Flow:                     ib.Settings.Flow,
+		WSPath:                   ib.Settings.WSPath,
+		GRPCServiceName:          ib.Settings.GRPCServiceName,
+		MultiplexEnabled:         ib.Settings.MultiplexEnabled,
+		Hy2UpMbps:                ib.Settings.Hy2UpMbps,
+		Hy2DownMbps:              ib.Settings.Hy2DownMbps,
+		Hy2IgnoreClientBandwidth: ib.Settings.Hy2IgnoreClientBandwidth,
+		Hy2ObfsMinPacketSize:     ib.Settings.Hy2ObfsMinPacketSize,
+		Hy2ObfsMaxPacketSize:     ib.Settings.Hy2ObfsMaxPacketSize,
+		Hy2Masquerade:            ib.Settings.Hy2Masquerade,
+		Hy2Network:               ib.Settings.Hy2Network,
+		Hy2BrutalDebug:           ib.Settings.Hy2BrutalDebug,
+		Hy2BBRProfile:            ib.Settings.Hy2BBRProfile,
+		NaiveNetwork:             ib.Settings.NaiveNetwork,
+		NaiveQuicCongestionCtrl:  ib.Settings.NaiveQuicCongestionCtrl,
 	}
 	if s != (inboundSettingsDTO{}) {
 		dto.Settings = &s
@@ -92,21 +128,50 @@ type inboundRequest struct {
 	ACMEEmail    string `json:"acmeEmail,omitempty"`
 	CertPath     string `json:"certPath,omitempty"`
 	KeyPath      string `json:"keyPath,omitempty"`
+	// VLESS multiplex.
+	MultiplexEnabled bool `json:"multiplexEnabled,omitempty"`
+	// Hysteria2.
+	Hy2UpMbps                int    `json:"hy2UpMbps,omitempty"`
+	Hy2DownMbps              int    `json:"hy2DownMbps,omitempty"`
+	Hy2IgnoreClientBandwidth bool   `json:"hy2IgnoreClientBandwidth,omitempty"`
+	Hy2ObfsPassword          string `json:"hy2ObfsPassword,omitempty"`
+	Hy2ObfsMinPacketSize     int    `json:"hy2ObfsMinPacketSize,omitempty"`
+	Hy2ObfsMaxPacketSize     int    `json:"hy2ObfsMaxPacketSize,omitempty"`
+	Hy2Masquerade            string `json:"hy2Masquerade,omitempty"`
+	Hy2Network               string `json:"hy2Network,omitempty"`
+	Hy2BrutalDebug           bool   `json:"hy2BrutalDebug,omitempty"`
+	Hy2BBRProfile            string `json:"hy2BbrProfile,omitempty"`
+	// Naive.
+	NaiveNetwork            string `json:"naiveNetwork,omitempty"`
+	NaiveQuicCongestionCtrl string `json:"naiveQuicCongestionCtrl,omitempty"`
 }
 
 func (req inboundRequest) toInput() svcinbound.Input {
 	return svcinbound.Input{
-		Remark:       req.Remark,
-		Protocol:     domain.Protocol(req.Protocol),
-		Port:         req.Port,
-		Transmission: domain.Transmission(req.Transmission),
-		TLS:          domain.TLSMode(req.TLS),
-		SNI:          req.SNI,
-		Dest:         req.Dest,
-		ACMEDomain:   req.ACMEDomain,
-		ACMEEmail:    req.ACMEEmail,
-		CertPath:     req.CertPath,
-		KeyPath:      req.KeyPath,
+		Remark:                   req.Remark,
+		Protocol:                 domain.Protocol(req.Protocol),
+		Port:                     req.Port,
+		Transmission:             domain.Transmission(req.Transmission),
+		TLS:                      domain.TLSMode(req.TLS),
+		SNI:                      req.SNI,
+		Dest:                     req.Dest,
+		ACMEDomain:               req.ACMEDomain,
+		ACMEEmail:                req.ACMEEmail,
+		CertPath:                 req.CertPath,
+		KeyPath:                  req.KeyPath,
+		MultiplexEnabled:         req.MultiplexEnabled,
+		Hy2UpMbps:                req.Hy2UpMbps,
+		Hy2DownMbps:              req.Hy2DownMbps,
+		Hy2IgnoreClientBandwidth: req.Hy2IgnoreClientBandwidth,
+		Hy2ObfsPassword:          req.Hy2ObfsPassword,
+		Hy2ObfsMinPacketSize:     req.Hy2ObfsMinPacketSize,
+		Hy2ObfsMaxPacketSize:     req.Hy2ObfsMaxPacketSize,
+		Hy2Masquerade:            req.Hy2Masquerade,
+		Hy2Network:               req.Hy2Network,
+		Hy2BrutalDebug:           req.Hy2BrutalDebug,
+		Hy2BBRProfile:            req.Hy2BBRProfile,
+		NaiveNetwork:             req.NaiveNetwork,
+		NaiveQuicCongestionCtrl:  req.NaiveQuicCongestionCtrl,
 	}
 }
 

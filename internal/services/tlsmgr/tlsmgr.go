@@ -154,13 +154,13 @@ func generateSelfSigned(hosts []string) (certPEM, keyPEM []byte, err error) {
 		return nil, nil, fmt.Errorf("serial: %w", err)
 	}
 
-	cn := "sing-grok-panel"
+	cn := "shilka"
 	if len(hosts) > 0 {
 		cn = hosts[0]
 	}
 	tmpl := x509.Certificate{
 		SerialNumber:          serial,
-		Subject:               pkix.Name{CommonName: cn, Organization: []string{"sing-grok"}},
+		Subject:               pkix.Name{CommonName: cn, Organization: []string{"shilka"}},
 		NotBefore:             time.Now().Add(-time.Hour),
 		NotAfter:              time.Now().AddDate(10, 0, 0),
 		KeyUsage:              x509.KeyUsageDigitalSignature,

@@ -34,11 +34,12 @@ export default defineConfig({
     host: "127.0.0.1",
     proxy: {
       "/api": {
-        target: process.env.SING_GROK_API_BASE_URL || "http://127.0.0.1:8081",
+        target: process.env.SHILKA_API_BASE_URL || "http://127.0.0.1:8080",
         changeOrigin: true
       }
     }
   },
+  base: "./",
   build: {
     outDir: "dist",
     sourcemap: analyze

@@ -1,0 +1,86 @@
+env: "production"
+
+runtime:
+  gomemlimit: "180MiB"
+  gogc: 50
+
+database:
+  path: "/var/lib/shilka/panel.db"
+  journal_mode: "wal"
+  synchronous: "normal"
+  cache_size_kb: 2000
+  mmap_size_mb: 32
+  busy_timeout_ms: 5000
+  temp_store: "memory"
+  foreign_keys: true
+
+http:
+  address: "127.0.0.1:8080"
+  base_path: ""
+  read_timeout: "10s"
+  write_timeout: "15s"
+  idle_timeout: "120s"
+  shutdown_timeout: "30s"
+  max_header_bytes: 1048576
+  max_conns: 128
+
+frontend:
+  serve_mode: "embed"
+  disk_path: "./frontend/dist"
+  cache_ttl: "720h"
+
+auth:
+  jwt_secret: "" # required: SHILKA_AUTH_JWT_SECRET
+  jwt_expiry: "24h"
+  admin_user: "admin"
+  admin_password: "" # required: SHILKA_AUTH_ADMIN_PASSWORD
+  argon2_memory_kb: 65536
+  argon2_iterations: 3
+  argon2_parallelism: 2
+  login_rate_limit: "5/m"
+  api_rate_limit: "100/s"
+
+sing_box:
+  binary_path: "/opt/shilka/bin/sing-box"
+  config_path: "/etc/shilka/config.json"
+  working_dir: "/etc/shilka"
+  api_address: "127.0.0.1:9090"
+  api_secret: "" # required: SHILKA_SING_BOX_API_SECRET
+  check_timeout: "10s"
+  restart_delay: "3s"
+  max_restarts: 4
+  process_mode: "auto"
+  service_name: "sing-box"
+  core_log_path: "/var/log/shilka/sing-box.log"
+
+stats:
+  source: "clash"
+  v2ray_api_address: "127.0.0.1:8088"
+
+tls:
+  mode: "file"
+  cert_file: "/etc/shilka/tls/cert.pem"
+  key_file: "/etc/shilka/tls/key.pem"
+  acme_email: ""
+  acme_domains: []
+  acme_cache_dir: "/var/lib/shilka/acme"
+  self_signed_hosts: []
+  self_signed_dir: "/var/lib/shilka/tls"
+
+metrics:
+  system_interval: "5s"
+  traffic_interval: "2s"
+  history_size: 120
+  batch_flush_interval: "8s"
+
+logging:
+  level: "info"
+  format: "json"
+  file_path: ""
+  max_memory_lines: 500
+  max_file_size_mb: 10
+  max_file_backups: 3
+
+subscription:
+  public_url: "" # set to "https://panel.example.com"
+  token_ttl: "720h"

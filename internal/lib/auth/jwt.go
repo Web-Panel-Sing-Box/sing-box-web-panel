@@ -21,10 +21,13 @@ func NewJWTManager(secret string, expiry time.Duration) *JWTManager {
 
 func (m *JWTManager) Create(adminID int64) (string, error) {
 	now := time.Now()
-	claims := jwt.RegisteredClaims{
-		Subject:   fmt.Sprintf("%d", adminID),
-		IssuedAt:  jwt.NewNumericDate(now),
-		ExpiresAt: jwt.NewNumericDate(now.Add(m.expiry)),
+	claims := totpPendingClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   fmt.Sprintf("%d", adminID),
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(m.expiry)),
+		},
+		TOTPPending: false,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

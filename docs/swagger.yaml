@@ -47,6 +47,17 @@ definitions:
         example: "123456"
         type: string
     type: object
+  internal_transport_handler.coreLogsResponse:
+    properties:
+      hasMore:
+        type: boolean
+      lines:
+        items:
+          type: string
+        type: array
+      total:
+        type: integer
+    type: object
   internal_transport_handler.coreStatusDTO:
     properties:
       pid:
@@ -125,7 +136,36 @@ definitions:
         type: string
       dest:
         type: string
+      hy2BbrProfile:
+        type: string
+      hy2BrutalDebug:
+        type: boolean
+      hy2DownMbps:
+        type: integer
+      hy2IgnoreClientBandwidth:
+        type: boolean
+      hy2Masquerade:
+        type: string
+      hy2Network:
+        type: string
+      hy2ObfsMaxPacketSize:
+        type: integer
+      hy2ObfsMinPacketSize:
+        type: integer
+      hy2ObfsPassword:
+        type: string
+      hy2UpMbps:
+        description: Hysteria2.
+        type: integer
       keyPath:
+        type: string
+      multiplexEnabled:
+        description: VLESS multiplex.
+        type: boolean
+      naiveNetwork:
+        description: Naive.
+        type: string
+      naiveQuicCongestionCtrl:
         type: string
       port:
         type: integer
@@ -145,6 +185,35 @@ definitions:
       flow:
         type: string
       grpcServiceName:
+        type: string
+      hy2BbrProfile:
+        type: string
+      hy2BrutalDebug:
+        type: boolean
+      hy2DownMbps:
+        type: integer
+      hy2IgnoreClientBandwidth:
+        type: boolean
+      hy2Masquerade:
+        type: string
+      hy2Network:
+        type: string
+      hy2ObfsMaxPacketSize:
+        type: integer
+      hy2ObfsMinPacketSize:
+        type: integer
+      hy2ObfsPassword:
+        type: string
+      hy2UpMbps:
+        description: Hysteria2.
+        type: integer
+      multiplexEnabled:
+        description: VLESS multiplex.
+        type: boolean
+      naiveNetwork:
+        description: Naive.
+        type: string
+      naiveQuicCongestionCtrl:
         type: string
       publicKey:
         type: string
@@ -178,11 +247,17 @@ definitions:
       password:
         example: admin
         type: string
-      totp_code:
-        example: "123456"
-        type: string
       username:
         example: admin
+        type: string
+    type: object
+  internal_transport_handler.loginTOTPRequest:
+    properties:
+      code:
+        example: "123456"
+        type: string
+      temp_token:
+        example: eyJhbG...
         type: string
     type: object
   internal_transport_handler.meResponse:
@@ -276,7 +351,7 @@ host: localhost:8080
 info:
   contact: {}
   description: Local-first web panel for managing a sing-box process.
-  title: SingGrok API
+  title: Shilka API
   version: 0.1.0
 paths:
   /:
@@ -330,8 +405,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Logs in with username and password. If 2FA is enabled and no TOTP
-        code is provided, returns 403 with requires_totp.
+      description: Logs in with username and password. Returns a JWT token, or temp_token
+        + requires_totp if 2FA is enabled.
       parameters:
       - description: Login credentials
         in: body
@@ -361,7 +436,7 @@ paths:
               type: string
             type: object
         "403":
-          description: requires_totp
+          description: requires_totp with temp_token
           schema:
             additionalProperties: true
             type: object
@@ -402,6 +477,43 @@ paths:
               type: string
             type: object
       summary: Login with recovery code
+      tags:
+      - auth
+  /auth/login/totp:
+    post:
+      consumes:
+      - application/json
+      description: Completes 2FA login using the temp_token returned by /login and
+        a TOTP code.
+      parameters:
+      - description: TOTP login payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_transport_handler.loginTOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Complete TOTP login
       tags:
       - auth
   /auth/logout:
@@ -722,6 +834,32 @@ paths:
       summary: Preview the generated config
       tags:
       - core
+  /core/logs:
+    get:
+      description: Returns lines from the sing-box log file with pagination.
+      parameters:
+      - default: 0
+        description: Line offset
+        in: query
+        name: offset
+        type: integer
+      - default: 200
+        description: Lines per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_transport_handler.coreLogsResponse'
+      security:
+      - BearerAuth: []
+      summary: Core process logs
+      tags:
+      - core
   /core/reload:
     post:
       description: Renders config from the database, runs `sing-box check`, installs
@@ -765,6 +903,8 @@ paths:
       - core
   /core/start:
     post:
+      description: Generates the initial config (if missing), then starts the core
+        process.
       produces:
       - application/json
       responses:

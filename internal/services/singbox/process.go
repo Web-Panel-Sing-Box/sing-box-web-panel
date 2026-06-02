@@ -205,16 +205,11 @@ func (m *subprocessManager) Restart(ctx context.Context) error {
 	return m.Start(ctx)
 }
 
-func (m *subprocessManager) Reload(_ context.Context) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if !m.running() {
-		return fmt.Errorf("sing-box is not running")
-	}
-	if err := m.cmd.Process.Signal(syscall.SIGHUP); err != nil {
-		return fmt.Errorf("reload sing-box: %w", err)
-	}
-	return nil
+func (m *subprocessManager) Reload(ctx context.Context) error {
+	// SIGHUP delivery is unreliable across platforms. For subprocess mode
+	// we restart the core atomically — the config is already written by
+	// the applier before calling Reload.
+	return m.Restart(ctx)
 }
 
 func (m *subprocessManager) Status(ctx context.Context) (Status, error) {

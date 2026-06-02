@@ -4,9 +4,9 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { StatusDot } from "@/components/ui/status-dot";
 import { formatBytes, formatDate, truncateMiddle } from "@/lib/format";
-import { useClients, useInbounds } from "@/lib/mock/store";
+import { useClients, useInbounds } from "@/lib/store";
 import { useClientFilter } from "@/hooks/useClientFilter";
-import type { Client } from "@/lib/mock/clients";
+import type { Client } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 
@@ -34,7 +34,7 @@ export function ClientsTable({ filter, onSelect }: Props) {
     <Card padded={false} className="flex max-h-[calc(100dvh-170px)] flex-col overflow-hidden">
       <div className="flex-1 overflow-auto">
         <div className="min-w-[960px]">
-          <div className={cn("sticky top-0 z-10 grid items-center border-b border-subtle bg-surface px-5 py-3 text-[11px] uppercase tracking-wider text-ink-tertiary", GRID)}>
+          <div className={cn("sticky top-0 z-10 grid items-center border-b border-subtle bg-surface px-5 py-3 text-xs font-medium text-ink-tertiary", GRID)}>
             <span>{t("clients.name")}</span>
             <span>{t("clients.dataUsage")}</span>
             <span className="text-center">{t("clients.expiry")}</span>
@@ -53,7 +53,7 @@ export function ClientsTable({ filter, onSelect }: Props) {
                 <Row
                   key={c.id}
                   client={c}
-                  inboundLabel={inbound?.remark ?? "—"}
+                  inboundLabel={inbound?.remark ?? "-"}
                   pct={pct}
                   total={total}
                   onSelect={onSelect}
@@ -94,7 +94,10 @@ const Row = memo(function Row({
     >
       <div className="min-w-0">
         <div className="truncate text-sm text-ink-primary">{client.name}</div>
-        <div className="truncate font-mono text-[11px] text-ink-tertiary">{truncateMiddle(client.uuid, 8, 6)}</div>
+        <div className="truncate font-mono text-[11px] text-ink-tertiary">
+          {client.nodeId ? `node:${client.nodeId} · ` : "local · "}
+          {truncateMiddle(client.uuid, 8, 6)}
+        </div>
       </div>
       <div className="min-w-0">
         <div className="mb-1 flex justify-between font-mono text-[11px] text-ink-tertiary">

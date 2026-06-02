@@ -10,7 +10,7 @@ When in doubt, choose the option that ships less JS, re-renders fewer components
 
 ### 1.1 — Never reintroduce a broad `useStore()`
 
-The mock store in `frontend/src/lib/mock/store.tsx` is split into six narrow contexts. Always consume the smallest slice you need.
+The store in `frontend/src/lib/store.tsx` is split into six narrow contexts. Always consume the smallest slice you need.
 
 | Need              | Hook                  |
 |-------------------|-----------------------|

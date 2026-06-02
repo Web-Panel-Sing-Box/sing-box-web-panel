@@ -6,8 +6,21 @@ import (
 	"testing"
 
 	"sing-box-web-panel/internal/domain"
+	"sing-box-web-panel/internal/repo"
 	"sing-box-web-panel/internal/services/singbox"
 )
+
+type fakeSettingReader struct {
+	data map[string]string
+}
+
+func (r fakeSettingReader) Get(_ context.Context, key string) (string, error) {
+	v, ok := r.data[key]
+	if !ok {
+		return "", repo.ErrNotFound
+	}
+	return v, nil
+}
 
 type fakeInbounds struct{ list []domain.Inbound }
 
@@ -103,5 +116,93 @@ func TestGeneratorSkipsInactiveClients(t *testing.T) {
 	ib := cfg["inbounds"].([]any)[0].(map[string]any)
 	if users := ib["users"].([]any); len(users) != 0 {
 		t.Errorf("inactive clients must be excluded, got %v", users)
+	}
+}
+
+func TestGeneratorLogLevel_FromSettings(t *testing.T) {
+	gen := singbox.NewGenerator(
+		fakeInbounds{list: []domain.Inbound{realityInbound()}},
+		fakeClients{},
+		singbox.GeneratorConfig{
+			LogLevel:   "info",
+			Settings:   fakeSettingReader{data: map[string]string{domain.SettingLogLevel: "debug"}},
+		},
+	)
+	data, err := gen.Render(context.Background())
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	var cfg map[string]any
+	json.Unmarshal(data, &cfg)
+
+	log := cfg["log"].(map[string]any)
+	if log["level"] != "debug" {
+		t.Errorf("log.level = %v, want debug (from settings)", log["level"])
+	}
+}
+
+func TestGeneratorLogLevel_FallbackWhenSettingsMissing(t *testing.T) {
+	gen := singbox.NewGenerator(
+		fakeInbounds{list: []domain.Inbound{realityInbound()}},
+		fakeClients{},
+		singbox.GeneratorConfig{
+			LogLevel:   "warn",
+			Settings:   fakeSettingReader{data: map[string]string{}},
+		},
+	)
+	data, err := gen.Render(context.Background())
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	var cfg map[string]any
+	json.Unmarshal(data, &cfg)
+
+	log := cfg["log"].(map[string]any)
+	if log["level"] != "warn" {
+		t.Errorf("log.level = %v, want warn (fallback from GeneratorConfig)", log["level"])
+	}
+}
+
+func TestGeneratorLogLevel_FallbackWhenNoSettings(t *testing.T) {
+	gen := singbox.NewGenerator(
+		fakeInbounds{list: []domain.Inbound{realityInbound()}},
+		fakeClients{},
+		singbox.GeneratorConfig{
+			LogLevel:   "error",
+			Settings:   nil,
+		},
+	)
+	data, err := gen.Render(context.Background())
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	var cfg map[string]any
+	json.Unmarshal(data, &cfg)
+
+	log := cfg["log"].(map[string]any)
+	if log["level"] != "error" {
+		t.Errorf("log.level = %v, want error (from GeneratorConfig, settings nil)", log["level"])
+	}
+}
+
+func TestGeneratorLogLevel_DefaultWhenBothEmpty(t *testing.T) {
+	gen := singbox.NewGenerator(
+		fakeInbounds{list: []domain.Inbound{realityInbound()}},
+		fakeClients{},
+		singbox.GeneratorConfig{
+			LogLevel:   "",
+			Settings:   fakeSettingReader{data: map[string]string{}},
+		},
+	)
+	data, err := gen.Render(context.Background())
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	var cfg map[string]any
+	json.Unmarshal(data, &cfg)
+
+	log := cfg["log"].(map[string]any)
+	if log["level"] != "info" {
+		t.Errorf("log.level = %v, want info (hard default)", log["level"])
 	}
 }

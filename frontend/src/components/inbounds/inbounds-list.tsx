@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import type { Inbound } from "@/lib/mock/inbounds";
+import type { Inbound } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
 
 import { InboundHeader, InboundRow } from "./inbound-row";
@@ -15,6 +15,7 @@ export function InboundsList({ inbounds, onEdit }: { inbounds: Inbound[]; onEdit
               <span>{t("common.protocol")}</span>
               <span>{t("common.port")}</span>
               <span>{t("common.remark")}</span>
+              <span>Node</span>
               <span>{t("common.transport")}</span>
               <span>{t("common.clients")}</span>
               <span className="text-center">{t("common.enabled")}</span>

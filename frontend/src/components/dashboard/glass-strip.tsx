@@ -1,35 +1,63 @@
 
 import { useState } from "react";
 
-import { useMetrics, useStoreActions } from "@/lib/mock/store";
+import { useMetrics, useStoreActions } from "@/lib/store";
+import { ApiError } from "@/api/client";
 import { StatusDot } from "@/components/ui/status-dot";
 import { formatBytes, formatUptime } from "@/lib/format";
-import { Modal, ModalBody, ModalFooter, ModalHeader } from "@/components/ui/modal";
+import { Modal, ModalFooter, ModalHeader } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { useI18n } from "@/lib/i18n";
 
+function coreError(err: unknown, fallback: string): string {
+  if (
+    err instanceof ApiError &&
+    err.body &&
+    typeof err.body === "object" &&
+    "error" in err.body
+  ) {
+    return String((err.body as { error: unknown }).error);
+  }
+  return fallback;
+}
+
 export function GlassStrip() {
   const { metrics } = useMetrics();
-  const { setCoreRunning } = useStoreActions();
+  const { startCore, stopCore } = useStoreActions();
   const { push } = useToast();
   const { t } = useI18n();
   const [confirmStop, setConfirmStop] = useState(false);
+  const [busy, setBusy] = useState(false);
   const running = metrics.coreRunning;
 
-  function handleCoreClick() {
+  async function handleCoreClick() {
     if (running) {
       setConfirmStop(true);
       return;
     }
-    setCoreRunning(true);
-    push(t("core.started"), "success");
+    setBusy(true);
+    try {
+      await startCore();
+      push(t("core.started"), "success");
+    } catch (err) {
+      push(coreError(err, t("core.startFailed")), "error");
+    } finally {
+      setBusy(false);
+    }
   }
 
-  function stopCore() {
-    setCoreRunning(false);
-    setConfirmStop(false);
-    push(t("core.stopped"), "success");
+  async function handleStopCore() {
+    setBusy(true);
+    try {
+      await stopCore();
+      push(t("core.stopped"), "success");
+    } catch (err) {
+      push(coreError(err, t("core.stopFailed")), "error");
+    } finally {
+      setBusy(false);
+      setConfirmStop(false);
+    }
   }
 
   return (
@@ -39,7 +67,8 @@ export function GlassStrip() {
           <button
             type="button"
             onClick={handleCoreClick}
-            className="flex h-9 shrink-0 items-center gap-2 rounded-full border border-subtle bg-canvas/70 px-3 text-xs transition-colors duration-200 hover:bg-hover"
+            disabled={busy}
+            className="flex h-9 shrink-0 items-center gap-2 rounded-full border border-subtle bg-canvas/70 px-3 text-xs transition-colors duration-200 hover:bg-hover disabled:cursor-not-allowed disabled:opacity-60"
             title={running ? t("core.clickToStop") : t("core.clickToStart")}
           >
             <StatusDot state={running ? "online" : "stopped"} />
@@ -55,17 +84,11 @@ export function GlassStrip() {
 
       <Modal open={confirmStop} onClose={() => setConfirmStop(false)} width="max-w-[420px]">
         <ModalHeader title={t("core.stopQuestion")} subtitle={t("core.stopBody")} onClose={() => setConfirmStop(false)} />
-        <ModalBody className="py-4">
-          <div className="flex items-center gap-3 rounded-xl border border-subtle bg-canvas/70 p-3 text-sm text-ink-secondary">
-            <StatusDot state="online" />
-            <span>{metrics.coreVersion}</span>
-          </div>
-        </ModalBody>
         <ModalFooter>
           <Button variant="secondary" onClick={() => setConfirmStop(false)}>
             {t("common.keepRunning")}
           </Button>
-          <Button variant="danger" onClick={stopCore}>
+          <Button variant="danger" onClick={handleStopCore} loading={busy}>
             {t("core.stopConfirm")}
           </Button>
         </ModalFooter>

@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { Cpu, Database, HardDrive, Network } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 
-import { useMetrics } from "@/lib/mock/store";
+import { useMetrics } from "@/lib/store";
 import { Card, CardHeader, CardLabel } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { AnimatedNumber } from "@/components/ui/animated-number";
@@ -69,6 +69,8 @@ export function DiskCard() {
   const { metrics } = useMetrics();
   const { t } = useI18n();
   const total = metrics.diskSegments.reduce((acc, s) => acc + s.totalBytes, 0);
+  const used = metrics.diskSegments.reduce((acc, s) => acc + s.usedBytes, 0);
+  const usedPercent = total > 0 ? (used / total) * 100 : 0;
   return (
     <Card>
       <CardHeader>
@@ -76,17 +78,14 @@ export function DiskCard() {
         <HardDrive size={16} className="text-ink-tertiary" />
       </CardHeader>
       <div className="mb-4 text-3xl font-semibold text-ink-primary">
-        <AnimatedNumber
-          value={(metrics.diskSegments.reduce((acc, s) => acc + s.usedBytes, 0) / total) * 100}
-          format={formatPercentValue}
-        />
+        <AnimatedNumber value={usedPercent} format={formatPercentValue} />
       </div>
       <div className="mb-3 flex h-2 w-full overflow-hidden rounded-full bg-white/10">
         {metrics.diskSegments.map((seg) => (
           <div
             key={seg.label}
             className="h-full transition-all duration-500"
-            style={{ width: `${(seg.totalBytes / total) * 100}%`, background: seg.color }}
+            style={{ width: total > 0 ? `${(seg.totalBytes / total) * 100}%` : "0%", background: seg.color }}
           />
         ))}
       </div>

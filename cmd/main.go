@@ -1,6 +1,6 @@
 package main
 
-//	@title			SingGrok API
+//	@title			Shilka API
 //	@version		0.1.0
 //	@description	Local-first web panel for managing a sing-box process.
 //	@host			localhost:8080
@@ -13,22 +13,30 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime/debug"
+	"strings"
 	"syscall"
+	"time"
 
 	"sing-box-web-panel/docs"
 	"sing-box-web-panel/internal/config"
+	"sing-box-web-panel/internal/domain"
 	libauth "sing-box-web-panel/internal/lib/auth"
 	"sing-box-web-panel/internal/lib/sl"
 	sqliterepo "sing-box-web-panel/internal/repo/sqlite"
+	svcapitoken "sing-box-web-panel/internal/services/apitoken"
 	"sing-box-web-panel/internal/services/auth"
 	svcclient "sing-box-web-panel/internal/services/client"
 	svcinbound "sing-box-web-panel/internal/services/inbound"
 	"sing-box-web-panel/internal/services/logbuf"
+	svcnode "sing-box-web-panel/internal/services/node"
+	svcsettings "sing-box-web-panel/internal/services/settings"
 	"sing-box-web-panel/internal/services/singbox"
 	"sing-box-web-panel/internal/services/stats"
 	"sing-box-web-panel/internal/services/sysstat"
@@ -40,6 +48,20 @@ import (
 )
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] != "run" {
+		if err := runCLI(os.Args[1:]); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
+	if len(os.Args) > 1 && os.Args[1] == "run" {
+		os.Args = append([]string{os.Args[0]}, os.Args[2:]...)
+	}
+	runServer()
+}
+
+func runServer() {
 	cfg := config.MustLoad()
 	logBuf := logbuf.New(cfg.Logging.MaxMemoryLines)
 	log := setupLogger(cfg.Env, logBuf)
@@ -58,7 +80,7 @@ func main() {
 		cfg.Auth.Argon2Parallelism,
 	)
 	jwtMgr := libauth.NewJWTManager(cfg.Auth.JWTSecret, cfg.Auth.JWTExpiry)
-	totpMgr := libauth.NewTOTPManager("SingGrok")
+	totpMgr := libauth.NewTOTPManager("Shilka")
 
 	adminRepo := sqliterepo.NewAdminRepo(storage)
 	recoveryRepo := sqliterepo.NewRecoveryRepo(storage)
@@ -78,6 +100,9 @@ func main() {
 		log.Error("bootstrap admin", sl.Error(err))
 		os.Exit(1)
 	}
+
+	debug.SetMemoryLimit(mustBytes(cfg.Runtime.GoMemLimit))
+	debug.SetGCPercent(cfg.Runtime.GoGC)
 
 	mux := http.NewServeMux()
 
@@ -100,22 +125,39 @@ func main() {
 
 	inboundRepo := sqliterepo.NewInboundRepo(storage)
 	clientRepo := sqliterepo.NewClientRepo(storage)
+	apiTokenRepo := sqliterepo.NewAPITokenRepo(storage)
+	nodeRepo := sqliterepo.NewNodeRepo(storage)
 	configRevRepo := sqliterepo.NewConfigRevisionRepo(storage)
+	settingRepo := sqliterepo.NewSettingRepo(storage)
+
+	// Seed defaults for known settings so the panel always has sane values.
+	seedSetting(context.Background(), settingRepo, domain.SettingPanelName, "Shilka")
+	seedSetting(context.Background(), settingRepo, domain.SettingLogLevel, "info")
+
+	// Read DB-backed settings that affect config generation.
+	logLevel := getSetting(context.Background(), settingRepo, domain.SettingLogLevel, "info")
 
 	// Resolve sing-box paths to absolute so the subprocess working dir does not
 	// double-apply to a relative config path.
 	absConfigPath := absPath(cfg.SingBox.ConfigPath)
 	absWorkingDir := absPath(cfg.SingBox.WorkingDir)
 
+	absCoreLogPath := ""
+	if cfg.SingBox.CoreLogPath != "" {
+		absCoreLogPath = absPath(cfg.SingBox.CoreLogPath)
+	}
+
 	// sing-box config generation + lifecycle.
 	generator := singbox.NewGenerator(inboundRepo, clientRepo, singbox.GeneratorConfig{
-		LogLevel:        "info",
+		LogLevel:        logLevel,
 		InboundListen:   "::",
 		ClashAPIAddress: cfg.SingBox.APIAddress,
 		ClashAPISecret:  cfg.SingBox.APISecret,
 		CacheFilePath:   filepath.Join(absWorkingDir, "cache.db"),
 		StatsSource:     cfg.Stats.Source,
 		V2RayAPIListen:  cfg.Stats.V2RayAPIAddress,
+		CoreLogPath:     absCoreLogPath,
+		Settings:        settingRepo,
 	})
 	checker := singbox.NewChecker(cfg.SingBox.BinaryPath, cfg.SingBox.CheckTimeout)
 	processMgr := singbox.NewProcessManager(singbox.ProcessConfig{
@@ -129,12 +171,22 @@ func main() {
 	applier := singbox.NewApplier(generator, checker, processMgr, configRevRepo, absConfigPath, log)
 	go applier.Run(rootCtx)
 
+	log.Debug("starting sing-box core")
+	// Bootstrap the initial config and start the core automatically.
+	if err := bootCore(context.Background(), applier, processMgr, log); err != nil {
+		log.Warn("boot core", sl.Error(err))
+	}
+
 	// Inbound and client management; the applier is the (debounced) ConfigTrigger.
 	inboundSvc := svcinbound.NewService(inboundRepo, clientRepo, applier)
 	clientSvc := svcclient.NewService(clientRepo, inboundRepo, applier)
+	apiTokenSvc := svcapitoken.NewService(apiTokenRepo)
+	nodeSvc := svcnode.NewService(nodeRepo, inboundRepo, clientRepo, svcnode.NewHTTPClient())
+	go nodeSvc.Run(rootCtx, 10*time.Second, 15*time.Second)
 
-	settingRepo := sqliterepo.NewSettingRepo(storage)
+	settingSvc := svcsettings.New(settingRepo, applier)
 	trafficRepo := sqliterepo.NewTrafficRepo(storage)
+	sysReader := sysstat.New()
 
 	// Traffic stats + quota worker. Clash REST is the live dashboard source; the
 	// per-user source (V2Ray gRPC) stays nil unless explicitly enabled.
@@ -155,23 +207,41 @@ func main() {
 
 	handler.NewInboundHandler(inboundSvc, log).Register(mux)
 	handler.NewClientHandler(clientSvc, cfg.Sub.PublicURL, log).Register(mux)
-	handler.NewCoreHandler(processMgr, applier, log).Register(mux)
+	handler.NewAPITokenHandler(apiTokenSvc, log).Register(mux)
+	handler.NewCoreHandler(processMgr, applier, log, absCoreLogPath).Register(mux)
+	handler.NewNodeHandler(nodeSvc, inboundSvc, clientSvc, sysReader, processMgr, log).Register(mux)
 	handler.NewSubscriptionHandler(clientRepo, inboundRepo, settingRepo, cfg.Sub.PublicURL, "", log).Register(mux)
-	handler.NewDashboardHandler(sysstat.New(), liveHolder, clientRepo, inboundRepo, trafficRepo, processMgr, log).Register(mux)
+	handler.NewDashboardHandler(sysReader, liveHolder, clientRepo, inboundRepo, trafficRepo, processMgr, log).Register(mux)
 	handler.NewLogsHandler(logBuf).Register(mux)
+	handler.NewSettingsHandler(settingSvc, log).Register(mux)
+
+	frontendHandler := handler.NewFrontendHandler(cfg.Frontend.ServeMode, cfg.Frontend.DiskPath, cfg.Frontend.CacheTTL, frontendDist)
+	mux.Handle("/", frontendHandler)
 
 	corsOrigins := []string{"http://localhost:3000", "http://127.0.0.1:3000"}
 
-	stack := middleware.Auth(jwtMgr)(mux)
+	stack := middleware.Auth(jwtMgr, log, apiTokenSvc)(mux)
 	stack = middleware.CORS(corsOrigins)(stack)
 	// Stricter brute-force limit on login, then a general per-IP API limit.
 	stack = middleware.RateLimit(cfg.Auth.LoginRateLimit, middleware.LoginPathMatcher, log)(stack)
 	stack = middleware.RateLimit(cfg.Auth.APIRateLimit, middleware.APIPathMatcher, log)(stack)
 	stack = middleware.Logger(log)(stack)
 
+	var httpHandler http.Handler = stack
+	if cfg.HTTP.BasePath != "" {
+		base := cfg.HTTP.BasePath
+		httpHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == base {
+				http.Redirect(w, r, base+"/", http.StatusMovedPermanently)
+				return
+			}
+			http.StripPrefix(base, stack).ServeHTTP(w, r)
+		})
+	}
+
 	server := &http.Server{
 		Addr:           cfg.HTTP.Address,
-		Handler:        stack,
+		Handler:        httpHandler,
 		ReadTimeout:    cfg.HTTP.ReadTimeout,
 		WriteTimeout:   cfg.HTTP.WriteTimeout,
 		IdleTimeout:    cfg.HTTP.IdleTimeout,
@@ -227,6 +297,10 @@ func main() {
 		log.Error("http shutdown error", sl.Error(err))
 	}
 
+	if err := processMgr.Stop(context.Background()); err != nil {
+		log.Warn("stop core", sl.Error(err))
+	}
+
 	shutdown(storage, log, cfg)
 	log.Info("stopped")
 }
@@ -237,6 +311,17 @@ func shutdown(storage interface{ Close() error }, log *slog.Logger, _ *config.Co
 	} else {
 		log.Info("database connection closed")
 	}
+}
+
+func bootCore(ctx context.Context, applier *singbox.Applier, pm singbox.ProcessManager, log *slog.Logger) error {
+	if err := applier.ApplyIfMissing(ctx); err != nil {
+		return fmt.Errorf("apply initial config: %w", err)
+	}
+	if err := pm.Start(ctx); err != nil {
+		return fmt.Errorf("start core: %w", err)
+	}
+	log.Info("core started")
+	return nil
 }
 
 // absPath resolves p to an absolute path, falling back to p on error.
@@ -255,6 +340,48 @@ func setupLogger(env string, buf *logbuf.Buffer) *slog.Logger {
 	default:
 		base = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
 	}
-	// Tee every record into the in-memory ring so the Logs view can show them.
 	return slog.New(logbuf.NewTeeHandler(base, buf))
+}
+
+func mustBytes(s string) int64 {
+	if s == "" {
+		return 0
+	}
+	var n float64
+	unit := "B"
+	if _, err := fmt.Sscanf(s, "%f%s", &n, &unit); err != nil {
+		return 0
+	}
+	switch strings.ToUpper(strings.TrimSpace(unit)) {
+	case "B":
+		return int64(n)
+	case "KB", "KIB":
+		return int64(n * 1024)
+	case "MB", "MIB":
+		return int64(n * 1024 * 1024)
+	case "GB", "GIB":
+		return int64(n * 1024 * 1024 * 1024)
+	default:
+		return int64(n)
+	}
+}
+
+type settingWriter interface {
+	Set(ctx context.Context, key, value string) error
+	Get(ctx context.Context, key string) (string, error)
+}
+
+func seedSetting(ctx context.Context, sw settingWriter, key, fallback string) {
+	if _, err := sw.Get(ctx, key); err == nil {
+		return
+	}
+	_ = sw.Set(ctx, key, fallback)
+}
+
+func getSetting(ctx context.Context, sr settingWriter, key, fallback string) string {
+	v, err := sr.Get(ctx, key)
+	if err != nil || v == "" {
+		return fallback
+	}
+	return v
 }

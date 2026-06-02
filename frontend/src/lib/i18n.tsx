@@ -4,17 +4,18 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState
+  useState,
 } from "react";
 
 export type Language = "en" | "ru";
 
-const STORAGE_KEY = "sing-grok:language";
+const STORAGE_KEY = "shilka:language";
 
 const en = {
   "nav.dashboard": "Dashboard",
   "nav.inbounds": "Inbounds",
   "nav.clients": "Clients",
+  "nav.nodes": "Nodes",
   "nav.settings": "Settings",
   "nav.logs": "Logs",
   "nav.pin": "Pin sidebar",
@@ -51,12 +52,15 @@ const en = {
   "common.keepRunning": "Keep running",
 
   "core.stopQuestion": "Are you sure you want to stop the core?",
-  "core.stopBody": "The mock sing-box core will be marked as stopped until you start it again.",
+  "core.stopBody":
+    "The sing-box core will be marked as stopped until you start it again.",
   "core.stopConfirm": "Stop core",
   "core.started": "Core started",
   "core.stopped": "Core stopped",
   "core.clickToStop": "Click to stop",
   "core.clickToStart": "Click to start",
+  "core.startFailed": "Could not start core",
+  "core.stopFailed": "Could not stop core",
 
   "dashboard.uptime": "Uptime",
   "dashboard.totalSent": "Total sent",
@@ -94,10 +98,12 @@ const en = {
   "inbounds.deleted": "Deleted {{remark}}",
   "inbounds.toggled": "{{remark}} {{state}}",
   "inbounds.remarkRequired": "Remark is required",
+  "inbounds.saveFailed": "Could not save inbound",
   "inbounds.modalCreate": "New inbound connection",
   "inbounds.modalEdit": "Edit inbound connection",
   "inbounds.modalClone": "Clone inbound connection",
-  "inbounds.modalSubtitle": "Configure protocol, transport, security, and a starter client.",
+  "inbounds.modalSubtitle":
+    "Configure protocol, transport, security, and a starter client.",
   "inbounds.cloneHint": "Change the remark before saving the cloned inbound.",
   "inbounds.basics": "Basics",
   "inbounds.basicsDesc": "Protocol, port, traffic reset, transport",
@@ -107,6 +113,17 @@ const en = {
   "inbounds.userTemplateDesc": "Initial client provisioned with this inbound",
   "inbounds.trafficReset": "Traffic reset",
   "inbounds.transmission": "Transmission",
+  "inbounds.transport": "Transport",
+  "inbounds.network": "Network",
+  "inbounds.flow": "Flow",
+  "inbounds.quicCc": "QUIC congestion control",
+  "inbounds.upMbps": "Up (Mbps)",
+  "inbounds.downMbps": "Down (Mbps)",
+  "inbounds.obfs": "Obfuscation (obfs)",
+  "inbounds.obfsPassword": "Obfs password",
+  "inbounds.tlsRequired": "TLS is always enabled for this protocol",
+  "inbounds.username": "Username",
+  "inbounds.password": "Password",
   "inbounds.enableSniffing": "Enable sniffing",
   "inbounds.sniffingDesc": "Protocol detection for routing decisions",
   "inbounds.metadataOnly": "Metadata only",
@@ -124,15 +141,17 @@ const en = {
   "inbounds.totalFlow": "Total flow (GB)",
   "inbounds.expiryDate": "Expiry date",
   "inbounds.startAfterFirstUse": "Start after first use",
-  "inbounds.startAfterFirstUseDesc": "Quota timer begins on the first connection rather than at creation",
+  "inbounds.startAfterFirstUseDesc":
+    "Quota timer begins on the first connection rather than at creation",
   "inbounds.deleteQuestion": "Delete this inbound?",
-  "inbounds.deleteBody": "{{remark}} will be removed from the mock list.",
+  "inbounds.deleteBody": "{{remark}} will be permanently removed.",
 
   "clients.title": "Clients",
   "clients.description": "Manage user quotas, expiry, and subscription links",
   "clients.add": "Add client",
   "clients.addTitle": "New client",
-  "clients.addHint": "Use 'New configuration' on Inbounds to provision the first client",
+  "clients.addHint":
+    "Use 'New configuration' on Inbounds to provision the first client",
   "clients.nameRequired": "Name is required",
   "clients.inboundRequired": "Select an inbound",
   "clients.created": "Client created",
@@ -153,8 +172,10 @@ const en = {
   "clients.copied": "Copied!",
 
   "settings.title": "Settings",
-  "settings.description": "All values below are local to this mock build",
+  "settings.description": "Panel configuration",
   "settings.saved": "Settings saved",
+  "settings.loadError": "Failed to load settings",
+  "settings.saveError": "Failed to save settings",
   "settings.general": "General",
   "settings.security": "Security",
   "settings.singBox": "Sing-box",
@@ -164,7 +185,7 @@ const en = {
   "settings.language": "Language",
   "settings.languageHint": "UI language for new sessions",
   "settings.adminUsername": "Admin username",
-  "settings.readOnly": "Read-only in this build",
+  "settings.readOnly": "Read-only",
   "settings.twoFactor": "Two-factor auth",
   "settings.twoFactorHint": "TOTP via authenticator app",
   "settings.twoFactorSetupTitle": "Enable two-factor auth",
@@ -175,7 +196,7 @@ const en = {
   "settings.twoFactorEnabled": "Two-factor auth enabled",
   "settings.twoFactorDisabled": "Two-factor auth disabled",
   "settings.changePassword": "Change password",
-  "settings.changePasswordHint": "Mock-disabled in this build",
+  "settings.changePasswordHint": "Not available yet",
   "settings.binaryPath": "Binary path",
   "settings.binaryPathHint": "Path used by ProcessManager",
   "settings.logLevel": "Log level",
@@ -194,13 +215,14 @@ const en = {
   "logs.allLevels": "All levels",
   "logs.resume": "Resume",
   "logs.pause": "Pause",
-  "logs.noMatch": "No log lines match the current filter."
+  "logs.noMatch": "No log lines match the current filter.",
 };
 
 const ru: Record<keyof typeof en, string> = {
   "nav.dashboard": "Дашборд",
   "nav.inbounds": "Инбаунды",
   "nav.clients": "Клиенты",
+  "nav.nodes": "Ноды",
   "nav.settings": "Настройки",
   "nav.logs": "Логи",
   "nav.pin": "Закрепить сайдбар",
@@ -237,12 +259,15 @@ const ru: Record<keyof typeof en, string> = {
   "common.keepRunning": "Оставить включенным",
 
   "core.stopQuestion": "Вы уверены, что хотите выключить ядро?",
-  "core.stopBody": "Моковое ядро sing-box будет отмечено как остановленное, пока вы не включите его снова.",
+  "core.stopBody":
+    "Ядро sing-box будет отмечено как остановленное, пока вы не включите его снова.",
   "core.stopConfirm": "Выключить ядро",
   "core.started": "Ядро включено",
   "core.stopped": "Ядро выключено",
   "core.clickToStop": "Нажмите, чтобы выключить",
   "core.clickToStart": "Нажмите, чтобы включить",
+  "core.startFailed": "Не удалось запустить ядро",
+  "core.stopFailed": "Не удалось остановить ядро",
 
   "dashboard.uptime": "Аптайм",
   "dashboard.totalSent": "Всего отправлено",
@@ -253,7 +278,8 @@ const ru: Record<keyof typeof en, string> = {
   "dashboard.swap": "Swap",
   "dashboard.disk": "Диск",
   "dashboard.traffic": "Трафик",
-  "dashboard.trafficSubtitle": "Входящая · исходящая скорость за последние 60 секунд",
+  "dashboard.trafficSubtitle":
+    "Входящая · исходящая скорость за последние 60 секунд",
   "dashboard.incoming": "Входящий",
   "dashboard.outgoing": "Исходящий",
   "dashboard.today": "Сегодня",
@@ -280,10 +306,12 @@ const ru: Record<keyof typeof en, string> = {
   "inbounds.deleted": "Удалено {{remark}}",
   "inbounds.toggled": "{{remark}} {{state}}",
   "inbounds.remarkRequired": "Нужно заполнить примечание",
+  "inbounds.saveFailed": "Не удалось сохранить инбаунд",
   "inbounds.modalCreate": "Новое входящее соединение",
   "inbounds.modalEdit": "Редактирование инбаунда",
   "inbounds.modalClone": "Клонирование инбаунда",
-  "inbounds.modalSubtitle": "Настройте протокол, транспорт, безопасность и стартового клиента.",
+  "inbounds.modalSubtitle":
+    "Настройте протокол, транспорт, безопасность и стартового клиента.",
   "inbounds.cloneHint": "Поменяйте примечание перед сохранением клона.",
   "inbounds.basics": "Основное",
   "inbounds.basicsDesc": "Протокол, порт, сброс трафика, транспорт",
@@ -293,6 +321,17 @@ const ru: Record<keyof typeof en, string> = {
   "inbounds.userTemplateDesc": "Первый клиент, созданный вместе с инбаундом",
   "inbounds.trafficReset": "Сброс трафика",
   "inbounds.transmission": "Transmission",
+  "inbounds.transport": "Транспорт",
+  "inbounds.network": "Сеть",
+  "inbounds.flow": "Flow",
+  "inbounds.quicCc": "QUIC congestion control",
+  "inbounds.upMbps": "Отдача (Mbps)",
+  "inbounds.downMbps": "Загрузка (Mbps)",
+  "inbounds.obfs": "Обфускация (obfs)",
+  "inbounds.obfsPassword": "Пароль obfs",
+  "inbounds.tlsRequired": "TLS всегда включён для этого протокола",
+  "inbounds.username": "Имя пользователя",
+  "inbounds.password": "Пароль",
   "inbounds.enableSniffing": "Включить sniffing",
   "inbounds.sniffingDesc": "Определение протоколов для маршрутизации",
   "inbounds.metadataOnly": "Только metadata",
@@ -310,15 +349,17 @@ const ru: Record<keyof typeof en, string> = {
   "inbounds.totalFlow": "Общий трафик (GB)",
   "inbounds.expiryDate": "Дата истечения",
   "inbounds.startAfterFirstUse": "Start after first use",
-  "inbounds.startAfterFirstUseDesc": "Срок начинает идти после первого подключения, а не при создании",
+  "inbounds.startAfterFirstUseDesc":
+    "Срок начинает идти после первого подключения, а не при создании",
   "inbounds.deleteQuestion": "Удалить этот инбаунд?",
-  "inbounds.deleteBody": "{{remark}} будет удален из мокового списка.",
+  "inbounds.deleteBody": "{{remark}} будет удален безвозвратно.",
 
   "clients.title": "Клиенты",
   "clients.description": "Управление квотами, сроками и ссылками подписки",
   "clients.add": "Добавить клиента",
   "clients.addTitle": "Новый клиент",
-  "clients.addHint": "Используйте 'Новая конфигурация' на странице инбаундов, чтобы создать первого клиента",
+  "clients.addHint":
+    "Используйте 'Новая конфигурация' на странице инбаундов, чтобы создать первого клиента",
   "clients.nameRequired": "Нужно заполнить имя",
   "clients.inboundRequired": "Выберите инбаунд",
   "clients.created": "Клиент создан",
@@ -339,18 +380,21 @@ const ru: Record<keyof typeof en, string> = {
   "clients.copied": "Скопировано!",
 
   "settings.title": "Настройки",
-  "settings.description": "Все значения ниже локальны для этого мокового билда",
+  "settings.description": "Конфигурация панели",
   "settings.saved": "Настройки сохранены",
+  "settings.loadError": "Не удалось загрузить настройки",
+  "settings.saveError": "Не удалось сохранить настройки",
   "settings.general": "Общие",
   "settings.security": "Безопасность",
   "settings.singBox": "Sing-box",
   "settings.subscriptions": "Подписки",
   "settings.panelName": "Название панели",
-  "settings.panelNameHint": "Показывается во вкладке браузера и на экране входа",
+  "settings.panelNameHint":
+    "Показывается во вкладке браузера и на экране входа",
   "settings.language": "Язык",
   "settings.languageHint": "Язык интерфейса для новых сессий",
   "settings.adminUsername": "Имя администратора",
-  "settings.readOnly": "Только чтение в этом билде",
+  "settings.readOnly": "Только чтение",
   "settings.twoFactor": "Двухфакторная авторизация",
   "settings.twoFactorHint": "TOTP через приложение-аутентификатор",
   "settings.twoFactorSetupTitle": "Включить двухфакторную авторизацию",
@@ -361,8 +405,8 @@ const ru: Record<keyof typeof en, string> = {
   "settings.twoFactorEnabled": "Двухфакторная авторизация включена",
   "settings.twoFactorDisabled": "Двухфакторная авторизация отключена",
   "settings.changePassword": "Сменить пароль",
-  "settings.changePasswordHint": "Отключено в моковом билде",
-  "settings.binaryPath": "Путь к бинарю",
+  "settings.changePasswordHint": "Пока недоступно",
+  "settings.binaryPath": "Путь к бинарнику",
   "settings.binaryPathHint": "Путь, который использует ProcessManager",
   "settings.logLevel": "Уровень логов",
   "settings.logLevelHint": "Управляет подробностью stdout sing-box",
@@ -380,7 +424,7 @@ const ru: Record<keyof typeof en, string> = {
   "logs.allLevels": "Все уровни",
   "logs.resume": "Возобновить",
   "logs.pause": "Пауза",
-  "logs.noMatch": "Нет строк логов под текущий фильтр."
+  "logs.noMatch": "Нет строк логов под текущий фильтр.",
 };
 
 const dictionaries = { en, ru };
@@ -402,7 +446,9 @@ function isLanguage(value: string | null): value is Language {
 
 function interpolate(template: string, params?: Params) {
   if (!params) return template;
-  return template.replace(/\{\{(\w+)\}\}/g, (_, key: string) => String(params[key] ?? ""));
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key: string) =>
+    String(params[key] ?? ""),
+  );
 }
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
@@ -422,11 +468,15 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const t = useCallback(
-    (key: TranslationKey, params?: Params) => interpolate(dictionaries[language][key] ?? en[key], params),
-    [language]
+    (key: TranslationKey, params?: Params) =>
+      interpolate(dictionaries[language][key] ?? en[key], params),
+    [language],
   );
 
-  const value = useMemo(() => ({ language, setLanguage, t }), [language, setLanguage, t]);
+  const value = useMemo(
+    () => ({ language, setLanguage, t }),
+    [language, setLanguage, t],
+  );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }

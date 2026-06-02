@@ -39,6 +39,8 @@ func (h *ClientHandler) subURL(token string) string {
 
 type clientDTO struct {
 	ID                 string `json:"id"`
+	NodeID             string `json:"nodeId,omitempty"`
+	RemoteID           string `json:"remoteId,omitempty"`
 	Name               string `json:"name"`
 	UUID               string `json:"uuid"`
 	InboundID          string `json:"inboundId"`
@@ -48,12 +50,15 @@ type clientDTO struct {
 	Expiry             string `json:"expiry"`
 	Status             string `json:"status"`
 	Subscription       string `json:"subscription"`
+	SubToken           string `json:"subToken,omitempty"`
+	Enabled            bool   `json:"enabled"`
 	StartAfterFirstUse bool   `json:"startAfterFirstUse"`
 }
 
 func (h *ClientHandler) toDTO(c *domain.Client) clientDTO {
-	return clientDTO{
+	dto := clientDTO{
 		ID:                 strconv.FormatInt(c.ID, 10),
+		RemoteID:           c.RemoteID,
 		Name:               c.Name,
 		UUID:               c.UUID,
 		InboundID:          strconv.FormatInt(c.InboundID, 10),
@@ -63,8 +68,14 @@ func (h *ClientHandler) toDTO(c *domain.Client) clientDTO {
 		Expiry:             formatTimePtr(c.Expiry),
 		Status:             string(c.Status),
 		Subscription:       h.subURL(c.SubToken),
+		SubToken:           c.SubToken,
+		Enabled:            c.Enabled,
 		StartAfterFirstUse: c.StartAfterFirstUse,
 	}
+	if c.NodeID != nil {
+		dto.NodeID = strconv.FormatInt(*c.NodeID, 10)
+	}
+	return dto
 }
 
 // List godoc
