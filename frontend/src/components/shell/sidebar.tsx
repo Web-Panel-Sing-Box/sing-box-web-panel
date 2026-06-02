@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   LogOut,
   Network,
+  ServerCog,
   ScrollText,
   Settings,
   Users,
@@ -24,7 +25,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 
-type NavLabel = "nav.dashboard" | "nav.inbounds" | "nav.clients" | "nav.settings" | "nav.logs";
+type NavLabel = "nav.dashboard" | "nav.inbounds" | "nav.clients" | "nav.nodes" | "nav.settings" | "nav.logs";
 
 type NavItem = {
   labelKey: NavLabel;
@@ -36,6 +37,7 @@ const NAV: NavItem[] = [
   { labelKey: "nav.dashboard", href: "/dashboard", icon: LayoutDashboard },
   { labelKey: "nav.inbounds", href: "/inbounds", icon: Network },
   { labelKey: "nav.clients", href: "/clients", icon: Users },
+  { labelKey: "nav.nodes", href: "/nodes", icon: ServerCog },
   { labelKey: "nav.settings", href: "/settings", icon: Settings },
   { labelKey: "nav.logs", href: "/logs", icon: ScrollText }
 ];

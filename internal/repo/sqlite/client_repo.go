@@ -17,15 +17,16 @@ type ClientRepo struct {
 func NewClientRepo(db *sql.DB) *ClientRepo { return &ClientRepo{db: db} }
 
 const clientColumns = `id, inbound_id, name, uuid, password, used_up, used_down, total_quota,
-	expiry, status, sub_token, start_after_first_use, enabled, first_used_at, created_at, updated_at`
+	expiry, status, sub_token, start_after_first_use, enabled, first_used_at, node_id, remote_id,
+	last_synced_at, created_at, updated_at`
 
 func (r *ClientRepo) Create(ctx context.Context, c *domain.Client) error {
 	result, err := r.db.ExecContext(ctx,
 		`INSERT INTO clients (inbound_id, name, uuid, password, total_quota, expiry,
-		                      status, sub_token, start_after_first_use, enabled)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		                      status, sub_token, start_after_first_use, enabled, node_id, remote_id, last_synced_at)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		c.InboundID, c.Name, c.UUID, c.Password, c.TotalQuota, c.Expiry,
-		c.Status, c.SubToken, c.StartAfterFirstUse, c.Enabled,
+		c.Status, c.SubToken, c.StartAfterFirstUse, c.Enabled, nullableInt64(c.NodeID), c.RemoteID, c.LastSyncedAt,
 	)
 	if err != nil {
 		if isUniqueViolation(err) {
@@ -62,7 +63,7 @@ func (r *ClientRepo) ListByInbound(ctx context.Context, inboundID int64) ([]doma
 // ListEnabled returns every client whose own flag is on. The generator further
 // filters by the inbound's enabled flag.
 func (r *ClientRepo) ListEnabled(ctx context.Context) ([]domain.Client, error) {
-	return r.query(ctx, `SELECT `+clientColumns+` FROM clients WHERE enabled = 1 ORDER BY inbound_id`)
+	return r.query(ctx, `SELECT `+clientColumns+` FROM clients WHERE enabled = 1 AND node_id IS NULL ORDER BY inbound_id`)
 }
 
 func (r *ClientRepo) query(ctx context.Context, q string, args ...any) ([]domain.Client, error) {
@@ -87,16 +88,51 @@ func (r *ClientRepo) Update(ctx context.Context, c *domain.Client) error {
 	_, err := r.db.ExecContext(ctx,
 		`UPDATE clients SET inbound_id = ?, name = ?, uuid = ?, password = ?, total_quota = ?,
 		                    expiry = ?, status = ?, start_after_first_use = ?, enabled = ?,
+		                    node_id = ?, remote_id = ?, last_synced_at = ?,
 		                    updated_at = CURRENT_TIMESTAMP
 		 WHERE id = ?`,
 		c.InboundID, c.Name, c.UUID, c.Password, c.TotalQuota, c.Expiry,
-		c.Status, c.StartAfterFirstUse, c.Enabled, c.ID,
+		c.Status, c.StartAfterFirstUse, c.Enabled, nullableInt64(c.NodeID), c.RemoteID, c.LastSyncedAt, c.ID,
 	)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return repo.ErrExist
 		}
 		return fmt.Errorf("update client: %w", err)
+	}
+	return nil
+}
+
+func (r *ClientRepo) UpsertRemote(ctx context.Context, nodeID int64, remoteID string, inboundID int64, c *domain.Client) error {
+	if remoteID == "" {
+		return fmt.Errorf("remote client id is required")
+	}
+	_, err := r.db.ExecContext(ctx,
+		`INSERT INTO clients (node_id, remote_id, inbound_id, name, uuid, password, used_up, used_down,
+		                      total_quota, expiry, status, sub_token, start_after_first_use, enabled,
+		                      first_used_at, last_synced_at)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+		 ON CONFLICT(node_id, remote_id) WHERE node_id IS NOT NULL AND remote_id <> ''
+		 DO UPDATE SET inbound_id = excluded.inbound_id,
+		               name = excluded.name,
+		               uuid = excluded.uuid,
+		               password = excluded.password,
+		               used_up = excluded.used_up,
+		               used_down = excluded.used_down,
+		               total_quota = excluded.total_quota,
+		               expiry = excluded.expiry,
+		               status = excluded.status,
+		               sub_token = excluded.sub_token,
+		               start_after_first_use = excluded.start_after_first_use,
+		               enabled = excluded.enabled,
+		               first_used_at = excluded.first_used_at,
+		               last_synced_at = CURRENT_TIMESTAMP,
+		               updated_at = CURRENT_TIMESTAMP`,
+		nodeID, remoteID, inboundID, c.Name, c.UUID, c.Password, c.UsedUp, c.UsedDown, c.TotalQuota,
+		c.Expiry, c.Status, c.SubToken, c.StartAfterFirstUse, c.Enabled, c.FirstUsedAt,
+	)
+	if err != nil {
+		return fmt.Errorf("upsert remote client: %w", err)
 	}
 	return nil
 }
@@ -209,10 +245,12 @@ func (r *ClientRepo) SumTraffic(ctx context.Context) (up int64, down int64, err 
 
 func scanClient(s rowScanner) (*domain.Client, error) {
 	var c domain.Client
+	var nodeID sql.NullInt64
+	var lastSyncedAt sql.NullTime
 	err := s.Scan(
 		&c.ID, &c.InboundID, &c.Name, &c.UUID, &c.Password, &c.UsedUp, &c.UsedDown, &c.TotalQuota,
 		&c.Expiry, &c.Status, &c.SubToken, &c.StartAfterFirstUse, &c.Enabled, &c.FirstUsedAt,
-		&c.CreatedAt, &c.UpdatedAt,
+		&nodeID, &c.RemoteID, &lastSyncedAt, &c.CreatedAt, &c.UpdatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -220,5 +258,7 @@ func scanClient(s rowScanner) (*domain.Client, error) {
 		}
 		return nil, fmt.Errorf("scan client: %w", err)
 	}
+	c.NodeID = ptrFromNullInt64(nodeID)
+	c.LastSyncedAt = ptrFromNullTime(lastSyncedAt)
 	return &c, nil
 }
