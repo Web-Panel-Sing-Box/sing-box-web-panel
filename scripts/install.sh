@@ -75,85 +75,106 @@ random_base_path() {
   echo "/$(random_hex 8)"
 }
 
+is_ipv4() {
+  [[ "$1" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]
+}
+
 is_domain() {
   local host="$1"
   [[ -z "${host}" ]] && return 1
-  # An IP (v4 or v6 shorthand) is not a domain.
-  if [[ "${host}" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    return 1
-  fi
-  if [[ "${host}" =~ ^[0-9a-fA-F:]+$ ]]; then
-    return 1
-  fi
-  # Must contain at least one dot and a tld-like suffix.
+  is_ipv4 "${host}" && return 1
   [[ "${host}" == *.* ]] && return 0
   return 1
 }
 
-install_certbot() {
-  if command -v certbot &>/dev/null; then
-    echo "certbot is already installed."
+install_acme() {
+  if [[ -x ~/.acme.sh/acme.sh ]]; then
+    echo "acme.sh is already installed."
     return
   fi
 
-  echo "Installing certbot..."
-
-  if command -v snap &>/dev/null; then
-    # snap is the recommended way.
-    if ! snap list certbot &>/dev/null 2>&1; then
-      snap install --classic certbot
+  echo "Installing acme.sh..."
+  if ! command -v curl &>/dev/null; then
+    if command -v apt-get &>/dev/null; then
+      apt-get update -qq && apt-get install -y -qq curl
+    else
+      echo "ERROR: curl is required to install acme.sh"
+      exit 1
     fi
-    # Ensure the snap bin is in PATH.
-    if [[ ! -f /usr/bin/certbot ]]; then
-      ln -sf /snap/bin/certbot /usr/bin/certbot 2>/dev/null || true
-    fi
-    return
   fi
 
-  # Fallback: apt.
-  if command -v apt-get &>/dev/null; then
-    apt-get update -qq
-    apt-get install -y -qq certbot
-    return
+  curl -s https://get.acme.sh | sh
+  if [[ ! -x ~/.acme.sh/acme.sh ]]; then
+    echo "ERROR: acme.sh installation failed"
+    exit 1
   fi
-
-  echo "ERROR: could not install certbot (no snap or apt). Install it manually."
-  exit 1
+  ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt --force
 }
 
-request_cert() {
-  local domain="$1"
-  local email="$2"
-
-  echo "Requesting Let's Encrypt certificate for ${domain}..."
-  certbot certonly \
-    --standalone \
-    --non-interactive \
-    --agree-tos \
-    --email "${email}" \
-    --domain "${domain}" \
-    --deploy-hook "/usr/local/bin/shilka-cert-deploy"
-
-  # Write the deploy hook that copies certs after renewal.
+write_cert_deploy_hook() {
   cat >/usr/local/bin/shilka-cert-deploy <<HOOK
 #!/usr/bin/env bash
 set -Eeuo pipefail
 CERT_DIR="${TLS_CERT_DIR}"
 APP_USER="${APP_USER}"
-if [[ -n "\${RENEWED_LINEAGE:-}" ]]; then
-  cat "\${RENEWED_LINEAGE}/fullchain.pem" > "\${CERT_DIR}/cert.pem"
-  cat "\${RENEWED_LINEAGE}/privkey.pem"   > "\${CERT_DIR}/key.pem"
-  chown "\${APP_USER}:\${APP_USER}" "\${CERT_DIR}/cert.pem" "\${CERT_DIR}/key.pem"
-  chmod 0600 "\${CERT_DIR}/cert.pem" "\${CERT_DIR}/key.pem"
-  if systemctl is-active --quiet shilka.service; then
-    systemctl restart shilka.service
-  fi
+cat "\${CERT_FILE}" > "\${CERT_DIR}/cert.pem"
+cat "\${CERT_KEY_FILE}" > "\${CERT_DIR}/key.pem"
+chown "\${APP_USER}:\${APP_USER}" "\${CERT_DIR}/cert.pem" "\${CERT_DIR}/key.pem"
+chmod 0600 "\${CERT_DIR}/cert.pem" "\${CERT_DIR}/key.pem"
+if systemctl is-active --quiet shilka.service; then
+  systemctl restart shilka.service
 fi
 HOOK
   chmod 0755 /usr/local/bin/shilka-cert-deploy
+}
 
-  # Run the deploy hook now to copy initial certs.
-  RENEWED_LINEAGE="/etc/letsencrypt/live/${domain}" /usr/local/bin/shilka-cert-deploy
+issue_domain_cert() {
+  local domain="$1" email="$2"
+  echo "Requesting Let's Encrypt certificate for ${domain}..."
+
+  ~/.acme.sh/acme.sh --issue \
+    -d "${domain}" \
+    --standalone \
+    --httpport 80 \
+    --force
+
+  if [[ $? -ne 0 ]]; then
+    echo "ERROR: failed to issue certificate for ${domain}. Is port 80 open?"
+    return 1
+  fi
+
+  write_cert_deploy_hook
+  ~/.acme.sh/acme.sh --installcert -d "${domain}" \
+    --key-file "${TLS_CERT_DIR}/key.pem" \
+    --fullchain-file "${TLS_CERT_DIR}/cert.pem" \
+    --reloadcmd "/usr/local/bin/shilka-cert-deploy"
+  ~/.acme.sh/acme.sh --upgrade --auto-upgrade
+}
+
+issue_ip_cert() {
+  local ip="$1" email="$2"
+  echo "Requesting Let's Encrypt IP certificate for ${ip} (shortlived profile, 6-day validity)..."
+
+  ~/.acme.sh/acme.sh --issue \
+    -d "${ip}" \
+    --standalone \
+    --server letsencrypt \
+    --certificate-profile shortlived \
+    --days 6 \
+    --httpport 80 \
+    --force
+
+  if [[ $? -ne 0 ]]; then
+    echo "ERROR: failed to issue IP certificate for ${ip}. Is port 80 open?"
+    return 1
+  fi
+
+  write_cert_deploy_hook
+  ~/.acme.sh/acme.sh --installcert -d "${ip}" \
+    --key-file "${TLS_CERT_DIR}/key.pem" \
+    --fullchain-file "${TLS_CERT_DIR}/cert.pem" \
+    --reloadcmd "/usr/local/bin/shilka-cert-deploy"
+  ~/.acme.sh/acme.sh --upgrade --auto-upgrade
 }
 
 create_user_and_dirs() {
@@ -228,25 +249,37 @@ gather_input() {
   PANEL_HOST="${input_host:-${default_host}}"
 
   # Detect whether this is a domain (eligible for Let's Encrypt) or a bare IP.
-  USE_CERTBOT=false
+  USE_ACME=false
   if is_domain "${PANEL_HOST}"; then
     echo ""
     echo "This looks like a domain. Let's Encrypt can provide a trusted certificate."
-    read -rp "Use Let's Encrypt via certbot? [Y/n] " use_le
+    read -rp "Use Let's Encrypt? [Y/n] " use_le
     if [[ "${use_le,,}" != "n" && "${use_le,,}" != "no" ]]; then
-      USE_CERTBOT=true
-      echo ""
-      echo "Enter your email address for Let's Encrypt notifications."
-      read -rp "Email: " input_email
-      ACME_EMAIL="${input_email}"
-      if [[ -z "${ACME_EMAIL}" ]]; then
-        echo "Email is required for Let's Encrypt."
-        exit 1
-      fi
-      echo ""
-      echo "Make sure port 80 is reachable from the internet and not in use."
-      echo "(certbot needs it briefly for HTTP-01 validation)"
+      USE_ACME=true
+      CERT_TYPE="domain"
     fi
+  elif is_ipv4 "${PANEL_HOST}"; then
+    echo ""
+    echo "Let's Encrypt supports IP addresses via the shortlived profile (6-day validity, auto-renews)."
+    read -rp "Use Let's Encrypt for this IP? [Y/n] " use_le
+    if [[ "${use_le,,}" != "n" && "${use_le,,}" != "no" ]]; then
+      USE_ACME=true
+      CERT_TYPE="ip"
+    fi
+  fi
+
+  if [[ "${USE_ACME}" == "true" ]]; then
+    echo ""
+    echo "Enter your email address for Let's Encrypt notifications."
+    read -rp "Email: " input_email
+    ACME_EMAIL="${input_email}"
+    if [[ -z "${ACME_EMAIL}" ]]; then
+      echo "Email is required for Let's Encrypt."
+      exit 1
+    fi
+    echo ""
+    echo "Make sure port 80 is reachable from the internet and not in use."
+    echo "(acme.sh needs it briefly for HTTP-01 validation)"
   fi
 
   # Port
@@ -288,7 +321,7 @@ gather_input() {
   echo "  Domain/IP:  ${PANEL_HOST}"
   echo "  Port:       ${PANEL_PORT}"
   echo "  Path:       ${PANEL_PATH}"
-  echo "  TLS:        $(if [[ "${USE_CERTBOT}" == "true" ]]; then echo "Let's Encrypt (certbot)"; else echo "self-signed"; fi)"
+  echo "  TLS:        $(if [[ "${USE_ACME}" == "true" ]]; then echo "Let's Encrypt (acme.sh)"; else echo "self-signed"; fi)"
   echo "  Username:   ${ADMIN_USER}"
   echo "  Password:   ${ADMIN_PASSWORD}"
   echo "--------------------------------------------"
@@ -305,7 +338,7 @@ write_prod_config() {
   jwt_secret="$(openssl rand -hex 32)"
   clash_secret="$(openssl rand -hex 24)"
 
-  if [[ "${USE_CERTBOT}" == "true" ]]; then
+  if [[ "${USE_ACME}" == "true" ]]; then
     tls_mode="file"
     tls_cert_file="${TLS_CERT_DIR}/cert.pem"
     tls_key_file="${TLS_CERT_DIR}/key.pem"
@@ -518,9 +551,13 @@ main() {
   require_root
   gather_input
   create_user_and_dirs
-  if [[ "${USE_CERTBOT}" == "true" ]]; then
-    install_certbot
-    request_cert "${PANEL_HOST}" "${ACME_EMAIL}"
+  if [[ "${USE_ACME}" == "true" ]]; then
+    install_acme
+    if [[ "${CERT_TYPE}" == "domain" ]]; then
+      issue_domain_cert "${PANEL_HOST}" "${ACME_EMAIL}"
+    else
+      issue_ip_cert "${PANEL_HOST}" "${ACME_EMAIL}"
+    fi
   fi
   install_sing_box
   install_panel_binary
