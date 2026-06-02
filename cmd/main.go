@@ -190,9 +190,14 @@ func main() {
 	stack = middleware.RateLimit(cfg.Auth.APIRateLimit, middleware.APIPathMatcher, log)(stack)
 	stack = middleware.Logger(log)(stack)
 
+	var httpHandler http.Handler = stack
+	if cfg.HTTP.BasePath != "" {
+		httpHandler = http.StripPrefix(cfg.HTTP.BasePath, stack)
+	}
+
 	server := &http.Server{
 		Addr:           cfg.HTTP.Address,
-		Handler:        stack,
+		Handler:        httpHandler,
 		ReadTimeout:    cfg.HTTP.ReadTimeout,
 		WriteTimeout:   cfg.HTTP.WriteTimeout,
 		IdleTimeout:    cfg.HTTP.IdleTimeout,

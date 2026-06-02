@@ -37,41 +37,39 @@ type spaHandler struct {
 func (h *spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	f, err := h.root.Open(r.URL.Path)
 	if err != nil {
-		if os.IsNotExist(err) {
-			spaFile, spaErr := h.root.Open("index.html")
-			if spaErr != nil {
-				if r.URL.Path == "/" {
-					http.NotFound(w, r)
-				} else {
-					http.Redirect(w, r, "/", http.StatusFound)
-				}
-				return
-			}
-			defer spaFile.Close()
-			stat, _ := spaFile.Stat()
+		if !os.IsNotExist(err) {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+	} else {
+		defer f.Close()
+		stat, statErr := f.Stat()
+		if statErr == nil && !stat.IsDir() {
 			if h.cacheTTL > 0 {
 				w.Header().Set("Cache-Control", "public, max-age="+formatSeconds(h.cacheTTL))
 			}
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			http.ServeContent(w, r, "index.html", stat.ModTime(), spaFile)
+			w.Header().Set("Content-Type", contentType(r.URL.Path))
+			http.ServeContent(w, r, stat.Name(), stat.ModTime(), f)
 			return
 		}
-		http.Error(w, "not found", http.StatusNotFound)
-		return
-	}
-	defer f.Close()
-
-	stat, err := f.Stat()
-	if err != nil || stat.IsDir() {
-		http.NotFound(w, r)
-		return
 	}
 
+	spaFile, spaErr := h.root.Open("index.html")
+	if spaErr != nil {
+		if r.URL.Path == "/" {
+			http.NotFound(w, r)
+		} else {
+			http.Redirect(w, r, "/", http.StatusFound)
+		}
+		return
+	}
+	defer spaFile.Close()
+	stat, _ := spaFile.Stat()
 	if h.cacheTTL > 0 {
 		w.Header().Set("Cache-Control", "public, max-age="+formatSeconds(h.cacheTTL))
 	}
-	w.Header().Set("Content-Type", contentType(r.URL.Path))
-	http.ServeContent(w, r, stat.Name(), stat.ModTime(), f)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	http.ServeContent(w, r, "index.html", stat.ModTime(), spaFile)
 }
 
 var mimeTypes = map[string]string{

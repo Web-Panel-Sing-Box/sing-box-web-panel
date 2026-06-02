@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { LazyMotion, domMax } from "framer-motion";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { RequireAuth } from "@/components/auth/require-auth";
 import { Toaster } from "@/components/ui/toaster";
@@ -33,7 +33,7 @@ export function App() {
       <LazyMotion features={domMax} strict>
         <Toaster>
           <AuthProvider>
-            <BrowserRouter>
+            <HashRouter>
               <Suspense
                 fallback={<div className="min-h-screen w-full bg-surface" />}
               >
@@ -52,7 +52,7 @@ export function App() {
                   </Route>
                 </Routes>
               </Suspense>
-            </BrowserRouter>
+            </HashRouter>
           </AuthProvider>
         </Toaster>
       </LazyMotion>
