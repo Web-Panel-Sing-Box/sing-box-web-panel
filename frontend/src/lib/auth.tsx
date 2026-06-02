@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -32,6 +33,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => readFlag("1"));
   const [twoFactorEnabled, setTwoFactorState] = useState(false);
 
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    api.getMe().then((me) => setTwoFactorState(me.is_totp_enabled)).catch(() => {});
+  }, [isAuthenticated]);
+
   const login = useCallback<AuthContextValue["login"]>(
     async (username, password) => {
       try {
@@ -49,7 +55,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         return { ok: false, needsTwoFactor: false };
-      } catch {
+      } catch (e: unknown) {
+        if (e instanceof api.ApiError && e.status === 403) {
+          const body = e.body as { requires_totp?: boolean; temp_token?: string } | undefined;
+          if (body?.requires_totp) {
+            return { ok: true, needsTwoFactor: true, tempToken: body.temp_token };
+          }
+        }
         return { ok: false, needsTwoFactor: false };
       }
     },
@@ -94,15 +106,4 @@ export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used inside <AuthProvider />");
   return ctx;
-}
-
-// Legacy exports for components still being migrated from mock.
-// TODO: replace with real API calls (setupTOTP, confirmTOTP).
-const MOCK_TOTP_SECRET = "JBSWY3DPEHPK3PXP";
-export const TWO_FACTOR_SECRET = MOCK_TOTP_SECRET;
-
-export function buildOtpAuthUri(account = "admin", issuer = "Sing box") {
-  const label = encodeURIComponent(`${issuer}:${account}`);
-  const params = new URLSearchParams({ secret: MOCK_TOTP_SECRET, issuer });
-  return `otpauth://totp/${label}?${params.toString()}`;
 }

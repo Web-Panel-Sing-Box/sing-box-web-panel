@@ -26,6 +26,7 @@ import (
 
 	"sing-box-web-panel/docs"
 	"sing-box-web-panel/internal/config"
+	"sing-box-web-panel/internal/domain"
 	libauth "sing-box-web-panel/internal/lib/auth"
 	"sing-box-web-panel/internal/lib/sl"
 	sqliterepo "sing-box-web-panel/internal/repo/sqlite"
@@ -35,6 +36,7 @@ import (
 	svcinbound "sing-box-web-panel/internal/services/inbound"
 	"sing-box-web-panel/internal/services/logbuf"
 	svcnode "sing-box-web-panel/internal/services/node"
+	svcsettings "sing-box-web-panel/internal/services/settings"
 	"sing-box-web-panel/internal/services/singbox"
 	"sing-box-web-panel/internal/services/stats"
 	"sing-box-web-panel/internal/services/sysstat"
@@ -126,6 +128,14 @@ func runServer() {
 	apiTokenRepo := sqliterepo.NewAPITokenRepo(storage)
 	nodeRepo := sqliterepo.NewNodeRepo(storage)
 	configRevRepo := sqliterepo.NewConfigRevisionRepo(storage)
+	settingRepo := sqliterepo.NewSettingRepo(storage)
+
+	// Seed defaults for known settings so the panel always has sane values.
+	seedSetting(context.Background(), settingRepo, domain.SettingPanelName, "Shilka")
+	seedSetting(context.Background(), settingRepo, domain.SettingLogLevel, "info")
+
+	// Read DB-backed settings that affect config generation.
+	logLevel := getSetting(context.Background(), settingRepo, domain.SettingLogLevel, "info")
 
 	// Resolve sing-box paths to absolute so the subprocess working dir does not
 	// double-apply to a relative config path.
@@ -139,7 +149,7 @@ func runServer() {
 
 	// sing-box config generation + lifecycle.
 	generator := singbox.NewGenerator(inboundRepo, clientRepo, singbox.GeneratorConfig{
-		LogLevel:        "info",
+		LogLevel:        logLevel,
 		InboundListen:   "::",
 		ClashAPIAddress: cfg.SingBox.APIAddress,
 		ClashAPISecret:  cfg.SingBox.APISecret,
@@ -147,6 +157,7 @@ func runServer() {
 		StatsSource:     cfg.Stats.Source,
 		V2RayAPIListen:  cfg.Stats.V2RayAPIAddress,
 		CoreLogPath:     absCoreLogPath,
+		Settings:        settingRepo,
 	})
 	checker := singbox.NewChecker(cfg.SingBox.BinaryPath, cfg.SingBox.CheckTimeout)
 	processMgr := singbox.NewProcessManager(singbox.ProcessConfig{
@@ -173,7 +184,7 @@ func runServer() {
 	nodeSvc := svcnode.NewService(nodeRepo, inboundRepo, clientRepo, svcnode.NewHTTPClient())
 	go nodeSvc.Run(rootCtx, 10*time.Second, 15*time.Second)
 
-	settingRepo := sqliterepo.NewSettingRepo(storage)
+	settingSvc := svcsettings.New(settingRepo, applier)
 	trafficRepo := sqliterepo.NewTrafficRepo(storage)
 	sysReader := sysstat.New()
 
@@ -202,6 +213,7 @@ func runServer() {
 	handler.NewSubscriptionHandler(clientRepo, inboundRepo, settingRepo, cfg.Sub.PublicURL, "", log).Register(mux)
 	handler.NewDashboardHandler(sysReader, liveHolder, clientRepo, inboundRepo, trafficRepo, processMgr, log).Register(mux)
 	handler.NewLogsHandler(logBuf).Register(mux)
+	handler.NewSettingsHandler(settingSvc, log).Register(mux)
 
 	frontendHandler := handler.NewFrontendHandler(cfg.Frontend.ServeMode, cfg.Frontend.DiskPath, cfg.Frontend.CacheTTL, frontendDist)
 	mux.Handle("/", frontendHandler)
@@ -352,4 +364,24 @@ func mustBytes(s string) int64 {
 	default:
 		return int64(n)
 	}
+}
+
+type settingWriter interface {
+	Set(ctx context.Context, key, value string) error
+	Get(ctx context.Context, key string) (string, error)
+}
+
+func seedSetting(ctx context.Context, sw settingWriter, key, fallback string) {
+	if _, err := sw.Get(ctx, key); err == nil {
+		return
+	}
+	_ = sw.Set(ctx, key, fallback)
+}
+
+func getSetting(ctx context.Context, sr settingWriter, key, fallback string) string {
+	v, err := sr.Get(ctx, key)
+	if err != nil || v == "" {
+		return fallback
+	}
+	return v
 }

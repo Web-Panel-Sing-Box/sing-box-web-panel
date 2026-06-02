@@ -31,6 +31,10 @@ func (a *TOTPAdapter) GenerateSecret(username string) (*otpKey, error) {
 	}, nil
 }
 
+func (a *TOTPAdapter) BuildKeyURI(username, secret string) string {
+	return a.manager.BuildKeyURI(username, secret)
+}
+
 func (a *TOTPAdapter) Validate(code, secret string) bool {
 	return a.manager.Validate(code, secret)
 }

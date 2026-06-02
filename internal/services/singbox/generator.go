@@ -20,6 +20,13 @@ type ClientLister interface {
 	ListEnabled(ctx context.Context) ([]domain.Client, error)
 }
 
+// SettingReader provides on-demand access to panel settings that affect config
+// generation (e.g. log_level). It is read during every Render call so that
+// runtime setting changes take effect without restarting the generator.
+type SettingReader interface {
+	Get(ctx context.Context, key string) (string, error)
+}
+
 // GeneratorConfig holds the static, rarely-changing knobs for config rendering.
 type GeneratorConfig struct {
 	LogLevel        string
@@ -30,6 +37,10 @@ type GeneratorConfig struct {
 	StatsSource     string // "auto" | "clash" | "v2ray"
 	V2RayAPIListen  string
 	CoreLogPath     string // sing-box log output file path
+
+	// Settings are the database-backed panel settings used to override hardcoded
+	// defaults at render time. When nil, static GeneratorConfig fields are used.
+	Settings SettingReader
 }
 
 type Generator struct {
@@ -85,12 +96,23 @@ func (g *Generator) Render(ctx context.Context) ([]byte, error) {
 		}
 	}
 
+	// Resolve log level: DB setting takes precedence, then config struct, then default.
+	logLevel := g.cfg.LogLevel
+	if g.cfg.Settings != nil {
+		if v, err := g.cfg.Settings.Get(ctx, domain.SettingLogLevel); err == nil && v != "" {
+			logLevel = v
+		}
+	}
+	if logLevel == "" {
+		logLevel = "info"
+	}
+
 	// Note: the DNS block is intentionally omitted. No single DNS form is valid
 	// across sing-box 1.11 (legacy only) and 1.14 (new format only), so the core
 	// default is used. Blocking uses the 1.11+ "reject" rule action rather than a
 	// block outbound (removed in 1.14).
 	cfg := &sbConfig{
-		Log:      &sbLog{Level: g.cfg.LogLevel, Timestamp: true, Output: g.cfg.CoreLogPath},
+		Log:      &sbLog{Level: logLevel, Timestamp: true, Output: g.cfg.CoreLogPath},
 		Inbounds: built,
 		Outbounds: []sbOutbound{
 			{Type: "direct", Tag: "direct"},
