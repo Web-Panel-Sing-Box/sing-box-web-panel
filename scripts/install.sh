@@ -6,6 +6,7 @@ APP_HOME="${APP_HOME:-/opt/shilka}"
 CONFIG_DIR="${CONFIG_DIR:-/etc/shilka}"
 DATA_DIR="${DATA_DIR:-/var/lib/shilka}"
 LOG_DIR="${LOG_DIR:-/var/log/shilka}"
+TLS_CERT_DIR="${TLS_CERT_DIR:-${CONFIG_DIR}/tls}"
 SING_BOX_VERSION="${SING_BOX_VERSION:-latest}"
 PANEL_VERSION="${PANEL_VERSION:-latest}"
 GITHUB_REPO="${GITHUB_REPO:-Web-Panel-Sing-Box/sing-box-web-panel}"
@@ -74,12 +75,93 @@ random_base_path() {
   echo "/$(random_hex 8)"
 }
 
+is_domain() {
+  local host="$1"
+  [[ -z "${host}" ]] && return 1
+  # An IP (v4 or v6 shorthand) is not a domain.
+  if [[ "${host}" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    return 1
+  fi
+  if [[ "${host}" =~ ^[0-9a-fA-F:]+$ ]]; then
+    return 1
+  fi
+  # Must contain at least one dot and a tld-like suffix.
+  [[ "${host}" == *.* ]] && return 0
+  return 1
+}
+
+install_certbot() {
+  if command -v certbot &>/dev/null; then
+    echo "certbot is already installed."
+    return
+  fi
+
+  echo "Installing certbot..."
+
+  if command -v snap &>/dev/null; then
+    # snap is the recommended way.
+    if ! snap list certbot &>/dev/null 2>&1; then
+      snap install --classic certbot
+    fi
+    # Ensure the snap bin is in PATH.
+    if [[ ! -f /usr/bin/certbot ]]; then
+      ln -sf /snap/bin/certbot /usr/bin/certbot 2>/dev/null || true
+    fi
+    return
+  fi
+
+  # Fallback: apt.
+  if command -v apt-get &>/dev/null; then
+    apt-get update -qq
+    apt-get install -y -qq certbot
+    return
+  fi
+
+  echo "ERROR: could not install certbot (no snap or apt). Install it manually."
+  exit 1
+}
+
+request_cert() {
+  local domain="$1"
+  local email="$2"
+
+  echo "Requesting Let's Encrypt certificate for ${domain}..."
+  certbot certonly \
+    --standalone \
+    --non-interactive \
+    --agree-tos \
+    --email "${email}" \
+    --domain "${domain}" \
+    --deploy-hook "/usr/local/bin/shilka-cert-deploy"
+
+  # Write the deploy hook that copies certs after renewal.
+  cat >/usr/local/bin/shilka-cert-deploy <<HOOK
+#!/usr/bin/env bash
+set -Eeuo pipefail
+CERT_DIR="${TLS_CERT_DIR}"
+APP_USER="${APP_USER}"
+if [[ -n "\${RENEWED_LINEAGE:-}" ]]; then
+  cat "\${RENEWED_LINEAGE}/fullchain.pem" > "\${CERT_DIR}/cert.pem"
+  cat "\${RENEWED_LINEAGE}/privkey.pem"   > "\${CERT_DIR}/key.pem"
+  chown "\${APP_USER}:\${APP_USER}" "\${CERT_DIR}/cert.pem" "\${CERT_DIR}/key.pem"
+  chmod 0600 "\${CERT_DIR}/cert.pem" "\${CERT_DIR}/key.pem"
+  if systemctl is-active --quiet shilka.service; then
+    systemctl restart shilka.service
+  fi
+fi
+HOOK
+  chmod 0755 /usr/local/bin/shilka-cert-deploy
+
+  # Run the deploy hook now to copy initial certs.
+  RENEWED_LINEAGE="/etc/letsencrypt/live/${domain}" /usr/local/bin/shilka-cert-deploy
+}
+
 create_user_and_dirs() {
   if ! id "${APP_USER}" >/dev/null 2>&1; then
     useradd --system --home "${APP_HOME}" --shell /usr/sbin/nologin "${APP_USER}"
   fi
   install -d -m 0755 "${APP_HOME}" "${APP_HOME}/bin" "${CONFIG_DIR}" "${DATA_DIR}" "${LOG_DIR}"
-  install -d -m 0700 "${DATA_DIR}/tls"
+  install -d -m 0700 "${DATA_DIR}/tls" "${TLS_CERT_DIR}"
   chown -R "${APP_USER}:${APP_USER}" "${APP_HOME}" "${CONFIG_DIR}" "${DATA_DIR}" "${LOG_DIR}"
 }
 
@@ -145,6 +227,28 @@ gather_input() {
   read -rp "Domain/IP [${default_host}]: " input_host
   PANEL_HOST="${input_host:-${default_host}}"
 
+  # Detect whether this is a domain (eligible for Let's Encrypt) or a bare IP.
+  USE_CERTBOT=false
+  if is_domain "${PANEL_HOST}"; then
+    echo ""
+    echo "This looks like a domain. Let's Encrypt can provide a trusted certificate."
+    read -rp "Use Let's Encrypt via certbot? [Y/n] " use_le
+    if [[ "${use_le,,}" != "n" && "${use_le,,}" != "no" ]]; then
+      USE_CERTBOT=true
+      echo ""
+      echo "Enter your email address for Let's Encrypt notifications."
+      read -rp "Email: " input_email
+      ACME_EMAIL="${input_email}"
+      if [[ -z "${ACME_EMAIL}" ]]; then
+        echo "Email is required for Let's Encrypt."
+        exit 1
+      fi
+      echo ""
+      echo "Make sure port 80 is reachable from the internet and not in use."
+      echo "(certbot needs it briefly for HTTP-01 validation)"
+    fi
+  fi
+
   # Port
   PANEL_PORT="${PANEL_PORT:-$(random_port)}"
   echo ""
@@ -184,6 +288,7 @@ gather_input() {
   echo "  Domain/IP:  ${PANEL_HOST}"
   echo "  Port:       ${PANEL_PORT}"
   echo "  Path:       ${PANEL_PATH}"
+  echo "  TLS:        $(if [[ "${USE_CERTBOT}" == "true" ]]; then echo "Let's Encrypt (certbot)"; else echo "self-signed"; fi)"
   echo "  Username:   ${ADMIN_USER}"
   echo "  Password:   ${ADMIN_PASSWORD}"
   echo "--------------------------------------------"
@@ -196,9 +301,22 @@ gather_input() {
 }
 
 write_prod_config() {
-  local jwt_secret clash_secret
+  local jwt_secret clash_secret tls_mode tls_cert_file tls_key_file self_signed_hosts
   jwt_secret="$(openssl rand -hex 32)"
   clash_secret="$(openssl rand -hex 24)"
+
+  if [[ "${USE_CERTBOT}" == "true" ]]; then
+    tls_mode="file"
+    tls_cert_file="${TLS_CERT_DIR}/cert.pem"
+    tls_key_file="${TLS_CERT_DIR}/key.pem"
+    self_signed_hosts=""
+  else
+    tls_mode="self_signed"
+    tls_cert_file=""
+    tls_key_file=""
+    self_signed_hosts="
+    - \"${PANEL_HOST}\""
+  fi
 
   cat >"${CONFIG_DIR}/prod.yaml" <<YAML
 env: "production"
@@ -261,14 +379,13 @@ stats:
   v2ray_api_address: "127.0.0.1:8088"
 
 tls:
-  mode: "self_signed"
-  cert_file: ""
-  key_file: ""
+  mode: "${tls_mode}"
+  cert_file: "${tls_cert_file}"
+  key_file: "${tls_key_file}"
   acme_email: ""
   acme_domains: []
   acme_cache_dir: "${DATA_DIR}/acme"
-  self_signed_hosts:
-    - "${PANEL_HOST}"
+  self_signed_hosts:${self_signed_hosts}
   self_signed_dir: "${DATA_DIR}/tls"
 
 metrics:
@@ -401,6 +518,10 @@ main() {
   require_root
   gather_input
   create_user_and_dirs
+  if [[ "${USE_CERTBOT}" == "true" ]]; then
+    install_certbot
+    request_cert "${PANEL_HOST}" "${ACME_EMAIL}"
+  fi
   install_sing_box
   install_panel_binary
   write_prod_config
