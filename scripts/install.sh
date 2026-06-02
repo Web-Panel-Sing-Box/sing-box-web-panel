@@ -26,6 +26,18 @@ detect_arch() {
   esac
 }
 
+detect_public_ip() {
+  local ip
+  ip="$(curl -fsS --max-time 5 -4 https://api.ipify.org 2>/dev/null)" || true
+  if [[ -z "${ip}" ]]; then
+    ip="$(curl -fsS --max-time 5 -4 https://ifconfig.me 2>/dev/null)" || true
+  fi
+  if [[ -z "${ip}" ]]; then
+    ip="$(curl -fsS --max-time 5 -4 https://icanhazip.com 2>/dev/null)" || true
+  fi
+  echo "${ip}"
+}
+
 resolve_sing_box_version() {
   if [[ "${SING_BOX_VERSION}" != "latest" ]]; then
     echo "${SING_BOX_VERSION#v}"
@@ -36,12 +48,38 @@ resolve_sing_box_version() {
     | head -n 1
 }
 
+random_port() {
+  local port
+  while true; do
+    port=$(( (RANDOM % 55535) + 10000 ))
+    if ! ss -tuln | grep -q ":${port} "; then
+      echo "${port}"
+      return
+    fi
+  done
+}
+
+random_hex() {
+  local len="${1:-16}"
+  openssl rand -hex "${len}"
+}
+
+random_username() {
+  local prefixes=("admin" "root" "operator" "manager" "super")
+  local prefix="${prefixes[$((RANDOM % ${#prefixes[@]}))]}"
+  echo "${prefix}_$(random_hex 4)"
+}
+
+random_base_path() {
+  echo "/$(random_hex 8)"
+}
+
 create_user_and_dirs() {
   if ! id "${APP_USER}" >/dev/null 2>&1; then
     useradd --system --home "${APP_HOME}" --shell /usr/sbin/nologin "${APP_USER}"
   fi
   install -d -m 0755 "${APP_HOME}" "${APP_HOME}/bin" "${CONFIG_DIR}" "${DATA_DIR}" "${LOG_DIR}"
-  install -d -m 0700 "${CONFIG_DIR}/tls"
+  install -d -m 0700 "${DATA_DIR}/tls"
   chown -R "${APP_USER}:${APP_USER}" "${APP_HOME}" "${CONFIG_DIR}" "${DATA_DIR}" "${LOG_DIR}"
 }
 
@@ -91,11 +129,76 @@ install_panel_binary() {
   chmod 0755 "${APP_HOME}/bin/shilka"
 }
 
+gather_input() {
+  local public_ip
+  public_ip="$(detect_public_ip)"
+
+  echo ""
+  echo "============================================"
+  echo "        Shilka Panel Installer"
+  echo "============================================"
+  echo ""
+
+  # Domain / IP
+  local default_host="${public_ip:-127.0.0.1}"
+  echo "Enter the domain or IP address for the panel certificate."
+  read -rp "Domain/IP [${default_host}]: " input_host
+  PANEL_HOST="${input_host:-${default_host}}"
+
+  # Port
+  PANEL_PORT="${PANEL_PORT:-$(random_port)}"
+  echo ""
+  echo "Panel port (must be free)."
+  read -rp "Port [${PANEL_PORT}]: " input_port
+  PANEL_PORT="${input_port:-${PANEL_PORT}}"
+
+  # Base path
+  local default_path
+  default_path="$(random_base_path)"
+  echo ""
+  echo "Web panel path prefix for obscurity (starts with /)."
+  read -rp "Path [${default_path}]: " input_path
+  PANEL_PATH="${input_path:-${default_path}}"
+  # Ensure leading /
+  [[ "${PANEL_PATH}" != /* ]] && PANEL_PATH="/${PANEL_PATH}"
+
+  # Admin username
+  local default_user
+  default_user="$(random_username)"
+  echo ""
+  echo "Admin username."
+  read -rp "Username [${default_user}]: " input_user
+  ADMIN_USER="${input_user:-${default_user}}"
+
+  # Admin password
+  local default_pass
+  default_pass="$(openssl rand -base64 18)"
+  echo ""
+  echo "Admin password (leave empty for auto-generated)."
+  read -rp "Password [auto]: " input_pass
+  ADMIN_PASSWORD="${input_pass:-${default_pass}}"
+
+  echo ""
+  echo "--------------------------------------------"
+  echo "Summary:"
+  echo "  Domain/IP:  ${PANEL_HOST}"
+  echo "  Port:       ${PANEL_PORT}"
+  echo "  Path:       ${PANEL_PATH}"
+  echo "  Username:   ${ADMIN_USER}"
+  echo "  Password:   ${ADMIN_PASSWORD}"
+  echo "--------------------------------------------"
+  echo ""
+  read -rp "Proceed with installation? [Y/n] " confirm
+  if [[ "${confirm,,}" == "n" || "${confirm,,}" == "no" ]]; then
+    echo "Installation cancelled."
+    exit 0
+  fi
+}
+
 write_prod_config() {
-  local jwt_secret clash_secret admin_password
+  local jwt_secret clash_secret
   jwt_secret="$(openssl rand -hex 32)"
   clash_secret="$(openssl rand -hex 24)"
-  admin_password="$(openssl rand -base64 18)"
 
   cat >"${CONFIG_DIR}/prod.yaml" <<YAML
 env: "production"
@@ -115,7 +218,8 @@ database:
   foreign_keys: true
 
 http:
-  address: "127.0.0.1:8080"
+  address: "::${PANEL_PORT}"
+  base_path: "${PANEL_PATH}"
   read_timeout: "10s"
   write_timeout: "15s"
   idle_timeout: "120s"
@@ -131,8 +235,8 @@ frontend:
 auth:
   jwt_secret: "${jwt_secret}"
   jwt_expiry: "24h"
-  admin_user: "admin"
-  admin_password: "${admin_password}"
+  admin_user: "${ADMIN_USER}"
+  admin_password: "${ADMIN_PASSWORD}"
   argon2_memory_kb: 65536
   argon2_iterations: 3
   argon2_parallelism: 2
@@ -157,13 +261,14 @@ stats:
   v2ray_api_address: "127.0.0.1:8088"
 
 tls:
-  mode: "file"
-  cert_file: "${CONFIG_DIR}/tls/cert.pem"
-  key_file: "${CONFIG_DIR}/tls/key.pem"
+  mode: "self_signed"
+  cert_file: ""
+  key_file: ""
   acme_email: ""
   acme_domains: []
   acme_cache_dir: "${DATA_DIR}/acme"
-  self_signed_hosts: []
+  self_signed_hosts:
+    - "${PANEL_HOST}"
   self_signed_dir: "${DATA_DIR}/tls"
 
 metrics:
@@ -181,20 +286,20 @@ logging:
   max_file_backups: 3
 
 subscription:
-  public_url: ""
+  public_url: "https://${PANEL_HOST}:${PANEL_PORT}"
   token_ttl: "720h"
 YAML
 
   chmod 0640 "${CONFIG_DIR}/prod.yaml"
   chown "${APP_USER}:${APP_USER}" "${CONFIG_DIR}/prod.yaml"
 
-  echo "${admin_password}" >"${CONFIG_DIR}/initial-admin-password"
+  echo "${ADMIN_PASSWORD}" >"${CONFIG_DIR}/initial-admin-password"
   chmod 0600 "${CONFIG_DIR}/initial-admin-password"
   chown "${APP_USER}:${APP_USER}" "${CONFIG_DIR}/initial-admin-password"
 }
 
 install_systemd() {
-  cat >/etc/systemd/system/shilka.service <<'UNIT'
+  cat >/etc/systemd/system/shilka.service <<UNIT
 [Unit]
 Description=Shilka web panel
 After=network-online.target
@@ -202,17 +307,17 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=shilka
-Group=shilka
-WorkingDirectory=/opt/shilka
-Environment=SHILKA_CONFIG_PATH=/etc/shilka/prod.yaml
-ExecStart=/opt/shilka/bin/shilka
+User=${APP_USER}
+Group=${APP_USER}
+WorkingDirectory=${APP_HOME}
+Environment=SHILKA_CONFIG_PATH=${CONFIG_DIR}/prod.yaml
+ExecStart=${APP_HOME}/bin/shilka
 Restart=on-failure
 RestartSec=3
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=full
-ReadWritePaths=/etc/shilka /var/lib/shilka /var/log/shilka
+ReadWritePaths=${CONFIG_DIR} ${DATA_DIR} ${LOG_DIR}
 StandardOutput=journal
 StandardError=journal
 
@@ -246,7 +351,7 @@ reset_admin_password() {
   chmod 0600 "${CONFIG_DIR}/initial-admin-password"
   rm -f /var/lib/shilka/panel.db /var/lib/shilka/panel.db-wal /var/lib/shilka/panel.db-shm
   systemctl start shilka.service
-  echo "Password reset. Log in with username 'admin' and the new password."
+  echo "Password reset. Log in with your admin username and the new password."
 }
 
 change_panel_port() {
@@ -256,7 +361,7 @@ change_panel_port() {
     echo "Invalid port"
     return 1
   fi
-  sed -i.bak "s/^  address: \"127.0.0.1:.*$/  address: \"127.0.0.1:${port}\"/" "${CONFIG_DIR}/prod.yaml"
+  sed -i.bak "s/^  address: .*\$/  address: \"::${port}\"/" "${CONFIG_DIR}/prod.yaml"
   systemctl restart shilka.service
 }
 
@@ -287,13 +392,14 @@ main() {
 main "$@"
 SCRIPT
 
-chmod 0755 /usr/local/bin/shilka
+  chmod 0755 /usr/local/bin/shilka
   systemctl daemon-reload
   systemctl enable --now shilka.service
 }
 
 main() {
   require_root
+  gather_input
   create_user_and_dirs
   install_sing_box
   install_panel_binary
@@ -302,9 +408,9 @@ main() {
 
   echo ""
   echo "===== Shilka installed ====="
-  echo "Panel: http://<server-ip>:8080 (behind nginx/caddy for HTTPS)"
-  echo "Admin: admin"
-  echo "Password: $(cat "${CONFIG_DIR}/initial-admin-password")"
+  echo "URL:      https://${PANEL_HOST}:${PANEL_PORT}${PANEL_PATH}"
+  echo "Username: ${ADMIN_USER}"
+  echo "Password: ${ADMIN_PASSWORD}"
   echo ""
   echo "Manage: shilka"
   echo "Logs:   journalctl -u shilka.service -f"

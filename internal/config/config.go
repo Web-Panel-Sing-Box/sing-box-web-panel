@@ -57,6 +57,7 @@ type DBConfig struct {
 
 type HTTPConfig struct {
 	Address         string        `yaml:"address" env:"SHILKA_HTTP_ADDRESS" env-default:"127.0.0.1:8080"`
+	BasePath        string        `yaml:"base_path" env:"SHILKA_HTTP_BASE_PATH" env-default:""`
 	ReadTimeout     time.Duration `yaml:"read_timeout" env:"SHILKA_HTTP_READ_TIMEOUT" env-default:"5s"`
 	WriteTimeout    time.Duration `yaml:"write_timeout" env:"SHILKA_HTTP_WRITE_TIMEOUT" env-default:"10s"`
 	IdleTimeout     time.Duration `yaml:"idle_timeout" env:"SHILKA_HTTP_IDLE_TIMEOUT" env-default:"120s"`
