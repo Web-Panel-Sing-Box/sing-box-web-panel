@@ -146,8 +146,14 @@ Logger → RateLimit (API) → RateLimit (Login) → CORS → Auth → Mux
 - Long tables: Card with `max-h-[calc(100dvh-NNNpx)]`, inner `overflow-auto`, sticky header.
 - Modals via `components/ui/modal.tsx`, flat (no header/footer dividers).
 - Framer Motion in `<LazyMotion features={domMax} strict>`. Import `{ m }` only.
-- Routes lazy-loaded via `React.lazy` + `<Suspense>`.
+- Routes lazy-loaded via `React.lazy` + `<Suspense>`. Router is `HashRouter`.
 - Reusable hooks in `frontend/src/hooks/`.
+- **Accessibility.** Tree wrapped in `<MotionConfig reducedMotion="user">`; honor `prefers-reduced-motion` (also via the CSS fallback in `index.css`). Keyboard `:focus-visible` ring is global in `index.css` — do not strip outlines. Animate only `transform`/`opacity`.
+- **Copy.** No em-dashes (`—`/`–`) anywhere in user-visible strings — use a hyphen `-`. Titles only, no filler subtitles. Every visible string goes through `lib/i18n.tsx` in both `en` and `ru`. No stale "mock"/"demo" wording (the backend is wired).
+- **Mutations surface errors.** Components call store actions (which call the API); always `await` them and show failures via a toast. Extract the backend message from `ApiError.body.error`, falling back to an i18n key. Never fire-and-forget a mutation (it silently lies on failure).
+- **Core lifecycle is real.** Start/stop go through store `startCore`/`stopCore` → `POST /api/core/start|stop`; the status pill reflects the backend poll, never an optimistic local flip. sing-box must be installed (PATH or `sing_box.binary_path`) for the core to actually run.
+- **Inbound TLS rules.** TLS is constrained per protocol in `useInboundForm` (`tlsForProtocol`/`buildPayload`): naive and hysteria2 require TLS, Reality is VLESS-only. Keep the form in sync with `internal/services/inbound/service.go` validation.
+- **Casing.** Table column headers are sentence case. ALL-CAPS is reserved for technical identifiers only (protocol/transport chips, log levels).
 
 ## Auth Implementation
 
