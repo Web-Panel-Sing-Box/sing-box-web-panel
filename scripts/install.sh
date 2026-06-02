@@ -218,7 +218,7 @@ database:
   foreign_keys: true
 
 http:
-  address: "::${PANEL_PORT}"
+  address: ":${PANEL_PORT}"
   base_path: "${PANEL_PATH}"
   read_timeout: "10s"
   write_timeout: "15s"
@@ -361,7 +361,7 @@ change_panel_port() {
     echo "Invalid port"
     return 1
   fi
-  sed -i.bak "s/^  address: .*\$/  address: \"::${port}\"/" "${CONFIG_DIR}/prod.yaml"
+  sed -i.bak "s/^  address: .*\$/  address: \":${port}\"/" "${CONFIG_DIR}/prod.yaml"
   systemctl restart shilka.service
 }
 
