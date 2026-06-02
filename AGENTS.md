@@ -82,6 +82,7 @@ scripts/install.sh                       # one-command VPS installer
 - Keep SQLite writes batched for traffic updates. Avoid per-poll disk writes from background workers.
 - Frontend style is true black, minimal, mono, and kinetic. Do not copy proprietary assets.
 - All `.context/` and `AGENTS.md` content must be written in English.
+- After completing any task, always record the work as a detailed English Markdown summary in `.context/`, named `<area>-<topic>-<YYYY-MM-DD>.md` (e.g. `frontend-per-protocol-inbounds-2026-06-01.md`). Cover what changed, why, the files touched, and how it was verified.
 - Tests live in `tests/` mirroring the `internal/` structure. Use external test packages (`package foo_test`).
 
 ## API Endpoints
