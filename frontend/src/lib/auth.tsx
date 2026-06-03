@@ -13,8 +13,8 @@ const SESSION_KEY = "shilka:auth";
 type AuthContextValue = {
   isAuthenticated: boolean;
   twoFactorEnabled: boolean;
-  login: (username: string, password: string) => Promise<{ ok: boolean; needsTwoFactor: boolean; tempToken?: string }>;
-  verifyTwoFactor: (tempToken: string, code: string) => Promise<boolean>;
+  login: (username: string, password: string) => Promise<{ ok: boolean; needsTwoFactor: boolean; tempToken?: string; rateLimited?: boolean }>;
+  verifyTwoFactor: (tempToken: string, code: string) => Promise<{ ok: boolean; rateLimited?: boolean }>;
   logout: () => void;
   setTwoFactorEnabled: (on: boolean) => void;
 };
@@ -49,6 +49,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return { ok: true, needsTwoFactor: true, tempToken: body.temp_token };
           }
         }
+        // Brute-force limiter: distinguish from bad credentials.
+        if (err instanceof api.ApiError && err.status === 429) {
+          return { ok: false, needsTwoFactor: false, rateLimited: true };
+        }
         return { ok: false, needsTwoFactor: false };
       }
     },
@@ -62,9 +66,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         api.setToken(res.token);
         window.localStorage.setItem(SESSION_KEY, "1");
         setIsAuthenticated(true);
-        return true;
-      } catch {
-        return false;
+        return { ok: true };
+      } catch (err) {
+        // Brute-force limiter: distinguish from a wrong code.
+        if (err instanceof api.ApiError && err.status === 429) {
+          return { ok: false, rateLimited: true };
+        }
+        return { ok: false };
       }
     },
     []

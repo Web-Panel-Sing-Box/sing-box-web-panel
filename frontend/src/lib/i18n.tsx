@@ -32,6 +32,7 @@ const en = {
   "login.code": "Authentication code",
   "login.verify": "Verify",
   "login.invalidCode": "Invalid authentication code",
+  "login.tooManyRequests": "Too many attempts. Wait a minute and try again.",
 
   "common.save": "Save",
   "common.cancel": "Cancel",
@@ -264,6 +265,7 @@ const ru: Record<keyof typeof en, string> = {
   "login.code": "Код подтверждения",
   "login.verify": "Подтвердить",
   "login.invalidCode": "Неверный код подтверждения",
+  "login.tooManyRequests": "Слишком много попыток. Подождите минуту и повторите.",
 
   "common.save": "Сохранить",
   "common.cancel": "Отмена",
