@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
-import { disableTOTP, getSettings, saveSettings } from "@/api";
+import { getSettings, saveSettings } from "@/api";
+import { TwoFactorDisableModal } from "@/components/auth/two-factor-disable-modal";
 import { TwoFactorSetupModal } from "@/components/auth/two-factor-setup-modal";
 import { ScheduledTaskList } from "@/components/settings/scheduled-task-list";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ export function SettingsPage() {
   const { language, setLanguage, t } = useI18n();
   const { twoFactorEnabled, setTwoFactorEnabled } = useAuth();
   const twoFactorSetup = useDisclosure();
+  const twoFactorDisable = useDisclosure();
   const [panelName, setPanelName] = useState("Shilka");
   const [binaryPath, setBinaryPath] = useState("/usr/local/bin/sing-box");
   const [logLevel, setLogLevel] = useState("info");
@@ -68,16 +70,9 @@ export function SettingsPage() {
   const handleTwoFactorToggle = (next: boolean) => {
     if (next) {
       twoFactorSetup.open();
-      return;
+    } else {
+      twoFactorDisable.open();
     }
-    const otpCode = window.prompt(t("settings.twoFactorEnterCode"));
-    if (!otpCode) return;
-    disableTOTP({ code: otpCode })
-      .then(() => {
-        setTwoFactorEnabled(false);
-        push(t("settings.twoFactorDisabled"), "success");
-      })
-      .catch(() => push(t("settings.twoFactorInvalidCode"), "error"));
   };
 
   return (
@@ -174,6 +169,12 @@ export function SettingsPage() {
         open={twoFactorSetup.isOpen}
         onClose={twoFactorSetup.close}
         onConfirmed={() => setTwoFactorEnabled(true)}
+      />
+
+      <TwoFactorDisableModal
+        open={twoFactorDisable.isOpen}
+        onClose={twoFactorDisable.close}
+        onDisabled={() => setTwoFactorEnabled(false)}
       />
     </div>
   );

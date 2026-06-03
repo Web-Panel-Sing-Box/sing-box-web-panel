@@ -56,8 +56,11 @@ export type MessageResponse = {
 
 // ------- API functions -------
 
-export function login(body: LoginRequest): Promise<LoginResponse | LoginTOTPResponse> {
-  return apiPost<LoginResponse | LoginTOTPResponse>("/auth/login", body);
+// Returns a token on success. When 2FA is enabled the backend responds with
+// HTTP 403 + { requires_totp, temp_token }, surfaced as an ApiError (see client.ts)
+// and handled by the auth context.
+export function login(body: LoginRequest): Promise<LoginResponse> {
+  return apiPost<LoginResponse>("/auth/login", body);
 }
 
 export function loginTOTP(body: LoginTOTPRequest): Promise<LoginResponse> {
