@@ -108,12 +108,10 @@ func runServer() {
 
 	mux := http.NewServeMux()
 
-	if cfg.Env == "dev" || cfg.Env == "local" {
-		docs.SwaggerInfo.BasePath = "/api"
-		mux.Handle("GET /swagger/", httpSwagger.Handler(
-			httpSwagger.URL("/swagger/doc.json"),
-		))
-	}
+	docs.SwaggerInfo.BasePath = "/api"
+	mux.Handle("GET /swagger/", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"),
+	))
 
 	authHandler := handler.NewAuthHandler(authSvc, log)
 	authHandler.Register(mux)

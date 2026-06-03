@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -54,6 +55,11 @@ func (h *spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if h.isAPIPath(r.URL.Path) {
+		http.NotFound(w, r)
+		return
+	}
+
 	spaFile, spaErr := h.root.Open("index.html")
 	if spaErr != nil {
 		if r.URL.Path == "/" {
@@ -70,6 +76,12 @@ func (h *spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	http.ServeContent(w, r, "index.html", stat.ModTime(), spaFile)
+}
+
+func (h *spaHandler) isAPIPath(path string) bool {
+	return strings.HasPrefix(path, "/api/") ||
+		strings.HasPrefix(path, "/swagger/") ||
+		strings.HasPrefix(path, "/sub/")
 }
 
 var mimeTypes = map[string]string{
