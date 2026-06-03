@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { disableTOTP, getSettings, saveSettings } from "@/api";
 import { TwoFactorSetupModal } from "@/components/auth/two-factor-setup-modal";
+import { ScheduledTaskList } from "@/components/settings/scheduled-task-list";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
@@ -163,6 +164,10 @@ export function SettingsPage() {
         <Row label={t("settings.tokenTtl")} hint={t("settings.tokenTtlHint")}>
           <Input value={ttl} onChange={(e) => setTtl(e.target.value)} mono />
         </Row>
+      </Section>
+
+      <Section title={t("settings.tasks.title")}>
+        <ScheduledTaskList />
       </Section>
 
       <TwoFactorSetupModal
