@@ -172,6 +172,8 @@ const en = {
   "clients.copyLink": "Copy link",
   "clients.copied": "Copied!",
 
+  "nodes.skipTlsVerify": "Skip TLS certificate verification",
+
   "settings.title": "Settings",
   "settings.description": "Panel configuration",
   "settings.saved": "Settings saved",
@@ -405,6 +407,8 @@ const ru: Record<keyof typeof en, string> = {
   "clients.getQr": "Получить QR",
   "clients.copyLink": "Скопировать ссылку",
   "clients.copied": "Скопировано!",
+
+  "nodes.skipTlsVerify": "Пропустить проверку TLS сертификата",
 
   "settings.title": "Настройки",
   "settings.description": "Конфигурация панели",

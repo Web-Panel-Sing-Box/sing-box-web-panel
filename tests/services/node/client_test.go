@@ -69,3 +69,61 @@ func TestHTTPClientAllowsPrivateAddressWhenExplicit(t *testing.T) {
 		t.Fatalf("unexpected status: %+v", status)
 	}
 }
+
+func TestHTTPClientRequiresTrustedTLSByDefault(t *testing.T) {
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(node.RemoteStatus{PanelVersion: "shilka-test"})
+	}))
+	defer srv.Close()
+
+	n := nodeFromServerURL(t, srv.URL)
+	client := node.NewHTTPClient()
+	if _, _, err := client.Status(context.Background(), n); err == nil {
+		t.Fatal("expected TLS verification error")
+	}
+}
+
+func TestHTTPClientSkipsTLSVerificationWhenExplicit(t *testing.T) {
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "Bearer secret" {
+			t.Fatalf("missing bearer token")
+		}
+		_ = json.NewEncoder(w).Encode(node.RemoteStatus{PanelVersion: "shilka-test"})
+	}))
+	defer srv.Close()
+
+	n := nodeFromServerURL(t, srv.URL)
+	n.SkipTLSVerify = true
+
+	client := node.NewHTTPClient()
+	status, _, err := client.Status(context.Background(), n)
+	if err != nil {
+		t.Fatalf("status: %v", err)
+	}
+	if status.PanelVersion != "shilka-test" {
+		t.Fatalf("unexpected status: %+v", status)
+	}
+}
+
+func nodeFromServerURL(t *testing.T, rawURL string) *domain.Node {
+	t.Helper()
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	host, portRaw, err := net.SplitHostPort(u.Host)
+	if err != nil {
+		t.Fatal(err)
+	}
+	port, err := strconv.Atoi(portRaw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return &domain.Node{
+		Scheme:              u.Scheme,
+		Address:             host,
+		Port:                port,
+		APITokenSecret:      "secret",
+		AllowPrivateAddress: true,
+	}
+}

@@ -41,7 +41,14 @@ export type ClientSetStatusRequest = {
 };
 
 export type ClientLinksDTO = {
+  link: string;
   shareLink: string;
+  subscription: string;
+};
+
+type ClientLinksResponse = {
+  link?: string;
+  shareLink?: string;
   subscription: string;
 };
 
@@ -80,6 +87,12 @@ export function setClientStatus(id: string, body: ClientSetStatusRequest): Promi
   return apiPost<ClientDTO>(`/clients/${id}/status`, body);
 }
 
-export function getClientLinks(id: string): Promise<ClientLinksDTO> {
-  return apiGet<ClientLinksDTO>(`/clients/${id}/links`);
+export async function getClientLinks(id: string): Promise<ClientLinksDTO> {
+  const links = await apiGet<ClientLinksResponse>(`/clients/${id}/links`);
+  const shareLink = links.shareLink ?? links.link ?? "";
+  return {
+    link: links.link ?? shareLink,
+    shareLink,
+    subscription: links.subscription,
+  };
 }

@@ -13,6 +13,7 @@ import (
 	svcnode "sing-box-web-panel/internal/services/node"
 	"sing-box-web-panel/internal/services/singbox"
 	"sing-box-web-panel/internal/services/sysstat"
+	"sing-box-web-panel/internal/version"
 )
 
 type NodeHandler struct {
@@ -64,6 +65,7 @@ type nodeDTO struct {
 	BasePath            string  `json:"basePath"`
 	Enabled             bool    `json:"enabled"`
 	AllowPrivateAddress bool    `json:"allowPrivateAddress"`
+	SkipTLSVerify       bool    `json:"skipTlsVerify"`
 	Status              string  `json:"status"`
 	LastHeartbeatAt     string  `json:"lastHeartbeatAt,omitempty"`
 	LatencyMS           int64   `json:"latencyMs"`
@@ -88,6 +90,7 @@ type nodeRequest struct {
 	APITokenSecret      string `json:"apiToken"`
 	Enabled             *bool  `json:"enabled"`
 	AllowPrivateAddress bool   `json:"allowPrivateAddress"`
+	SkipTLSVerify       bool   `json:"skipTlsVerify"`
 }
 
 func toNodeDTO(n *domain.Node) nodeDTO {
@@ -101,6 +104,7 @@ func toNodeDTO(n *domain.Node) nodeDTO {
 		BasePath:            n.BasePath,
 		Enabled:             n.Enabled,
 		AllowPrivateAddress: n.AllowPrivateAddress,
+		SkipTLSVerify:       n.SkipTLSVerify,
 		Status:              string(n.Status),
 		LastHeartbeatAt:     formatTimePtr(n.LastHeartbeatAt),
 		LatencyMS:           n.LatencyMS,
@@ -131,6 +135,7 @@ func (req nodeRequest) toInput(defaultEnabled bool) svcnode.Input {
 		APITokenSecret:      req.APITokenSecret,
 		Enabled:             enabled,
 		AllowPrivateAddress: req.AllowPrivateAddress,
+		SkipTLSVerify:       req.SkipTLSVerify,
 	}
 }
 
@@ -537,7 +542,7 @@ func (h *NodeHandler) localStatus(ctx context.Context) svcnode.RemoteStatus {
 			}
 		}
 	}
-	out.PanelVersion = "shilka"
+	out.PanelVersion = version.Panel()
 	return out
 }
 

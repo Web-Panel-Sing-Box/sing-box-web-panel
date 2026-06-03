@@ -22,6 +22,7 @@ type Node struct {
 	APITokenSecret      string
 	Enabled             bool
 	AllowPrivateAddress bool
+	SkipTLSVerify       bool
 	Status              NodeStatus
 	LastHeartbeatAt     *time.Time
 	LatencyMS           int64
