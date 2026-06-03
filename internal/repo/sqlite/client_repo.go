@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"sing-box-web-panel/internal/domain"
 	"sing-box-web-panel/internal/repo"
@@ -17,7 +18,7 @@ type ClientRepo struct {
 func NewClientRepo(db *sql.DB) *ClientRepo { return &ClientRepo{db: db} }
 
 const clientColumns = `id, inbound_id, name, uuid, password, used_up, used_down, total_quota,
-	expiry, status, sub_token, start_after_first_use, enabled, first_used_at, node_id, remote_id,
+	expiry, status, sub_token, start_after_first_use, enabled, first_used_at, last_used_at, node_id, remote_id,
 	last_synced_at, created_at, updated_at`
 
 func (r *ClientRepo) Create(ctx context.Context, c *domain.Client) error {
@@ -173,6 +174,15 @@ func (r *ClientRepo) SetFirstUsed(ctx context.Context, id int64, at any) error {
 	return nil
 }
 
+func (r *ClientRepo) SetLastUsedAt(ctx context.Context, id int64, at time.Time) error {
+	_, err := r.db.ExecContext(ctx,
+		`UPDATE clients SET last_used_at = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, at, id)
+	if err != nil {
+		return fmt.Errorf("set client last used: %w", err)
+	}
+	return nil
+}
+
 // AddTraffic applies a batch of per-client counter increments in one transaction.
 func (r *ClientRepo) AddTraffic(ctx context.Context, deltas []domain.TrafficDelta) error {
 	if len(deltas) == 0 {
@@ -184,6 +194,7 @@ func (r *ClientRepo) AddTraffic(ctx context.Context, deltas []domain.TrafficDelt
 	}
 	stmt, err := tx.PrepareContext(ctx,
 		`UPDATE clients SET used_up = used_up + ?, used_down = used_down + ?,
+		                    last_used_at = CURRENT_TIMESTAMP,
 		                    updated_at = CURRENT_TIMESTAMP
 		 WHERE id = ?`)
 	if err != nil {
@@ -250,7 +261,7 @@ func scanClient(s rowScanner) (*domain.Client, error) {
 	err := s.Scan(
 		&c.ID, &c.InboundID, &c.Name, &c.UUID, &c.Password, &c.UsedUp, &c.UsedDown, &c.TotalQuota,
 		&c.Expiry, &c.Status, &c.SubToken, &c.StartAfterFirstUse, &c.Enabled, &c.FirstUsedAt,
-		&nodeID, &c.RemoteID, &lastSyncedAt, &c.CreatedAt, &c.UpdatedAt,
+		&c.LastUsedAt, &nodeID, &c.RemoteID, &lastSyncedAt, &c.CreatedAt, &c.UpdatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

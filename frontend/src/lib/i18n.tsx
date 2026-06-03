@@ -170,6 +170,8 @@ const en = {
   "clients.getQr": "Get QR",
   "clients.copyLink": "Copy link",
   "clients.copied": "Copied!",
+  "clients.online": "Online",
+  "clients.offline": "Offline",
 
   "settings.title": "Settings",
   "settings.description": "Panel configuration",
@@ -394,6 +396,8 @@ const ru: Record<keyof typeof en, string> = {
   "clients.getQr": "Получить QR",
   "clients.copyLink": "Скопировать ссылку",
   "clients.copied": "Скопировано!",
+  "clients.online": "Онлайн",
+  "clients.offline": "Не в сети",
 
   "settings.title": "Настройки",
   "settings.description": "Конфигурация панели",

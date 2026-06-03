@@ -93,7 +93,10 @@ const Row = memo(function Row({
       className={cn("grid w-full items-center px-5 py-3 text-left transition-colors duration-200", GRID, hover && "bg-elevated")}
     >
       <div className="min-w-0">
-        <div className="truncate text-sm text-ink-primary">{client.name}</div>
+        <div className="flex items-center gap-2">
+          <StatusDot state={client.online ? "online" : "neutral"} size={6} />
+          <div className="truncate text-sm text-ink-primary">{client.name}</div>
+        </div>
         <div className="truncate font-mono text-[11px] text-ink-tertiary">
           {client.nodeId ? `node:${client.nodeId} · ` : "local · "}
           {truncateMiddle(client.uuid, 8, 6)}
