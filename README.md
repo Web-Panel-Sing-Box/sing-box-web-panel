@@ -12,7 +12,7 @@ Shilka is a local-first web panel for managing a local `sing-box` process. Singl
 ## Quick Start (VPS)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Web-Panel-Sing-Box/sing-box-web-panel/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Web-Panel-Sing-Box/shilka-web-panel/main/scripts/install.sh | bash
 ```
 
 ## Local Development
@@ -20,7 +20,7 @@ curl -fsSL https://raw.githubusercontent.com/Web-Panel-Sing-Box/sing-box-web-pan
 ### Backend
 
 ```bash
-go run ./cmd/main.go
+go run ./cmd
 # API at http://127.0.0.1:8080
 # Swagger at http://127.0.0.1:8080/swagger/
 ```

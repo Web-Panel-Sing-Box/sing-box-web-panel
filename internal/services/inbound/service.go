@@ -113,8 +113,15 @@ func applyProtocolSettings(ib *domain.Inbound, in Input) {
 	ib.Settings.Hy2Network = in.Hy2Network
 	ib.Settings.Hy2BrutalDebug = in.Hy2BrutalDebug
 	ib.Settings.Hy2BBRProfile = in.Hy2BBRProfile
-	ib.Settings.NaiveNetwork = in.NaiveNetwork
+	ib.Settings.NaiveNetwork = normalizeNaiveNetwork(in.NaiveNetwork)
 	ib.Settings.NaiveQuicCongestionCtrl = in.NaiveQuicCongestionCtrl
+}
+
+func normalizeNaiveNetwork(network string) string {
+	if network == "both" {
+		return ""
+	}
+	return network
 }
 
 func (s *Service) List(ctx context.Context) ([]View, error) {
@@ -366,7 +373,7 @@ func validate(in Input) error {
 	// Naive: network must be one of the allowed values.
 	if in.Protocol == domain.ProtocolNaive {
 		switch in.NaiveNetwork {
-		case "", "tcp", "udp":
+		case "", "tcp", "udp", "both":
 		default:
 			return fmt.Errorf("%w: naive network must be tcp, udp, or empty", ErrValidation)
 		}

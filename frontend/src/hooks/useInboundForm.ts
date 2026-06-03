@@ -9,6 +9,7 @@ import {
   DEFAULT_QUIC_CC,
   DEFAULT_TRANSMISSION,
 } from "@/lib/store";
+import { networkFromApi, networkToApi } from "@/api/types";
 import type {
   Inbound,
   InboundCreateRequest,
@@ -101,7 +102,7 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
     setTls(tlsForProtocol(nextProtocol, inbound?.tls ?? "none"));
     setSni(inbound?.sni ?? "www.cloudflare.com");
     setDest(inbound?.dest ?? "www.cloudflare.com:443");
-    setNetwork((s?.naiveNetwork as Network) ?? DEFAULT_NETWORK);
+    setNetwork(networkFromApi(s?.naiveNetwork));
     setQuicCc((s?.naiveQuicCongestionCtrl as QuicCc) ?? DEFAULT_QUIC_CC);
     setObfsType(s?.hy2ObfsPassword ? "salamander" : "none");
     setObfsPassword(s?.hy2ObfsPassword ?? randomHex(12));
@@ -166,7 +167,7 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
         ...base,
         tls: "tls",
         sni,
-        naiveNetwork: network,
+        naiveNetwork: networkToApi(network),
         naiveQuicCongestionCtrl: quicCc,
       };
     }
