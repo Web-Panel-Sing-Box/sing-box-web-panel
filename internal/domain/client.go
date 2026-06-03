@@ -30,6 +30,7 @@ type Client struct {
 	StartAfterFirstUse bool
 	Enabled            bool
 	FirstUsedAt        *time.Time
+	LastUsedAt         *time.Time
 	LastSyncedAt       *time.Time
 	CreatedAt          time.Time
 	UpdatedAt          time.Time
