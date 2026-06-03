@@ -18,16 +18,16 @@ type NodeRepo struct {
 func NewNodeRepo(db *sql.DB) *NodeRepo { return &NodeRepo{db: db} }
 
 const nodeColumns = `id, name, remark, scheme, address, port, base_path, api_token_secret,
-	enabled, allow_private_address, status, last_heartbeat_at, latency_ms, panel_version,
+	enabled, allow_private_address, skip_tls_verify, status, last_heartbeat_at, latency_ms, panel_version,
 	core_version, cpu_pct, ram_pct, uptime_seconds, last_error, created_at, updated_at`
 
 func (r *NodeRepo) Create(ctx context.Context, n *domain.Node) error {
 	result, err := r.db.ExecContext(ctx,
 		`INSERT INTO nodes (name, remark, scheme, address, port, base_path, api_token_secret,
-		                    enabled, allow_private_address, status)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		                    enabled, allow_private_address, skip_tls_verify, status)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		n.Name, n.Remark, n.Scheme, n.Address, n.Port, n.BasePath, n.APITokenSecret,
-		n.Enabled, n.AllowPrivateAddress, n.Status,
+		n.Enabled, n.AllowPrivateAddress, n.SkipTLSVerify, n.Status,
 	)
 	if err != nil {
 		if isUniqueViolation(err) {
@@ -77,10 +77,10 @@ func (r *NodeRepo) Update(ctx context.Context, n *domain.Node) error {
 	res, err := r.db.ExecContext(ctx,
 		`UPDATE nodes SET name = ?, remark = ?, scheme = ?, address = ?, port = ?,
 		                  base_path = ?, api_token_secret = ?, enabled = ?,
-		                  allow_private_address = ?, updated_at = CURRENT_TIMESTAMP
+		                  allow_private_address = ?, skip_tls_verify = ?, updated_at = CURRENT_TIMESTAMP
 		 WHERE id = ?`,
 		n.Name, n.Remark, n.Scheme, n.Address, n.Port, n.BasePath, n.APITokenSecret,
-		n.Enabled, n.AllowPrivateAddress, n.ID,
+		n.Enabled, n.AllowPrivateAddress, n.SkipTLSVerify, n.ID,
 	)
 	if err != nil {
 		if isUniqueViolation(err) {
@@ -139,7 +139,7 @@ func scanNode(s rowScanner) (*domain.Node, error) {
 	var heartbeat sql.NullTime
 	err := s.Scan(
 		&n.ID, &n.Name, &n.Remark, &n.Scheme, &n.Address, &n.Port, &n.BasePath, &n.APITokenSecret,
-		&n.Enabled, &n.AllowPrivateAddress, &n.Status, &heartbeat, &n.LatencyMS, &n.PanelVersion,
+		&n.Enabled, &n.AllowPrivateAddress, &n.SkipTLSVerify, &n.Status, &heartbeat, &n.LatencyMS, &n.PanelVersion,
 		&n.CoreVersion, &n.CPUPct, &n.RAMPct, &n.UptimeSeconds, &n.LastError, &n.CreatedAt, &n.UpdatedAt,
 	)
 	if err != nil {

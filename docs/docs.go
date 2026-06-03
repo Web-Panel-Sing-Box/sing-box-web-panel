@@ -1447,6 +1447,9 @@ const docTemplate = `{
                 "link": {
                     "type": "string"
                 },
+                "shareLink": {
+                    "type": "string"
+                },
                 "subscription": {
                     "type": "string"
                 }

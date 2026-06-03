@@ -2,6 +2,7 @@ package node
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -69,8 +70,9 @@ func (c *HTTPClient) get(ctx context.Context, n *domain.Node, suffix string, tim
 	client := &http.Client{
 		Timeout: timeout,
 		Transport: &http.Transport{
-			Proxy:       http.ProxyFromEnvironment,
-			DialContext: safeDialer(n.AllowPrivateAddress).DialContext,
+			Proxy:           http.ProxyFromEnvironment,
+			DialContext:     safeDialer(n.AllowPrivateAddress).DialContext,
+			TLSClientConfig: tlsClientConfig(n.SkipTLSVerify),
 		},
 	}
 	resp, err := client.Do(req)
@@ -85,6 +87,13 @@ func (c *HTTPClient) get(ctx context.Context, n *domain.Node, suffix string, tim
 		return fmt.Errorf("decode node response: %w", err)
 	}
 	return nil
+}
+
+func tlsClientConfig(skipVerify bool) *tls.Config {
+	if !skipVerify {
+		return nil
+	}
+	return &tls.Config{InsecureSkipVerify: true}
 }
 
 func baseURL(n *domain.Node) (*url.URL, error) {

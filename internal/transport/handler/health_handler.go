@@ -2,6 +2,8 @@ package handler
 
 import (
 	"net/http"
+
+	"sing-box-web-panel/internal/version"
 )
 
 type HealthHandler struct{}
@@ -26,7 +28,7 @@ func (h *HealthHandler) Register(mux *http.ServeMux) {
 func (h *HealthHandler) Root(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{
 		"name":    "Singbox Web Panel",
-		"version": "0.0.0",
+		"version": version.Panel(),
 	})
 }
 

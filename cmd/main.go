@@ -45,6 +45,7 @@ import (
 	"sing-box-web-panel/internal/services/tlsmgr"
 	"sing-box-web-panel/internal/transport/handler"
 	"sing-box-web-panel/internal/transport/middleware"
+	"sing-box-web-panel/internal/version"
 
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
@@ -109,6 +110,7 @@ func runServer() {
 	mux := http.NewServeMux()
 
 	docs.SwaggerInfo.BasePath = "/api"
+	docs.SwaggerInfo.Version = version.Panel()
 	mux.Handle("GET /swagger/", httpSwagger.Handler(
 		httpSwagger.URL("/swagger/doc.json"),
 	))

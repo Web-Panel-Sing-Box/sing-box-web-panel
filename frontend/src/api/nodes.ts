@@ -12,6 +12,7 @@ export type NodeDTO = {
   basePath: string;
   enabled: boolean;
   allowPrivateAddress: boolean;
+  skipTlsVerify: boolean;
   status: NodeStatus;
   lastHeartbeatAt?: string;
   latencyMs: number;
@@ -36,6 +37,7 @@ export type NodeRequest = {
   apiToken?: string;
   enabled?: boolean;
   allowPrivateAddress?: boolean;
+  skipTlsVerify?: boolean;
 };
 
 export type NodeSyncResult = {

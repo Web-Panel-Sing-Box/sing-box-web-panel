@@ -1,0 +1,1 @@
+ALTER TABLE nodes ADD COLUMN skip_tls_verify BOOLEAN NOT NULL DEFAULT 0;
