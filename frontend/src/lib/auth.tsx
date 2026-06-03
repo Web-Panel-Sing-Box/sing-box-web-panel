@@ -33,31 +33,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => readFlag("1"));
   const [twoFactorEnabled, setTwoFactorState] = useState(false);
 
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    api.getMe().then((me) => setTwoFactorState(me.is_totp_enabled)).catch(() => {});
-  }, [isAuthenticated]);
-
   const login = useCallback<AuthContextValue["login"]>(
     async (username, password) => {
       try {
         const res = await api.login({ username, password });
-
-        if ("requires_totp" in res && res.requires_totp) {
-          return { ok: true, needsTwoFactor: true, tempToken: res.temp_token };
-        }
-
-        if ("token" in res) {
-          api.setToken(res.token);
-          window.localStorage.setItem(SESSION_KEY, "1");
-          setIsAuthenticated(true);
-          return { ok: true, needsTwoFactor: false };
-        }
-
-        return { ok: false, needsTwoFactor: false };
-      } catch (e: unknown) {
-        if (e instanceof api.ApiError && e.status === 403) {
-          const body = e.body as { requires_totp?: boolean; temp_token?: string } | undefined;
+        api.setToken(res.token);
+        window.localStorage.setItem(SESSION_KEY, "1");
+        setIsAuthenticated(true);
+        return { ok: true, needsTwoFactor: false };
+      } catch (err) {
+        // 2FA enabled: backend returns 403 + { requires_totp, temp_token }.
+        if (err instanceof api.ApiError && err.status === 403) {
+          const body = err.body as { requires_totp?: boolean; temp_token?: string };
           if (body?.requires_totp) {
             return { ok: true, needsTwoFactor: true, tempToken: body.temp_token };
           }
@@ -93,6 +80,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const setTwoFactorEnabled = useCallback((on: boolean) => {
     setTwoFactorState(on);
   }, []);
+
+  // Hydrate 2FA state from the server so Settings reflects reality across reloads.
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setTwoFactorState(false);
+      return;
+    }
+    let cancelled = false;
+    api
+      .getMe()
+      .then((me) => {
+        if (!cancelled) setTwoFactorState(me.is_totp_enabled);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
 
   const value = useMemo<AuthContextValue>(
     () => ({ isAuthenticated, twoFactorEnabled, login, verifyTwoFactor, logout, setTwoFactorEnabled }),
