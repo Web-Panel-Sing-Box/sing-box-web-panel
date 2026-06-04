@@ -75,6 +75,8 @@ type Input struct {
 	ACMEEmail  string
 	CertPath   string
 	KeyPath    string
+	// Client-side subscription TLS verification override. nil means automatic.
+	AllowInsecure *bool
 	// VLESS multiplex.
 	MultiplexEnabled bool
 	// Hysteria2.
@@ -99,6 +101,7 @@ func applyTLSMaterial(ib *domain.Inbound, in Input) {
 	ib.Settings.ACMEEmail = in.ACMEEmail
 	ib.Settings.CertPath = in.CertPath
 	ib.Settings.KeyPath = in.KeyPath
+	ib.Settings.AllowInsecure = in.AllowInsecure
 }
 
 func applyProtocolSettings(ib *domain.Inbound, in Input) {
@@ -237,6 +240,9 @@ func (s *Service) Clone(ctx context.Context, id int64) (*domain.Inbound, error) 
 		SNI:          src.SNI,
 		Dest:         src.Dest,
 		Enabled:      false,
+		Settings: domain.InboundSettings{
+			AllowInsecure: cloneBoolPtr(src.Settings.AllowInsecure),
+		},
 	}
 	if err := s.applyGeneratedSettings(clone); err != nil {
 		return nil, err
@@ -246,6 +252,14 @@ func (s *Service) Clone(ctx context.Context, id int64) (*domain.Inbound, error) 
 	}
 	s.notify()
 	return clone, nil
+}
+
+func cloneBoolPtr(v *bool) *bool {
+	if v == nil {
+		return nil
+	}
+	cp := *v
+	return &cp
 }
 
 func (s *Service) Delete(ctx context.Context, id int64) error {

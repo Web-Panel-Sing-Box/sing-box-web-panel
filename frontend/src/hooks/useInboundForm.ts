@@ -65,6 +65,7 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
   const [tls, setTls] = useState<TlsMode>("none");
   const [dest, setDest] = useState("www.cloudflare.com:443");
   const [sni, setSni] = useState("www.cloudflare.com");
+  const [allowInsecure, setAllowInsecure] = useState(true);
   const [shortIds, setShortIds] = useState("");
   const [privateKey, setPrivateKey] = useState("");
   const [publicKey, setPublicKey] = useState("");
@@ -102,6 +103,7 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
     setTls(tlsForProtocol(nextProtocol, inbound?.tls ?? "none"));
     setSni(inbound?.sni ?? "www.cloudflare.com");
     setDest(inbound?.dest ?? "www.cloudflare.com:443");
+    setAllowInsecure(s?.allowInsecure ?? true);
     setNetwork(networkFromApi(s?.naiveNetwork));
     setQuicCc((s?.naiveQuicCongestionCtrl as QuicCc) ?? DEFAULT_QUIC_CC);
     setObfsType(s?.hy2ObfsPassword ? "salamander" : "none");
@@ -160,6 +162,7 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
         tls,
         sni: tls === "none" ? undefined : sni,
         dest: tls === "reality" ? dest : undefined,
+        allowInsecure: tls === "tls" ? allowInsecure : undefined,
       };
     }
     if (protocol === "naive") {
@@ -167,6 +170,7 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
         ...base,
         tls: "tls",
         sni,
+        allowInsecure,
         naiveNetwork: networkToApi(network),
         naiveQuicCongestionCtrl: quicCc,
       };
@@ -176,6 +180,7 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
       ...base,
       tls: "tls",
       sni,
+      allowInsecure,
       hy2UpMbps: Number(upMbps) || undefined,
       hy2DownMbps: Number(downMbps) || undefined,
       hy2ObfsPassword: obfsType === "salamander" ? obfsPassword : undefined,
@@ -188,6 +193,7 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
     tls,
     sni,
     dest,
+    allowInsecure,
     network,
     quicCc,
     obfsType,
@@ -257,6 +263,7 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
     tls, setTls,
     dest, setDest,
     sni, setSni,
+    allowInsecure, setAllowInsecure,
     shortIds, setShortIds,
     privateKey, publicKey, generateKeypair,
     network, setNetwork,
