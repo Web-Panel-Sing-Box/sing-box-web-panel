@@ -49,9 +49,9 @@ func NewSubscriptionHandler(clients ClientByToken, inbounds InboundByID, setting
 }
 
 func (h *SubscriptionHandler) Register(mux *http.ServeMux) {
-	mux.HandleFunc("GET /sub/{token}", h.Serve)               // public
-	mux.HandleFunc("GET /api/subscription/{token}", h.Serve)  // public
-	mux.HandleFunc("GET /api/clients/{id}/links", h.Links)    // authenticated
+	mux.HandleFunc("GET /sub/{token}", h.Serve)              // public
+	mux.HandleFunc("GET /api/subscription/{token}", h.Serve) // public
+	mux.HandleFunc("GET /api/clients/{id}/links", h.Links)   // authenticated
 }
 
 // Serve godoc
@@ -104,6 +104,7 @@ func (h *SubscriptionHandler) Serve(w http.ResponseWriter, r *http.Request) {
 
 type clientLinksDTO struct {
 	Link         string `json:"link"`
+	ShareLink    string `json:"shareLink"`
 	Subscription string `json:"subscription"`
 }
 
@@ -136,8 +137,10 @@ func (h *SubscriptionHandler) Links(w http.ResponseWriter, r *http.Request) {
 	if h.subBaseURL != "" {
 		sub = h.subBaseURL + "/sub/" + client.SubToken
 	}
+	link := sublink.BuildLink(inbound, client, h.resolveHost(r.Context(), r))
 	writeJSON(w, http.StatusOK, clientLinksDTO{
-		Link:         sublink.BuildLink(inbound, client, h.resolveHost(r.Context(), r)),
+		Link:         link,
+		ShareLink:    link,
 		Subscription: sub,
 	})
 }

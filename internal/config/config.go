@@ -20,6 +20,7 @@ type Config struct {
 	TLS      TLSConfig      `yaml:"tls"`
 	Metrics  MetricsConfig  `yaml:"metrics"`
 	Logging  LoggingConfig  `yaml:"logging"`
+	Updates  UpdatesConfig  `yaml:"updates"`
 	Sub      SubConfig      `yaml:"subscription"`
 }
 
@@ -117,6 +118,13 @@ type LoggingConfig struct {
 	MaxMemoryLines int    `yaml:"max_memory_lines" env:"SHILKA_LOG_MAX_MEMORY_LINES" env-default:"200"`
 	MaxFileSizeMB  int    `yaml:"max_file_size_mb" env:"SHILKA_LOG_MAX_FILE_SIZE_MB" env-default:"10"`
 	MaxFileBackups int    `yaml:"max_file_backups" env:"SHILKA_LOG_MAX_FILE_BACKUPS" env-default:"2"`
+}
+
+type UpdatesConfig struct {
+	Repo           string        `yaml:"repo" env:"SHILKA_UPDATES_REPO" env-default:"Web-Panel-Sing-Box/shilka-web-panel"`
+	ScriptPath     string        `yaml:"script_path" env:"SHILKA_UPDATES_SCRIPT_PATH" env-default:"/usr/local/sbin/shilka-update"`
+	CheckCacheTTL  time.Duration `yaml:"check_cache_ttl" env:"SHILKA_UPDATES_CHECK_CACHE_TTL" env-default:"10m"`
+	CommandTimeout time.Duration `yaml:"command_timeout" env:"SHILKA_UPDATES_COMMAND_TIMEOUT" env-default:"10m"`
 }
 
 type SubConfig struct {

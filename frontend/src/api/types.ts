@@ -6,6 +6,7 @@ export type TlsMode = "none" | "tls" | "reality";
 export type ClientStatus = "active" | "disabled" | "expired";
 export type TrafficReset = "never" | "hourly" | "daily" | "weekly" | "monthly";
 export type LogLevel = "info" | "warn" | "error";
+export type LogSource = "panel" | "core" | "frontend";
 
 // naive `network`
 export type Network = "tcp" | "udp" | "both";
@@ -58,6 +59,14 @@ export const OBFS_OPTIONS: { value: ObfsType; label: string }[] = [
 export const DEFAULT_TRANSMISSION: Transmission = "tcp";
 export const DEFAULT_NETWORK: Network = "both";
 export const DEFAULT_QUIC_CC: QuicCc = "bbr";
+
+export function networkFromApi(value?: string | null): Network {
+  return value === "tcp" || value === "udp" ? value : DEFAULT_NETWORK;
+}
+
+export function networkToApi(value: Network): "tcp" | "udp" | undefined {
+  return value === "both" ? undefined : value;
+}
 
 export const TRAFFIC_RESET_OPTIONS: { value: TrafficReset; label: string }[] = [
   { value: "never", label: "Never" },

@@ -9,6 +9,7 @@ import {
   ClientsTelemetryCard,
   InboundsActiveCard,
 } from "@/components/dashboard/connections-panel";
+import { PanelVersionCard } from "@/components/dashboard/panel-version-card";
 import { TrafficChart } from "@/components/dashboard/traffic-chart";
 
 export function DashboardPage() {
@@ -22,10 +23,11 @@ export function DashboardPage() {
         <DiskCard />
       </section>
 
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         <TrafficSplitCard />
         <InboundsActiveCard />
         <ClientsTelemetryCard />
+        <PanelVersionCard />
       </section>
 
       <TrafficChart />

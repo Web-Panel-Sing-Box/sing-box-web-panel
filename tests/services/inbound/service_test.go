@@ -37,11 +37,13 @@ func (r *fakeRepo) Update(_ context.Context, ib *domain.Inbound) error {
 	return nil
 }
 func (r *fakeRepo) SetEnabled(_ context.Context, id int64, e bool) error { return nil }
-func (r *fakeRepo) Delete(_ context.Context, id int64) error            { return nil }
+func (r *fakeRepo) Delete(_ context.Context, id int64) error             { return nil }
 
 type fakeCounter struct{}
 
-func (fakeCounter) CountByInbound(context.Context) (map[int64]int, error) { return map[int64]int{}, nil }
+func (fakeCounter) CountByInbound(context.Context) (map[int64]int, error) {
+	return map[int64]int{}, nil
+}
 
 func newService() *svcinbound.Service {
 	return svcinbound.NewService(newFakeRepo(), fakeCounter{}, nil)
@@ -86,6 +88,20 @@ func TestCreateValidation(t *testing.T) {
 				t.Errorf("want ErrValidation, got %v", err)
 			}
 		})
+	}
+}
+
+func TestCreateNaiveNormalizesBothNetwork(t *testing.T) {
+	svc := newService()
+	ib, err := svc.Create(context.Background(), svcinbound.Input{
+		Remark: "naive", Protocol: domain.ProtocolNaive, Port: 4443,
+		TLS: domain.TLSModeTLS, NaiveNetwork: "both",
+	})
+	if err != nil {
+		t.Fatalf("create naive: %v", err)
+	}
+	if ib.Settings.NaiveNetwork != "" {
+		t.Fatalf("naive both network should be stored as empty auto mode, got %q", ib.Settings.NaiveNetwork)
 	}
 }
 

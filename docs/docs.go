@@ -418,6 +418,40 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/totp/qr": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a PNG QR code for the current admin's configured TOTP secret.",
+                "produces": [
+                    "image/png"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Get TOTP QR code",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/auth/totp/setup": {
             "post": {
                 "security": [
@@ -1320,6 +1354,12 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "panel | core | frontend",
+                        "name": "source",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "substring filter",
                         "name": "q",
                         "in": "query"
@@ -1339,6 +1379,124 @@ const docTemplate = `{
                             "items": {
                                 "$ref": "#/definitions/internal_transport_handler.logEntryDTO"
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "/logs/frontend": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Stores authenticated frontend runtime errors in the in-memory log buffer.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "logs"
+                ],
+                "summary": "Record a frontend log line",
+                "parameters": [
+                    {
+                        "description": "Log line",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.frontendLogRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/panel/update": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Starts the configured update helper asynchronously. Returns 409 if an update is already running.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "panel"
+                ],
+                "summary": "Start panel update",
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.panelVersionDTO"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/panel/version": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "panel"
+                ],
+                "summary": "Panel version and update status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_transport_handler.panelVersionDTO"
                         }
                     }
                 }
@@ -1406,6 +1564,9 @@ const docTemplate = `{
         "internal_transport_handler.clientDTO": {
             "type": "object",
             "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
                 "expiry": {
                     "type": "string"
                 },
@@ -1418,10 +1579,19 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "nodeId": {
+                    "type": "string"
+                },
+                "remoteId": {
+                    "type": "string"
+                },
                 "startAfterFirstUse": {
                     "type": "boolean"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "subToken": {
                     "type": "string"
                 },
                 "subscription": {
@@ -1445,6 +1615,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "link": {
+                    "type": "string"
+                },
+                "shareLink": {
                     "type": "string"
                 },
                 "subscription": {
@@ -1541,6 +1714,23 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_transport_handler.frontendLogRequest": {
+            "type": "object",
+            "properties": {
+                "fields": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "level": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "internal_transport_handler.inboundDTO": {
             "type": "object",
             "properties": {
@@ -1559,6 +1749,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "nodeId": {
+                    "type": "string"
+                },
                 "port": {
                     "type": "integer"
                 },
@@ -1566,6 +1759,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "remark": {
+                    "type": "string"
+                },
+                "remoteId": {
                     "type": "string"
                 },
                 "settings": {
@@ -1578,6 +1774,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "transmission": {
+                    "type": "string"
+                },
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -1727,6 +1926,12 @@ const docTemplate = `{
         "internal_transport_handler.logEntryDTO": {
             "type": "object",
             "properties": {
+                "fields": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
                 "id": {
                     "type": "string"
                 },
@@ -1734,6 +1939,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "message": {
+                    "type": "string"
+                },
+                "requestId": {
+                    "type": "string"
+                },
+                "source": {
                     "type": "string"
                 },
                 "t": {
@@ -1865,6 +2076,29 @@ const docTemplate = `{
                 },
                 "uptimeSeconds": {
                     "type": "integer"
+                }
+            }
+        },
+        "internal_transport_handler.panelVersionDTO": {
+            "type": "object",
+            "properties": {
+                "checkedAt": {
+                    "type": "string"
+                },
+                "currentVersion": {
+                    "type": "string"
+                },
+                "latestVersion": {
+                    "type": "string"
+                },
+                "releaseURL": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updateAvailable": {
+                    "type": "boolean"
                 }
             }
         },

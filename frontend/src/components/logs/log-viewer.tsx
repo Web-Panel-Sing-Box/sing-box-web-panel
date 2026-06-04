@@ -16,6 +16,12 @@ const levelColor: Record<"info" | "warn" | "error", string> = {
   error: "text-danger"
 };
 
+const sourceColor: Record<"panel" | "core" | "frontend", string> = {
+  panel: "text-cyan",
+  core: "text-violet",
+  frontend: "text-amber"
+};
+
 export function LogViewer({ filter }: { filter: LogFilter }) {
   const logs = useLogs();
   const { t } = useI18n();
@@ -41,11 +47,15 @@ export function LogViewer({ filter }: { filter: LogFilter }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.05 }}
-              className="flex gap-3 py-0.5"
+              className="grid grid-cols-[64px_48px_72px_minmax(0,1fr)] gap-3 py-0.5"
             >
               <span className="shrink-0 text-ink-tertiary">{formatTime(l.t)}</span>
               <span className={cn("w-12 shrink-0 uppercase", levelColor[l.level])}>{l.level}</span>
-              <span className={cn(l.level === "error" ? "text-danger" : "text-ink-primary/85")}>{l.message}</span>
+              <span className={cn("shrink-0", sourceColor[l.source])}>{l.source}</span>
+              <span className={cn("min-w-0 break-words", l.level === "error" ? "text-danger" : "text-ink-primary/85")}>
+                {l.message}
+                <LogMeta requestId={l.requestId} fields={l.fields} />
+              </span>
             </m.div>
           ))}
         </AnimatePresence>
@@ -54,5 +64,20 @@ export function LogViewer({ filter }: { filter: LogFilter }) {
         ) : null}
       </div>
     </div>
+  );
+}
+
+function LogMeta({ requestId, fields }: { requestId?: string; fields?: Record<string, string> }) {
+  const pairs = Object.entries(fields ?? {});
+  if (!requestId && pairs.length === 0) return null;
+  return (
+    <span className="ml-2 text-ink-tertiary">
+      {requestId ? <span>request_id={requestId}</span> : null}
+      {pairs.map(([key, value]) => (
+        <span key={key} className="ml-2">
+          {key}={value}
+        </span>
+      ))}
+    </span>
   );
 }

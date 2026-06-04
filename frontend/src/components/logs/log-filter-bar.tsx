@@ -10,6 +10,7 @@ import { useI18n } from "@/lib/i18n";
 type LogFilter = {
   query: string;
   level: "all" | "info" | "warn" | "error";
+  source: "all" | "panel" | "core" | "frontend";
 };
 
 type Props = {
@@ -22,7 +23,7 @@ export function LogFilterBar({ value, onChange }: Props) {
   const { setPaused } = useStoreActions();
   const { t } = useI18n();
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_180px_auto]">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_160px_160px_auto]">
       <Input
         value={value.query}
         onChange={(e) => onChange({ ...value, query: e.target.value })}
@@ -38,6 +39,16 @@ export function LogFilterBar({ value, onChange }: Props) {
           { value: "info", label: "Info" },
           { value: "warn", label: "Warn" },
           { value: "error", label: "Error" }
+        ]}
+      />
+      <Select<LogFilter["source"]>
+        value={value.source}
+        onChange={(v) => onChange({ ...value, source: v })}
+        options={[
+          { value: "all", label: t("logs.allSources") },
+          { value: "panel", label: t("logs.sourcePanel") },
+          { value: "core", label: t("logs.sourceCore") },
+          { value: "frontend", label: t("logs.sourceFrontend") }
         ]}
       />
       <Button variant="secondary" onClick={() => setPaused(!paused)}>

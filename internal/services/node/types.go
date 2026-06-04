@@ -16,6 +16,7 @@ type Input struct {
 	APITokenSecret      string
 	Enabled             bool
 	AllowPrivateAddress bool
+	SkipTLSVerify       bool
 }
 
 type RemoteStatus struct {

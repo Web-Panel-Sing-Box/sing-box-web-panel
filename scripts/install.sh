@@ -7,9 +7,11 @@ CONFIG_DIR="${CONFIG_DIR:-/etc/shilka}"
 DATA_DIR="${DATA_DIR:-/var/lib/shilka}"
 LOG_DIR="${LOG_DIR:-/var/log/shilka}"
 TLS_CERT_DIR="${TLS_CERT_DIR:-${CONFIG_DIR}/tls}"
+UPDATE_SCRIPT_PATH="${UPDATE_SCRIPT_PATH:-/usr/local/sbin/shilka-update}"
+UPDATE_SUDOERS_PATH="${UPDATE_SUDOERS_PATH:-/etc/sudoers.d/shilka-update}"
 SING_BOX_VERSION="${SING_BOX_VERSION:-latest}"
 PANEL_VERSION="${PANEL_VERSION:-latest}"
-GITHUB_REPO="${GITHUB_REPO:-Web-Panel-Sing-Box/sing-box-web-panel}"
+GITHUB_REPO="${GITHUB_REPO:-Web-Panel-Sing-Box/shilka-web-panel}"
 
 require_root() {
   if [[ "${EUID}" -ne 0 ]]; then
@@ -53,7 +55,7 @@ random_port() {
   local port
   while true; do
     port=$(( (RANDOM % 55535) + 10000 ))
-    if ! ss -tuln | grep -q ":${port} "; then
+    if ! port_in_use "${port}"; then
       echo "${port}"
       return
     fi
@@ -85,6 +87,11 @@ is_domain() {
   is_ipv4 "${host}" && return 1
   [[ "${host}" == *.* ]] && return 0
   return 1
+}
+
+port_in_use() {
+  local port="$1"
+  ss -tuln | awk '{print $5}' | grep -Eq ":${port}$"
 }
 
 install_acme() {
@@ -207,6 +214,38 @@ install_sing_box() {
   rm -rf "${tmp}"
 }
 
+sha256_file() {
+  local file="$1"
+  if command -v sha256sum &>/dev/null; then
+    sha256sum "${file}" | awk '{print $1}'
+    return
+  fi
+  if command -v shasum &>/dev/null; then
+    shasum -a 256 "${file}" | awk '{print $1}'
+    return
+  fi
+  echo "ERROR: sha256sum or shasum is required to verify Shilka release assets" >&2
+  return 1
+}
+
+verify_panel_checksum() {
+  local tmp="$1" asset="$2" version="$3" expected actual checksums_url
+  checksums_url="https://github.com/${GITHUB_REPO}/releases/download/v${version}/checksums.txt"
+  echo "Verifying Shilka release checksum..."
+  curl -fL "${checksums_url}" -o "${tmp}/checksums.txt"
+  expected="$(awk -v asset="${asset}" '$2 == asset || $2 == "dist/" asset { print $1; found=1; exit } END { if (!found) exit 1 }' "${tmp}/checksums.txt")" || {
+    echo "ERROR: checksum for ${asset} not found in release checksums.txt"
+    exit 1
+  }
+  actual="$(sha256_file "${tmp}/${asset}")"
+  if [[ "${actual}" != "${expected}" ]]; then
+    echo "ERROR: checksum mismatch for ${asset}"
+    echo "Expected: ${expected}"
+    echo "Actual:   ${actual}"
+    exit 1
+  fi
+}
+
 install_panel_binary() {
   local arch version asset url tmp
   arch="$(detect_arch)"
@@ -231,8 +270,45 @@ install_panel_binary() {
   asset="shilka-linux-${arch}"
   url="https://github.com/${GITHUB_REPO}/releases/download/v${version}/${asset}"
   echo "Downloading Shilka ${version} (linux-${arch})..."
-  curl -fL "${url}" -o "${APP_HOME}/bin/shilka"
-  chmod 0755 "${APP_HOME}/bin/shilka"
+  tmp="$(mktemp -d)"
+  curl -fL "${url}" -o "${tmp}/${asset}"
+  verify_panel_checksum "${tmp}" "${asset}" "${version}"
+  install -m 0755 "${tmp}/${asset}" "${APP_HOME}/bin/shilka"
+  rm -rf "${tmp}"
+}
+
+ensure_sudo() {
+  if command -v sudo &>/dev/null; then
+    return 0
+  fi
+  if command -v apt-get &>/dev/null; then
+    echo "Installing sudo for the panel update helper..."
+    apt-get update -qq && apt-get install -y -qq sudo
+    return 0
+  fi
+  echo "WARNING: sudo is not installed. The web update button will stay unavailable."
+  return 1
+}
+
+install_update_helper() {
+  local update_url helper_dir
+  helper_dir="$(dirname "${UPDATE_SCRIPT_PATH}")"
+  update_url="https://raw.githubusercontent.com/${GITHUB_REPO}/main/scripts/update.sh"
+  echo "Installing Shilka update helper..."
+  install -d -m 0755 "${helper_dir}"
+  curl -fsSL "${update_url}" -o "${UPDATE_SCRIPT_PATH}"
+  chown root:root "${UPDATE_SCRIPT_PATH}"
+  chmod 0755 "${UPDATE_SCRIPT_PATH}"
+
+  if ensure_sudo; then
+    cat >"${UPDATE_SUDOERS_PATH}" <<SUDOERS
+${APP_USER} ALL=(root) NOPASSWD: ${UPDATE_SCRIPT_PATH}
+SUDOERS
+    chmod 0440 "${UPDATE_SUDOERS_PATH}"
+    if command -v visudo &>/dev/null; then
+      visudo -cf "${UPDATE_SUDOERS_PATH}" >/dev/null
+    fi
+  fi
 }
 
 gather_input() {
@@ -247,27 +323,58 @@ gather_input() {
 
   # Domain / IP
   local default_host="${public_ip:-127.0.0.1}"
-  echo "Enter the domain or IP address for the panel certificate."
+  echo "Enter the domain or IP address users will use to reach the panel."
   read -rp "Domain/IP [${default_host}]: " input_host
   PANEL_HOST="${input_host:-${default_host}}"
 
+  PANEL_EXPOSURE="${PANEL_EXPOSURE:-direct}"
+  echo ""
+  echo "Panel exposure mode:"
+  echo "  1) Direct high port - Shilka listens publicly on the selected port."
+  echo "  2) Reverse proxy - Shilka listens on 127.0.0.1 and nginx/Caddy handles public TLS."
+  read -rp "Mode [1]: " input_exposure
+  if [[ "${input_exposure}" == "2" || "${input_exposure,,}" == "reverse" || "${input_exposure,,}" == "proxy" ]]; then
+    PANEL_EXPOSURE="reverse_proxy"
+  fi
+
   # Detect whether this is a domain (eligible for Let's Encrypt) or a bare IP.
   USE_ACME=false
-  if is_domain "${PANEL_HOST}"; then
+  if [[ "${PANEL_EXPOSURE}" == "reverse_proxy" ]]; then
+    echo ""
+    echo "Reverse proxy mode selected. Panel TLS will be off and the panel will bind to 127.0.0.1."
+  elif is_domain "${PANEL_HOST}"; then
     echo ""
     echo "This looks like a domain. Let's Encrypt can provide a trusted certificate."
-    read -rp "Use Let's Encrypt? [Y/n] " use_le
-    if [[ "${use_le,,}" != "n" && "${use_le,,}" != "no" ]]; then
-      USE_ACME=true
-      CERT_TYPE="domain"
+    if port_in_use 80; then
+      echo "WARNING: port 80 is already in use. Standalone Let's Encrypt may disrupt the existing service or fail."
+      read -rp "Use Let's Encrypt anyway? [y/N] " use_le
+      if [[ "${use_le,,}" == "y" || "${use_le,,}" == "yes" ]]; then
+        USE_ACME=true
+        CERT_TYPE="domain"
+      fi
+    else
+      read -rp "Use Let's Encrypt? [Y/n] " use_le
+      if [[ "${use_le,,}" != "n" && "${use_le,,}" != "no" ]]; then
+        USE_ACME=true
+        CERT_TYPE="domain"
+      fi
     fi
   elif is_ipv4 "${PANEL_HOST}"; then
     echo ""
     echo "Let's Encrypt supports IP addresses via the shortlived profile (6-day validity, auto-renews)."
-    read -rp "Use Let's Encrypt for this IP? [Y/n] " use_le
-    if [[ "${use_le,,}" != "n" && "${use_le,,}" != "no" ]]; then
-      USE_ACME=true
-      CERT_TYPE="ip"
+    if port_in_use 80; then
+      echo "WARNING: port 80 is already in use. Standalone Let's Encrypt may disrupt the existing service or fail."
+      read -rp "Use Let's Encrypt for this IP anyway? [y/N] " use_le
+      if [[ "${use_le,,}" == "y" || "${use_le,,}" == "yes" ]]; then
+        USE_ACME=true
+        CERT_TYPE="ip"
+      fi
+    else
+      read -rp "Use Let's Encrypt for this IP? [Y/n] " use_le
+      if [[ "${use_le,,}" != "n" && "${use_le,,}" != "no" ]]; then
+        USE_ACME=true
+        CERT_TYPE="ip"
+      fi
     fi
   fi
 
@@ -288,9 +395,23 @@ gather_input() {
   # Port
   PANEL_PORT="${PANEL_PORT:-$(random_port)}"
   echo ""
-  echo "Panel port (must be free)."
+  if [[ "${PANEL_EXPOSURE}" == "reverse_proxy" ]]; then
+    echo "Panel local port for the reverse proxy target (must be free on 127.0.0.1)."
+  else
+    echo "Panel public port (must be free)."
+  fi
   read -rp "Port [${PANEL_PORT}]: " input_port
   PANEL_PORT="${input_port:-${PANEL_PORT}}"
+  if port_in_use "${PANEL_PORT}"; then
+    echo "ERROR: port ${PANEL_PORT} is already in use"
+    exit 1
+  fi
+
+  if [[ "${PANEL_EXPOSURE}" == "reverse_proxy" ]]; then
+    PANEL_LISTEN_ADDRESS="127.0.0.1:${PANEL_PORT}"
+  else
+    PANEL_LISTEN_ADDRESS=":${PANEL_PORT}"
+  fi
 
   # Base path
   local default_path
@@ -301,6 +422,12 @@ gather_input() {
   PANEL_PATH="${input_path:-${default_path}}"
   # Ensure leading /
   [[ "${PANEL_PATH}" != /* ]] && PANEL_PATH="/${PANEL_PATH}"
+
+  if [[ "${PANEL_EXPOSURE}" == "reverse_proxy" ]]; then
+    PANEL_PUBLIC_URL="https://${PANEL_HOST}${PANEL_PATH}"
+  else
+    PANEL_PUBLIC_URL="https://${PANEL_HOST}:${PANEL_PORT}${PANEL_PATH}"
+  fi
 
   # Admin username
   local default_user
@@ -322,9 +449,10 @@ gather_input() {
   echo "--------------------------------------------"
   echo "Summary:"
   echo "  Domain/IP:  ${PANEL_HOST}"
-  echo "  Port:       ${PANEL_PORT}"
+  echo "  Listen:     ${PANEL_LISTEN_ADDRESS}"
+  echo "  Public URL: ${PANEL_PUBLIC_URL}"
   echo "  Path:       ${PANEL_PATH}"
-  echo "  TLS:        $(if [[ "${USE_ACME}" == "true" ]]; then echo "Let's Encrypt (acme.sh)"; else echo "self-signed"; fi)"
+  echo "  TLS:        $(if [[ "${PANEL_EXPOSURE}" == "reverse_proxy" ]]; then echo "off (reverse proxy)"; elif [[ "${USE_ACME}" == "true" ]]; then echo "Let's Encrypt (acme.sh)"; else echo "self-signed"; fi)"
   echo "  Username:   ${ADMIN_USER}"
   echo "  Password:   ${ADMIN_PASSWORD}"
   echo "--------------------------------------------"
@@ -341,7 +469,12 @@ write_prod_config() {
   jwt_secret="$(openssl rand -hex 32)"
   clash_secret="$(openssl rand -hex 24)"
 
-  if [[ "${USE_ACME}" == "true" ]]; then
+  if [[ "${PANEL_EXPOSURE}" == "reverse_proxy" ]]; then
+    tls_mode="off"
+    tls_cert_file=""
+    tls_key_file=""
+    self_signed_hosts=""
+  elif [[ "${USE_ACME}" == "true" ]]; then
     tls_mode="file"
     tls_cert_file="${TLS_CERT_DIR}/cert.pem"
     tls_key_file="${TLS_CERT_DIR}/key.pem"
@@ -372,7 +505,7 @@ database:
   foreign_keys: true
 
 http:
-  address: ":${PANEL_PORT}"
+  address: "${PANEL_LISTEN_ADDRESS}"
   base_path: "${PANEL_PATH}"
   read_timeout: "10s"
   write_timeout: "15s"
@@ -438,8 +571,14 @@ logging:
   max_file_size_mb: 10
   max_file_backups: 3
 
+updates:
+  repo: "${GITHUB_REPO}"
+  script_path: "${UPDATE_SCRIPT_PATH}"
+  check_cache_ttl: "10m"
+  command_timeout: "10m"
+
 subscription:
-  public_url: "https://${PANEL_HOST}:${PANEL_PORT}"
+  public_url: "${PANEL_PUBLIC_URL}"
   token_ttl: "720h"
 YAML
 
@@ -467,7 +606,7 @@ Environment=SHILKA_CONFIG_PATH=${CONFIG_DIR}/prod.yaml
 ExecStart=${APP_HOME}/bin/shilka run
 Restart=on-failure
 RestartSec=3
-NoNewPrivileges=true
+NoNewPrivileges=false
 PrivateTmp=true
 ProtectSystem=full
 ReadWritePaths=${CONFIG_DIR} ${DATA_DIR} ${LOG_DIR}
@@ -616,12 +755,13 @@ main() {
   fi
   install_sing_box
   install_panel_binary
+  install_update_helper
   write_prod_config
   install_systemd
 
   echo ""
   echo "===== Shilka installed ====="
-  echo "URL:      https://${PANEL_HOST}:${PANEL_PORT}${PANEL_PATH}"
+  echo "URL:      ${PANEL_PUBLIC_URL}"
   echo "Username: ${ADMIN_USER}"
   echo "Password: ${ADMIN_PASSWORD}"
   echo ""

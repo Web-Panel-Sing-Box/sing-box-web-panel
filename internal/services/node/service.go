@@ -287,6 +287,7 @@ func nodeFromInput(in Input) (*domain.Node, error) {
 		APITokenSecret:      strings.TrimSpace(in.APITokenSecret),
 		Enabled:             in.Enabled,
 		AllowPrivateAddress: in.AllowPrivateAddress,
+		SkipTLSVerify:       in.SkipTLSVerify,
 		Status:              domain.NodeStatusUnknown,
 	}, nil
 }

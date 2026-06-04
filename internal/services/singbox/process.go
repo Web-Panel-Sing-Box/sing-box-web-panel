@@ -21,6 +21,11 @@ type Status struct {
 	Uptime  time.Duration
 }
 
+type externalProcess struct {
+	PID    int
+	Uptime time.Duration
+}
+
 // ProcessManager controls the sing-box lifecycle. Reload sends SIGHUP; note
 // that sing-box reload re-reads the config but resets active connections.
 type ProcessManager interface {
@@ -220,6 +225,13 @@ func (m *subprocessManager) Status(ctx context.Context) (Status, error) {
 		st.Uptime = time.Since(m.startedAt)
 	}
 	m.mu.Unlock()
+	if !st.Running {
+		if external, ok := externalProcessStatus(ctx, m.cfg); ok {
+			st.Running = true
+			st.PID = external.PID
+			st.Uptime = external.Uptime
+		}
+	}
 	st.Version = coreVersion(ctx, m.cfg.Binary)
 	return st, nil
 }

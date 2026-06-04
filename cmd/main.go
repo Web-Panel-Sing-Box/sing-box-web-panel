@@ -15,6 +15,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -22,6 +23,7 @@ import (
 	"path/filepath"
 	"runtime/debug"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -43,8 +45,10 @@ import (
 	"sing-box-web-panel/internal/services/stats"
 	"sing-box-web-panel/internal/services/sysstat"
 	"sing-box-web-panel/internal/services/tlsmgr"
+	"sing-box-web-panel/internal/services/updater"
 	"sing-box-web-panel/internal/transport/handler"
 	"sing-box-web-panel/internal/transport/middleware"
+	"sing-box-web-panel/internal/version"
 
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
@@ -66,7 +70,7 @@ func main() {
 func runServer() {
 	cfg := config.MustLoad()
 	logBuf := logbuf.New(cfg.Logging.MaxMemoryLines)
-	log := setupLogger(cfg.Env, logBuf)
+	log := setupLogger(cfg.Env, cfg.Logging, logBuf)
 
 	log.Info("starting server", slog.String("env", cfg.Env))
 
@@ -109,6 +113,7 @@ func runServer() {
 	mux := http.NewServeMux()
 
 	docs.SwaggerInfo.BasePath = "/api"
+	docs.SwaggerInfo.Version = version.Panel()
 	mux.Handle("GET /swagger/", httpSwagger.Handler(
 		httpSwagger.URL("/swagger/doc.json"),
 	))
@@ -145,6 +150,9 @@ func runServer() {
 	absCoreLogPath := ""
 	if cfg.SingBox.CoreLogPath != "" {
 		absCoreLogPath = absPath(cfg.SingBox.CoreLogPath)
+	}
+	if absCoreLogPath != "" {
+		go logBuf.TailFile(rootCtx, absCoreLogPath, logbuf.SourceCore, time.Second, log)
 	}
 
 	// sing-box config generation + lifecycle.
@@ -270,6 +278,14 @@ func runServer() {
 	handler.NewLogsHandler(logBuf).Register(mux)
 	handler.NewSettingsHandler(settingSvc, log).Register(mux)
 	handler.NewSchedulerHandler(schedulerSvc, log).Register(mux)
+	updateSvc := updater.New(updater.Config{
+		Repo:           cfg.Updates.Repo,
+		ScriptPath:     cfg.Updates.ScriptPath,
+		CurrentVersion: version.Panel(),
+		CheckCacheTTL:  cfg.Updates.CheckCacheTTL,
+		CommandTimeout: cfg.Updates.CommandTimeout,
+	}, nil, nil, log)
+	handler.NewPanelHandler(updateSvc, log).Register(mux)
 
 	frontendHandler := handler.NewFrontendHandler(cfg.Frontend.ServeMode, cfg.Frontend.DiskPath, cfg.Frontend.CacheTTL, frontendDist)
 	mux.Handle("/", frontendHandler)
@@ -390,15 +406,106 @@ func absPath(p string) string {
 	return p
 }
 
-func setupLogger(env string, buf *logbuf.Buffer) *slog.Logger {
+func setupLogger(env string, cfg config.LoggingConfig, buf *logbuf.Buffer) *slog.Logger {
+	level := slogLevel(cfg.Level)
+	out := io.Writer(os.Stdout)
+	if cfg.FilePath != "" {
+		fileOut, err := newRotateWriter(cfg.FilePath, int64(cfg.MaxFileSizeMB)*1024*1024, cfg.MaxFileBackups)
+		if err == nil {
+			out = io.MultiWriter(os.Stdout, fileOut)
+		}
+	}
 	var base slog.Handler
-	switch env {
-	case "dev", "local":
-		base = sl.SetupPrettySlog().Handler()
+	switch strings.ToLower(cfg.Format) {
+	case "text":
+		base = slog.NewTextHandler(out, &slog.HandlerOptions{Level: level})
+	case "pretty":
+		base = sl.PrettyHandlerOptions{SlogOpts: &slog.HandlerOptions{Level: level}}.NewPrettyHandler(out)
 	default:
-		base = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
+		if env == "dev" || env == "local" {
+			base = sl.PrettyHandlerOptions{SlogOpts: &slog.HandlerOptions{Level: level}}.NewPrettyHandler(out)
+		} else {
+			base = slog.NewJSONHandler(out, &slog.HandlerOptions{Level: level})
+		}
 	}
 	return slog.New(logbuf.NewTeeHandler(base, buf))
+}
+
+func slogLevel(level string) slog.Level {
+	switch strings.ToLower(strings.TrimSpace(level)) {
+	case "debug":
+		return slog.LevelDebug
+	case "warn", "warning":
+		return slog.LevelWarn
+	case "error":
+		return slog.LevelError
+	default:
+		return slog.LevelInfo
+	}
+}
+
+type rotateWriter struct {
+	path    string
+	max     int64
+	backups int
+	mu      sync.Mutex
+	file    *os.File
+}
+
+func newRotateWriter(path string, maxBytes int64, backups int) (*rotateWriter, error) {
+	if maxBytes <= 0 {
+		maxBytes = 10 * 1024 * 1024
+	}
+	if backups < 0 {
+		backups = 0
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
+		return nil, err
+	}
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o640)
+	if err != nil {
+		return nil, err
+	}
+	return &rotateWriter{path: path, max: maxBytes, backups: backups, file: f}, nil
+}
+
+func (w *rotateWriter) Write(p []byte) (int, error) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	if err := w.rotateIfNeeded(int64(len(p))); err != nil {
+		return 0, err
+	}
+	return w.file.Write(p)
+}
+
+func (w *rotateWriter) rotateIfNeeded(next int64) error {
+	if w.file == nil {
+		return nil
+	}
+	st, err := w.file.Stat()
+	if err != nil {
+		return err
+	}
+	if st.Size()+next <= w.max {
+		return nil
+	}
+	if err := w.file.Close(); err != nil {
+		return err
+	}
+	if w.backups > 0 {
+		for i := w.backups - 1; i >= 1; i-- {
+			_ = os.Rename(fmt.Sprintf("%s.%d", w.path, i), fmt.Sprintf("%s.%d", w.path, i+1))
+		}
+		_ = os.Rename(w.path, w.path+".1")
+	} else {
+		_ = os.Remove(w.path)
+	}
+	f, err := os.OpenFile(w.path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o640)
+	if err != nil {
+		return err
+	}
+	w.file = f
+	return nil
 }
 
 func mustBytes(s string) int64 {

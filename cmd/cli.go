@@ -20,6 +20,7 @@ import (
 	svcapitoken "sing-box-web-panel/internal/services/apitoken"
 	svcnode "sing-box-web-panel/internal/services/node"
 	"sing-box-web-panel/internal/services/singbox"
+	"sing-box-web-panel/internal/version"
 
 	"gopkg.in/yaml.v3"
 )
@@ -42,7 +43,7 @@ func runCLI(args []string) error {
 	case "cert":
 		return cliCert(args[1:])
 	case "-v", "--version", "version":
-		fmt.Println("shilka development")
+		fmt.Println("shilka " + version.Panel())
 		return nil
 	default:
 		return fmt.Errorf("unknown command %q", args[0])
@@ -224,10 +225,11 @@ func cliNode(args []string) error {
 		basePath := fs.String("base-path", "", "panel base path")
 		token := fs.String("token", "", "remote API token")
 		allowPrivate := fs.Bool("allow-private", false, "allow private node address")
+		skipTLSVerify := fs.Bool("skip-tls-verify", false, "skip TLS certificate verification for this node")
 		if err := fs.Parse(args[1:]); err != nil {
 			return err
 		}
-		n, err := svc.Create(ctx, svcnode.Input{Name: *name, Scheme: *scheme, Address: *address, Port: *port, BasePath: *basePath, APITokenSecret: *token, Enabled: true, AllowPrivateAddress: *allowPrivate})
+		n, err := svc.Create(ctx, svcnode.Input{Name: *name, Scheme: *scheme, Address: *address, Port: *port, BasePath: *basePath, APITokenSecret: *token, Enabled: true, AllowPrivateAddress: *allowPrivate, SkipTLSVerify: *skipTLSVerify})
 		if err != nil {
 			return err
 		}
