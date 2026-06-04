@@ -6,6 +6,7 @@ export type TlsMode = "none" | "tls" | "reality";
 export type ClientStatus = "active" | "disabled" | "expired";
 export type TrafficReset = "never" | "hourly" | "daily" | "weekly" | "monthly";
 export type LogLevel = "info" | "warn" | "error";
+export type LogSource = "panel" | "core" | "frontend";
 
 // naive `network`
 export type Network = "tcp" | "udp" | "both";
