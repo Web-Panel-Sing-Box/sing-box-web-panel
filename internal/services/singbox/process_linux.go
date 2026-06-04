@@ -56,7 +56,7 @@ func splitProcCmdline(data []byte) []string {
 }
 
 func matchesSingBoxRun(args []string, cfg ProcessConfig) bool {
-	if len(args) == 0 || !sameExecutable(args[0], cfg.Binary) {
+	if len(args) == 0 || !sameProcessExecutable(args, cfg.Binary) {
 		return false
 	}
 	hasRun := false
@@ -67,6 +67,15 @@ func matchesSingBoxRun(args []string, cfg ProcessConfig) bool {
 		}
 	}
 	return hasRun && hasConfigArg(args, cfg.ConfigPath)
+}
+
+func sameProcessExecutable(args []string, expected string) bool {
+	if sameExecutable(args[0], expected) {
+		return true
+	}
+	// Test fixtures and some admin wrappers can launch an executable script via
+	// an interpreter, making /proc cmdline look like `/bin/sh <script> ...`.
+	return len(args) > 1 && sameExecutable(args[1], expected)
 }
 
 func sameExecutable(actual, expected string) bool {
