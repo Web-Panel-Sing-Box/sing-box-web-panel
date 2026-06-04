@@ -9,16 +9,22 @@ import (
 
 	"sing-box-web-panel/internal/domain"
 	svcclient "sing-box-web-panel/internal/services/client"
+	svcnode "sing-box-web-panel/internal/services/node"
 )
 
 type ClientHandler struct {
 	svc        *svcclient.Service
+	nodes      *svcnode.Service
 	subBaseURL string
 	log        *slog.Logger
 }
 
-func NewClientHandler(svc *svcclient.Service, subBaseURL string, log *slog.Logger) *ClientHandler {
-	return &ClientHandler{svc: svc, subBaseURL: strings.TrimRight(subBaseURL, "/"), log: log}
+func NewClientHandler(svc *svcclient.Service, subBaseURL string, log *slog.Logger, nodes ...*svcnode.Service) *ClientHandler {
+	h := &ClientHandler{svc: svc, subBaseURL: strings.TrimRight(subBaseURL, "/"), log: log}
+	if len(nodes) > 0 {
+		h.nodes = nodes[0]
+	}
+	return h
 }
 
 func (h *ClientHandler) Register(mux *http.ServeMux) {
@@ -29,6 +35,7 @@ func (h *ClientHandler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("DELETE /api/clients/{id}", h.Delete)
 	mux.HandleFunc("POST /api/clients/{id}/reset-traffic", h.ResetTraffic)
 	mux.HandleFunc("POST /api/clients/{id}/status", h.SetStatus)
+	mux.HandleFunc("POST /api/nodes/{id}/clients", h.CreateOnNode)
 }
 
 func (h *ClientHandler) subURL(token string) string {
@@ -113,6 +120,7 @@ func (h *ClientHandler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 type createClientRequest struct {
+	NodeID             string `json:"nodeId,omitempty"`
 	Name               string `json:"name"`
 	InboundID          string `json:"inboundId"`
 	TotalQuota         int64  `json:"totalQuota"`
@@ -135,28 +143,77 @@ func (h *ClientHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &req) {
 		return
 	}
-	inboundID, err := strconv.ParseInt(req.InboundID, 10, 64)
-	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid inboundId"})
+	in, ok := req.toInput(w)
+	if !ok {
 		return
 	}
-	expiry, err := parseTimePtr(req.Expiry)
-	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid expiry"})
+	if req.NodeID != "" {
+		nodeID, ok := parsePositiveID(w, req.NodeID, "invalid nodeId")
+		if !ok {
+			return
+		}
+		h.createRemote(w, r, nodeID, in)
 		return
 	}
-	c, err := h.svc.Create(r.Context(), svcclient.CreateInput{
-		Name:               req.Name,
-		InboundID:          inboundID,
-		TotalQuota:         req.TotalQuota,
-		Expiry:             expiry,
-		StartAfterFirstUse: req.StartAfterFirstUse,
-	})
+	c, err := h.svc.Create(r.Context(), in)
 	if err != nil {
 		writeServiceError(w, h.log, "create client", err)
 		return
 	}
 	writeJSON(w, http.StatusCreated, h.toDTO(c))
+}
+
+func (h *ClientHandler) CreateOnNode(w http.ResponseWriter, r *http.Request) {
+	nodeID, ok := idParam(r)
+	if !ok {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid nodeId"})
+		return
+	}
+	var req createClientRequest
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+	if req.NodeID != "" && !matchesNodeID(w, req.NodeID, nodeID) {
+		return
+	}
+	in, ok := req.toInput(w)
+	if !ok {
+		return
+	}
+	h.createRemote(w, r, nodeID, in)
+}
+
+func (h *ClientHandler) createRemote(w http.ResponseWriter, r *http.Request, nodeID int64, in svcclient.CreateInput) {
+	if h.nodes == nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "node mutations are not configured"})
+		return
+	}
+	c, err := h.nodes.CreateClient(r.Context(), nodeID, in)
+	if err != nil {
+		writeServiceError(w, h.log, "create remote client", err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, h.toDTO(c))
+}
+
+func (req createClientRequest) toInput(w http.ResponseWriter) (svcclient.CreateInput, bool) {
+	inboundID, err := strconv.ParseInt(req.InboundID, 10, 64)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid inboundId"})
+		return svcclient.CreateInput{}, false
+	}
+	expiry, err := parseTimePtr(req.Expiry)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid expiry"})
+		return svcclient.CreateInput{}, false
+	}
+	return svcclient.CreateInput{
+		Name:               req.Name,
+		InboundID:          inboundID,
+		TotalQuota:         req.TotalQuota,
+		Expiry:             expiry,
+		StartAfterFirstUse: req.StartAfterFirstUse,
+	}, true
 }
 
 // Get godoc
@@ -183,6 +240,7 @@ func (h *ClientHandler) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 type updateClientRequest struct {
+	NodeID             *string `json:"nodeId,omitempty"`
 	Name               *string `json:"name"`
 	InboundID          *string `json:"inboundId"`
 	TotalQuota         *int64  `json:"totalQuota"`
@@ -212,7 +270,44 @@ func (h *ClientHandler) Update(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &req) {
 		return
 	}
+	in, ok := req.toInput(w)
+	if !ok {
+		return
+	}
+	existing, err := h.svc.Get(r.Context(), id)
+	if err != nil {
+		writeServiceError(w, h.log, "get client", err)
+		return
+	}
+	if existing.NodeID != nil {
+		if h.nodes == nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "node mutations are not configured"})
+			return
+		}
+		if req.NodeID != nil && *req.NodeID != "" && !matchesNodeID(w, *req.NodeID, *existing.NodeID) {
+			return
+		}
+		c, err := h.nodes.UpdateClient(r.Context(), id, in)
+		if err != nil {
+			writeServiceError(w, h.log, "update remote client", err)
+			return
+		}
+		writeJSON(w, http.StatusOK, h.toDTO(c))
+		return
+	}
+	if req.NodeID != nil && *req.NodeID != "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "cannot move client between nodes"})
+		return
+	}
+	c, err := h.svc.Update(r.Context(), id, in)
+	if err != nil {
+		writeServiceError(w, h.log, "update client", err)
+		return
+	}
+	writeJSON(w, http.StatusOK, h.toDTO(c))
+}
 
+func (req updateClientRequest) toInput(w http.ResponseWriter) (svcclient.UpdateInput, bool) {
 	in := svcclient.UpdateInput{
 		Name:               req.Name,
 		TotalQuota:         req.TotalQuota,
@@ -222,7 +317,7 @@ func (h *ClientHandler) Update(w http.ResponseWriter, r *http.Request) {
 		inboundID, err := strconv.ParseInt(*req.InboundID, 10, 64)
 		if err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid inboundId"})
-			return
+			return svcclient.UpdateInput{}, false
 		}
 		in.InboundID = &inboundID
 	}
@@ -230,7 +325,7 @@ func (h *ClientHandler) Update(w http.ResponseWriter, r *http.Request) {
 		expiry, err := parseTimePtr(*req.Expiry)
 		if err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid expiry"})
-			return
+			return svcclient.UpdateInput{}, false
 		}
 		in.Expiry = expiry
 	}
@@ -238,13 +333,7 @@ func (h *ClientHandler) Update(w http.ResponseWriter, r *http.Request) {
 		status := domain.ClientStatus(*req.Status)
 		in.Status = &status
 	}
-
-	c, err := h.svc.Update(r.Context(), id, in)
-	if err != nil {
-		writeServiceError(w, h.log, "update client", err)
-		return
-	}
-	writeJSON(w, http.StatusOK, h.toDTO(c))
+	return in, true
 }
 
 // Delete godoc
@@ -260,6 +349,23 @@ func (h *ClientHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	id, ok := idParam(r)
 	if !ok {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
+		return
+	}
+	existing, err := h.svc.Get(r.Context(), id)
+	if err != nil {
+		writeServiceError(w, h.log, "get client", err)
+		return
+	}
+	if existing.NodeID != nil {
+		if h.nodes == nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "node mutations are not configured"})
+			return
+		}
+		if err := h.nodes.DeleteClient(r.Context(), id); err != nil {
+			writeServiceError(w, h.log, "delete remote client", err)
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]string{"message": "deleted"})
 		return
 	}
 	if err := h.svc.Delete(r.Context(), id); err != nil {
@@ -282,6 +388,24 @@ func (h *ClientHandler) ResetTraffic(w http.ResponseWriter, r *http.Request) {
 	id, ok := idParam(r)
 	if !ok {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
+		return
+	}
+	existing, err := h.svc.Get(r.Context(), id)
+	if err != nil {
+		writeServiceError(w, h.log, "get client", err)
+		return
+	}
+	if existing.NodeID != nil {
+		if h.nodes == nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "node mutations are not configured"})
+			return
+		}
+		c, err := h.nodes.ResetClientTraffic(r.Context(), id)
+		if err != nil {
+			writeServiceError(w, h.log, "reset remote client traffic", err)
+			return
+		}
+		writeJSON(w, http.StatusOK, h.toDTO(c))
 		return
 	}
 	c, err := h.svc.ResetTraffic(r.Context(), id)
@@ -315,6 +439,24 @@ func (h *ClientHandler) SetStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	var req setStatusRequest
 	if !decodeJSON(w, r, &req) {
+		return
+	}
+	existing, err := h.svc.Get(r.Context(), id)
+	if err != nil {
+		writeServiceError(w, h.log, "get client", err)
+		return
+	}
+	if existing.NodeID != nil {
+		if h.nodes == nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "node mutations are not configured"})
+			return
+		}
+		c, err := h.nodes.SetClientStatus(r.Context(), id, domain.ClientStatus(req.Status))
+		if err != nil {
+			writeServiceError(w, h.log, "set remote client status", err)
+			return
+		}
+		writeJSON(w, http.StatusOK, h.toDTO(c))
 		return
 	}
 	c, err := h.svc.SetStatus(r.Context(), id, domain.ClientStatus(req.Status))

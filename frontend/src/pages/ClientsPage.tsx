@@ -103,6 +103,7 @@ export function ClientsPage() {
             defaultInboundId={
               filter.inboundId !== "all" ? filter.inboundId : undefined
             }
+            defaultNodeId={filter.nodeId !== "all" ? filter.nodeId : undefined}
           />
         </Suspense>
       ) : null}

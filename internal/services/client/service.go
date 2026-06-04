@@ -91,8 +91,12 @@ func (s *Service) Create(ctx context.Context, in CreateInput) (*domain.Client, e
 	if in.Name == "" {
 		return nil, fmt.Errorf("%w: name is required", ErrValidation)
 	}
-	if _, err := s.inbounds.GetByID(ctx, in.InboundID); err != nil {
+	ib, err := s.inbounds.GetByID(ctx, in.InboundID)
+	if err != nil {
 		return nil, ErrInboundMissing
+	}
+	if ib.NodeID != nil {
+		return nil, fmt.Errorf("%w: inbound belongs to a remote node", ErrValidation)
 	}
 
 	uuid, err := keys.GenerateUUID()
@@ -132,6 +136,9 @@ func (s *Service) Update(ctx context.Context, id int64, in UpdateInput) (*domain
 	if err != nil {
 		return nil, err
 	}
+	if c.NodeID != nil {
+		return nil, fmt.Errorf("%w: remote client must be updated through its node", ErrValidation)
+	}
 
 	if in.Name != nil {
 		if *in.Name == "" {
@@ -140,8 +147,12 @@ func (s *Service) Update(ctx context.Context, id int64, in UpdateInput) (*domain
 		c.Name = *in.Name
 	}
 	if in.InboundID != nil {
-		if _, err := s.inbounds.GetByID(ctx, *in.InboundID); err != nil {
+		ib, err := s.inbounds.GetByID(ctx, *in.InboundID)
+		if err != nil {
 			return nil, ErrInboundMissing
+		}
+		if ib.NodeID != nil {
+			return nil, fmt.Errorf("%w: inbound belongs to a remote node", ErrValidation)
 		}
 		c.InboundID = *in.InboundID
 	}
@@ -167,6 +178,13 @@ func (s *Service) Update(ctx context.Context, id int64, in UpdateInput) (*domain
 }
 
 func (s *Service) Delete(ctx context.Context, id int64) error {
+	c, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if c.NodeID != nil {
+		return fmt.Errorf("%w: remote client must be deleted through its node", ErrValidation)
+	}
 	if err := s.repo.Delete(ctx, id); err != nil {
 		return err
 	}
@@ -181,6 +199,9 @@ func (s *Service) SetStatus(ctx context.Context, id int64, status domain.ClientS
 	if err != nil {
 		return nil, err
 	}
+	if c.NodeID != nil {
+		return nil, fmt.Errorf("%w: remote client status must be set through its node", ErrValidation)
+	}
 	enabled := status == domain.ClientStatusActive
 	if err := s.repo.SetStatus(ctx, id, status, enabled); err != nil {
 		return nil, err
@@ -192,6 +213,13 @@ func (s *Service) SetStatus(ctx context.Context, id int64, status domain.ClientS
 }
 
 func (s *Service) ResetTraffic(ctx context.Context, id int64) (*domain.Client, error) {
+	existing, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if existing.NodeID != nil {
+		return nil, fmt.Errorf("%w: remote client traffic must be reset through its node", ErrValidation)
+	}
 	if err := s.repo.ResetTraffic(ctx, id); err != nil {
 		return nil, err
 	}

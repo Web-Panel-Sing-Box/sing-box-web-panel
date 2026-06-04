@@ -45,8 +45,8 @@ export function ClientFilterBar({ value, onChange }: ClientFilterBarProps) {
       <Select
         value={value.nodeId}
         options={[
-          { value: "all", label: "All nodes" },
-          { value: "local", label: "Local" },
+          { value: "all", label: t("nodes.all") },
+          { value: "local", label: t("common.local") },
           ...nodes.map((node) => ({ value: node.id, label: node.name })),
         ]}
         onChange={(v) => onChange({ ...value, nodeId: v })}

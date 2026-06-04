@@ -1,7 +1,9 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Copy, QrCode, RefreshCw } from "lucide-react";
 
+import { ApiError } from "@/api/client";
+import { listNodes, type NodeDTO } from "@/api";
 import { Button } from "@/components/ui/button";
 import { DateInput, Input, Label, NumberInput } from "@/components/ui/input";
 import { Modal, ModalBody, ModalFooter, ModalHeader } from "@/components/ui/modal";
@@ -29,11 +31,16 @@ export function ClientDetailModal({ client, onClose }: Props) {
   const { t } = useI18n();
 
   const [draft, setDraft] = useState<Client | null>(client);
+  const [nodes, setNodes] = useState<NodeDTO[]>([]);
   const [qrOpen, setQrOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [totalFlowGb, setTotalFlowGb] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    void listNodes()
+      .then(setNodes)
+      .catch(() => setNodes([]));
     setDraft(client);
     setCopied(false);
     if (client) {
@@ -41,6 +48,19 @@ export function ClientDetailModal({ client, onClose }: Props) {
       setTotalFlowGb(gb > 0 ? String(gb) : "");
     }
   }, [client]);
+
+  const currentNodeId = draft?.nodeId ?? "local";
+  const currentNodeLabel = useMemo(() => {
+    if (!draft?.nodeId) return t("common.local");
+    return nodes.find((node) => node.id === draft.nodeId)?.name ?? `node:${draft.nodeId}`;
+  }, [draft?.nodeId, nodes, t]);
+  const inboundOptions = useMemo(
+    () =>
+      inbounds
+        .filter((inbound) => (currentNodeId === "local" ? !inbound.nodeId : inbound.nodeId === currentNodeId))
+        .map((inbound) => ({ value: inbound.id, label: inbound.remark })),
+    [currentNodeId, inbounds],
+  );
 
   if (!draft || !client) {
     return <Modal open={false} onClose={onClose}>{null}</Modal>;
@@ -62,12 +82,32 @@ export function ClientDetailModal({ client, onClose }: Props) {
     window.setTimeout(() => setCopied(false), 1500);
   }
 
-  function save() {
+  async function save() {
     if (!draft) return;
     const parsedFlow = totalFlowGb === "" ? 0 : Number(totalFlowGb);
-    updateClient(draft.id, { ...draft, totalQuota: parsedFlow * GB });
-    push(t("clients.updated"), "success");
-    onClose();
+    setSaving(true);
+    try {
+      await updateClient(draft.id, {
+        nodeId: draft.nodeId,
+        name: draft.name,
+        inboundId: draft.inboundId,
+        totalQuota: parsedFlow * GB,
+        expiry: draft.expiry,
+        status: draft.status,
+        startAfterFirstUse: draft.startAfterFirstUse,
+      });
+      push(t("clients.updated"), "success");
+      onClose();
+    } catch (err) {
+      const body = err instanceof ApiError ? err.body : null;
+      const message =
+        body && typeof body === "object" && body !== null && "error" in body
+          ? String((body as { error: unknown }).error)
+          : t("clients.updateFailed");
+      push(message, "error");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -78,6 +118,10 @@ export function ClientDetailModal({ client, onClose }: Props) {
           <div className="-mt-2 flex items-center gap-1.5 text-xs text-ink-tertiary">
             <StatusDot state={draft.online ? "online" : "neutral"} size={6} />
             <span>{draft.online ? t("clients.online") : t("clients.offline")}</span>
+          </div>
+          <div>
+            <Label>{t("common.node")}</Label>
+            <Input value={currentNodeLabel} readOnly />
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
@@ -107,7 +151,7 @@ export function ClientDetailModal({ client, onClose }: Props) {
             <Label>{t("clients.inbound")}</Label>
             <Select
               value={draft.inboundId}
-              options={inbounds.map((i) => ({ value: i.id, label: i.remark }))}
+              options={inboundOptions}
               onChange={(v) => update("inboundId", v)}
             />
           </div>
@@ -163,7 +207,7 @@ export function ClientDetailModal({ client, onClose }: Props) {
           <Button variant="danger" onClick={onClose}>
             {t("common.cancel")}
           </Button>
-          <Button variant="primary" onClick={save}>
+          <Button variant="primary" onClick={save} loading={saving}>
             {t("common.save")}
           </Button>
         </ModalFooter>

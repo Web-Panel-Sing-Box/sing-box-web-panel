@@ -1,11 +1,13 @@
 package node
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -19,10 +21,41 @@ import (
 )
 
 var ErrUnsafeAddress = errors.New("node address is private or loopback")
+var ErrRemote = errors.New("remote node error")
+
+type RemoteHTTPError struct {
+	StatusCode int
+	Body       string
+}
+
+func (e *RemoteHTTPError) Error() string {
+	if e.Body == "" {
+		return fmt.Sprintf("%s: status %d", ErrRemote, e.StatusCode)
+	}
+	return fmt.Sprintf("%s: status %d: %s", ErrRemote, e.StatusCode, e.Body)
+}
+
+func (e *RemoteHTTPError) Is(target error) bool {
+	return target == ErrRemote
+}
+
+func IsRemoteStatus(err error, status int) bool {
+	var remoteErr *RemoteHTTPError
+	return errors.As(err, &remoteErr) && remoteErr.StatusCode == status
+}
 
 type RemoteClienter interface {
 	Status(ctx context.Context, n *domain.Node) (*RemoteStatus, time.Duration, error)
 	Snapshot(ctx context.Context, n *domain.Node) (*RemoteSnapshot, error)
+	CreateInbound(ctx context.Context, n *domain.Node, in RemoteInboundRequest) (*RemoteInbound, error)
+	UpdateInbound(ctx context.Context, n *domain.Node, remoteID string, in RemoteInboundRequest) (*RemoteInbound, error)
+	DeleteInbound(ctx context.Context, n *domain.Node, remoteID string) error
+	ToggleInbound(ctx context.Context, n *domain.Node, remoteID string) (*RemoteInbound, error)
+	CreateClient(ctx context.Context, n *domain.Node, in RemoteClientCreateRequest) (*RemoteClient, error)
+	UpdateClient(ctx context.Context, n *domain.Node, remoteID string, in RemoteClientUpdateRequest) (*RemoteClient, error)
+	DeleteClient(ctx context.Context, n *domain.Node, remoteID string) error
+	ResetClientTraffic(ctx context.Context, n *domain.Node, remoteID string) (*RemoteClient, error)
+	SetClientStatus(ctx context.Context, n *domain.Node, remoteID string, status domain.ClientStatus) (*RemoteClient, error)
 }
 
 type HTTPClient struct {
@@ -40,7 +73,7 @@ func NewHTTPClient() *HTTPClient {
 func (c *HTTPClient) Status(ctx context.Context, n *domain.Node) (*RemoteStatus, time.Duration, error) {
 	start := time.Now()
 	var out RemoteStatus
-	if err := c.get(ctx, n, "/api/node/v1/status", c.statusTimeout, &out); err != nil {
+	if err := c.do(ctx, n, http.MethodGet, "/api/node/v1/status", nil, c.statusTimeout, &out); err != nil {
 		return nil, 0, err
 	}
 	return &out, time.Since(start), nil
@@ -48,24 +81,100 @@ func (c *HTTPClient) Status(ctx context.Context, n *domain.Node) (*RemoteStatus,
 
 func (c *HTTPClient) Snapshot(ctx context.Context, n *domain.Node) (*RemoteSnapshot, error) {
 	var out RemoteSnapshot
-	if err := c.get(ctx, n, "/api/node/v1/snapshot", c.writeTimeout, &out); err != nil {
+	if err := c.do(ctx, n, http.MethodGet, "/api/node/v1/snapshot", nil, c.writeTimeout, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
 }
 
-func (c *HTTPClient) get(ctx context.Context, n *domain.Node, suffix string, timeout time.Duration, out any) error {
+func (c *HTTPClient) CreateInbound(ctx context.Context, n *domain.Node, in RemoteInboundRequest) (*RemoteInbound, error) {
+	var out RemoteInbound
+	if err := c.do(ctx, n, http.MethodPost, "/api/node/v1/inbounds", in, c.writeTimeout, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *HTTPClient) UpdateInbound(ctx context.Context, n *domain.Node, remoteID string, in RemoteInboundRequest) (*RemoteInbound, error) {
+	var out RemoteInbound
+	if err := c.do(ctx, n, http.MethodPut, "/api/node/v1/inbounds/"+remoteID, in, c.writeTimeout, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *HTTPClient) DeleteInbound(ctx context.Context, n *domain.Node, remoteID string) error {
+	return c.do(ctx, n, http.MethodDelete, "/api/node/v1/inbounds/"+remoteID, nil, c.writeTimeout, nil)
+}
+
+func (c *HTTPClient) ToggleInbound(ctx context.Context, n *domain.Node, remoteID string) (*RemoteInbound, error) {
+	var out RemoteInbound
+	if err := c.do(ctx, n, http.MethodPost, "/api/node/v1/inbounds/"+remoteID+"/toggle", nil, c.writeTimeout, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *HTTPClient) CreateClient(ctx context.Context, n *domain.Node, in RemoteClientCreateRequest) (*RemoteClient, error) {
+	var out RemoteClient
+	if err := c.do(ctx, n, http.MethodPost, "/api/node/v1/clients", in, c.writeTimeout, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *HTTPClient) UpdateClient(ctx context.Context, n *domain.Node, remoteID string, in RemoteClientUpdateRequest) (*RemoteClient, error) {
+	var out RemoteClient
+	if err := c.do(ctx, n, http.MethodPut, "/api/node/v1/clients/"+remoteID, in, c.writeTimeout, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *HTTPClient) DeleteClient(ctx context.Context, n *domain.Node, remoteID string) error {
+	return c.do(ctx, n, http.MethodDelete, "/api/node/v1/clients/"+remoteID, nil, c.writeTimeout, nil)
+}
+
+func (c *HTTPClient) ResetClientTraffic(ctx context.Context, n *domain.Node, remoteID string) (*RemoteClient, error) {
+	var out RemoteClient
+	if err := c.do(ctx, n, http.MethodPost, "/api/node/v1/clients/"+remoteID+"/reset-traffic", nil, c.writeTimeout, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *HTTPClient) SetClientStatus(ctx context.Context, n *domain.Node, remoteID string, status domain.ClientStatus) (*RemoteClient, error) {
+	var out RemoteClient
+	in := RemoteClientStatusRequest{Status: string(status)}
+	if err := c.do(ctx, n, http.MethodPost, "/api/node/v1/clients/"+remoteID+"/status", in, c.writeTimeout, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *HTTPClient) do(ctx context.Context, n *domain.Node, method, suffix string, body any, timeout time.Duration, out any) error {
 	base, err := baseURL(n)
 	if err != nil {
 		return err
 	}
 	base.Path = path.Join(base.Path, suffix)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, base.String(), nil)
+	var reader io.Reader
+	if body != nil {
+		buf := &bytes.Buffer{}
+		if err := json.NewEncoder(buf).Encode(body); err != nil {
+			return fmt.Errorf("encode node request: %w", err)
+		}
+		reader = buf
+	}
+	req, err := http.NewRequestWithContext(ctx, method, base.String(), reader)
 	if err != nil {
 		return err
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Authorization", "Bearer "+n.APITokenSecret)
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
 
 	client := &http.Client{
 		Timeout: timeout,
@@ -81,7 +190,11 @@ func (c *HTTPClient) get(ctx context.Context, n *domain.Node, suffix string, tim
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("node returned status %d", resp.StatusCode)
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
+		return &RemoteHTTPError{StatusCode: resp.StatusCode, Body: strings.TrimSpace(string(body))}
+	}
+	if out == nil {
+		return nil
 	}
 	if err := json.NewDecoder(resp.Body).Decode(out); err != nil {
 		return fmt.Errorf("decode node response: %w", err)

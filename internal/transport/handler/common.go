@@ -11,6 +11,7 @@ import (
 	"sing-box-web-panel/internal/repo"
 	svcclient "sing-box-web-panel/internal/services/client"
 	svcinbound "sing-box-web-panel/internal/services/inbound"
+	svcnode "sing-box-web-panel/internal/services/node"
 )
 
 const timeRFC3339 = time.RFC3339
@@ -22,6 +23,27 @@ func idParam(r *http.Request) (int64, bool) {
 		return 0, false
 	}
 	return id, true
+}
+
+func parsePositiveID(w http.ResponseWriter, raw string, message string) (int64, bool) {
+	id, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil || id <= 0 {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": message})
+		return 0, false
+	}
+	return id, true
+}
+
+func matchesNodeID(w http.ResponseWriter, raw string, nodeID int64) bool {
+	id, ok := parsePositiveID(w, raw, "invalid nodeId")
+	if !ok {
+		return false
+	}
+	if id != nodeID {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "cannot move resource between nodes"})
+		return false
+	}
+	return true
 }
 
 // decodeJSON decodes the request body into dst, writing a 400 on failure.
@@ -60,10 +82,12 @@ func writeServiceError(w http.ResponseWriter, log *slog.Logger, op string, err e
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 	case errors.Is(err, repo.ErrExist):
 		writeJSON(w, http.StatusConflict, map[string]string{"error": "already exists"})
-	case errors.Is(err, svcinbound.ErrValidation), errors.Is(err, svcclient.ErrValidation):
+	case errors.Is(err, svcinbound.ErrValidation), errors.Is(err, svcclient.ErrValidation), errors.Is(err, svcnode.ErrValidation):
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 	case errors.Is(err, svcclient.ErrInboundMissing):
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+	case errors.Is(err, svcnode.ErrRemote):
+		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "remote node error"})
 	default:
 		log.Error(op, slog.String("error", err.Error()))
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})

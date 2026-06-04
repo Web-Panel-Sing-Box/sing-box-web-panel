@@ -15,7 +15,7 @@ export function InboundsList({ inbounds, onEdit }: { inbounds: Inbound[]; onEdit
               <span>{t("common.protocol")}</span>
               <span>{t("common.port")}</span>
               <span>{t("common.remark")}</span>
-              <span>Node</span>
+              <span>{t("common.node")}</span>
               <span>{t("common.transport")}</span>
               <span>{t("common.clients")}</span>
               <span className="text-center">{t("common.enabled")}</span>
