@@ -41,6 +41,34 @@ func TestLogger_LogsRequest(t *testing.T) {
 	if !strings.Contains(output, "duration=") {
 		t.Error("log should contain duration")
 	}
+	if rec.Header().Get("X-Request-ID") == "" {
+		t.Error("response should include X-Request-ID")
+	}
+	if !strings.Contains(output, "request_id=") {
+		t.Error("log should contain request_id")
+	}
+}
+
+func TestLogger_UsesSafeIncomingRequestID(t *testing.T) {
+	var buf bytes.Buffer
+	log := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
+
+	handler := middleware.Logger(log)(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/health", nil)
+	req.Header.Set("X-Request-ID", "req_test_123")
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Header().Get("X-Request-ID") != "req_test_123" {
+		t.Fatalf("X-Request-ID = %q, want req_test_123", rec.Header().Get("X-Request-ID"))
+	}
+	if !strings.Contains(buf.String(), "request_id=req_test_123") {
+		t.Fatalf("log should contain incoming request id, got: %s", buf.String())
+	}
 }
 
 func TestLogger_LogsWarnFor4xx(t *testing.T) {

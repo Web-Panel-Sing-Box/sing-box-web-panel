@@ -80,6 +80,12 @@ logging:
   max_file_size_mb: 10
   max_file_backups: 2
 
+updates:
+  repo: "Web-Panel-Sing-Box/shilka-web-panel"
+  script_path: "/usr/local/sbin/shilka-update"
+  check_cache_ttl: "10m"
+  command_timeout: "10m"
+
 subscription:
   public_url: ""
   token_ttl: "720h"

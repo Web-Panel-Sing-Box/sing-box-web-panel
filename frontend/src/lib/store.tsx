@@ -25,7 +25,7 @@ export type { ClientStatus } from "@/api/types";
 export type { MetricsDTO as Metrics } from "@/api/dashboard";
 export type { TrafficPoint } from "@/api/dashboard";
 export type { LogEntryDTO as LogEntry } from "@/api/logs";
-export type { LogLevel, Protocol, Transmission, TlsMode, Network, Flow, ObfsType, QuicCc } from "@/api/types";
+export type { LogLevel, LogSource, Protocol, Transmission, TlsMode, Network, Flow, ObfsType, QuicCc } from "@/api/types";
 export type { InboundSettings, InboundCreateRequest } from "@/api/inbounds";
 export {
   PROTOCOL_OPTIONS,
@@ -104,7 +104,7 @@ export function StoreProvider({ children, seed }: { children: React.ReactNode; s
       setClients(clList);
       setMetrics(m);
       setHistory(await api.getTrafficHistory());
-      setLogs(await getPanelLogs());
+      setLogs(await getPanelLogs({ limit: 500 }));
     } catch {
       // backend not yet available; stay silent
     }

@@ -171,6 +171,8 @@ const en = {
   "clients.getQr": "Get QR",
   "clients.copyLink": "Copy link",
   "clients.copied": "Copied!",
+  "clients.online": "Online",
+  "clients.offline": "Offline",
 
   "nodes.skipTlsVerify": "Skip TLS certificate verification",
 
@@ -241,9 +243,32 @@ const en = {
   "logs.description": "Live stream of sing-box runtime output",
   "logs.search": "Search logs",
   "logs.allLevels": "All levels",
+  "logs.allSources": "All sources",
+  "logs.sourcePanel": "Panel",
+  "logs.sourceCore": "Core",
+  "logs.sourceFrontend": "Frontend",
   "logs.resume": "Resume",
   "logs.pause": "Pause",
   "logs.noMatch": "No log lines match the current filter.",
+
+  "panel.title": "Panel",
+  "panel.current": "Current",
+  "panel.latest": "Latest",
+  "panel.unknown": "Unknown",
+  "panel.refresh": "Refresh version",
+  "panel.release": "Open release",
+  "panel.update": "Update panel",
+  "panel.updateStarted": "Panel update started",
+  "panel.updateFailed": "Could not start panel update",
+  "panel.versionLoadFailed": "Could not load panel version",
+  "panel.status.up_to_date": "Panel is up to date",
+  "panel.status.update_available": "Update available",
+  "panel.status.running": "Update is running",
+  "panel.status.failed": "Last update failed",
+  "panel.status.updated": "Update finished",
+  "panel.status.development": "Development build",
+  "panel.status.check_failed": "Could not check latest release",
+  "panel.status.not_configured": "Update helper is not configured",
 };
 
 const ru: Record<keyof typeof en, string> = {
@@ -407,6 +432,8 @@ const ru: Record<keyof typeof en, string> = {
   "clients.getQr": "Получить QR",
   "clients.copyLink": "Скопировать ссылку",
   "clients.copied": "Скопировано!",
+  "clients.online": "Онлайн",
+  "clients.offline": "Не в сети",
 
   "nodes.skipTlsVerify": "Пропустить проверку TLS сертификата",
 
@@ -477,9 +504,32 @@ const ru: Record<keyof typeof en, string> = {
   "logs.description": "Живой поток вывода runtime sing-box",
   "logs.search": "Поиск по логам",
   "logs.allLevels": "Все уровни",
+  "logs.allSources": "Все источники",
+  "logs.sourcePanel": "Панель",
+  "logs.sourceCore": "Ядро",
+  "logs.sourceFrontend": "Фронтенд",
   "logs.resume": "Возобновить",
   "logs.pause": "Пауза",
   "logs.noMatch": "Нет строк логов под текущий фильтр.",
+
+  "panel.title": "Панель",
+  "panel.current": "Текущая",
+  "panel.latest": "Последняя",
+  "panel.unknown": "Неизвестно",
+  "panel.refresh": "Обновить версию",
+  "panel.release": "Открыть релиз",
+  "panel.update": "Обновить панель",
+  "panel.updateStarted": "Обновление панели запущено",
+  "panel.updateFailed": "Не удалось запустить обновление панели",
+  "panel.versionLoadFailed": "Не удалось загрузить версию панели",
+  "panel.status.up_to_date": "Панель обновлена",
+  "panel.status.update_available": "Доступно обновление",
+  "panel.status.running": "Обновление выполняется",
+  "panel.status.failed": "Последнее обновление завершилось ошибкой",
+  "panel.status.updated": "Обновление завершено",
+  "panel.status.development": "Сборка для разработки",
+  "panel.status.check_failed": "Не удалось проверить последний релиз",
+  "panel.status.not_configured": "Helper обновления не настроен",
 };
 
 const dictionaries = { en, ru };

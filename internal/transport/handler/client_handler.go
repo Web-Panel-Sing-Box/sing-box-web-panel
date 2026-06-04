@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"sing-box-web-panel/internal/domain"
 	svcclient "sing-box-web-panel/internal/services/client"
@@ -53,6 +54,7 @@ type clientDTO struct {
 	SubToken           string `json:"subToken,omitempty"`
 	Enabled            bool   `json:"enabled"`
 	StartAfterFirstUse bool   `json:"startAfterFirstUse"`
+	Online             bool   `json:"online"`
 }
 
 func (h *ClientHandler) toDTO(c *domain.Client) clientDTO {
@@ -71,6 +73,7 @@ func (h *ClientHandler) toDTO(c *domain.Client) clientDTO {
 		SubToken:           c.SubToken,
 		Enabled:            c.Enabled,
 		StartAfterFirstUse: c.StartAfterFirstUse,
+		Online:             isOnline(c.LastUsedAt),
 	}
 	if c.NodeID != nil {
 		dto.NodeID = strconv.FormatInt(*c.NodeID, 10)
@@ -320,4 +323,10 @@ func (h *ClientHandler) SetStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, h.toDTO(c))
+}
+
+const onlineThreshold = 5 * time.Minute
+
+func isOnline(lastUsedAt *time.Time) bool {
+	return lastUsedAt != nil && time.Since(*lastUsedAt) < onlineThreshold
 }

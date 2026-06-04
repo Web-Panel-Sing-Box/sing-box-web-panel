@@ -7,6 +7,8 @@ CONFIG_DIR="${CONFIG_DIR:-/etc/shilka}"
 DATA_DIR="${DATA_DIR:-/var/lib/shilka}"
 LOG_DIR="${LOG_DIR:-/var/log/shilka}"
 TLS_CERT_DIR="${TLS_CERT_DIR:-${CONFIG_DIR}/tls}"
+UPDATE_SCRIPT_PATH="${UPDATE_SCRIPT_PATH:-/usr/local/sbin/shilka-update}"
+UPDATE_SUDOERS_PATH="${UPDATE_SUDOERS_PATH:-/etc/sudoers.d/shilka-update}"
 SING_BOX_VERSION="${SING_BOX_VERSION:-latest}"
 PANEL_VERSION="${PANEL_VERSION:-latest}"
 GITHUB_REPO="${GITHUB_REPO:-Web-Panel-Sing-Box/shilka-web-panel}"
@@ -275,6 +277,40 @@ install_panel_binary() {
   rm -rf "${tmp}"
 }
 
+ensure_sudo() {
+  if command -v sudo &>/dev/null; then
+    return 0
+  fi
+  if command -v apt-get &>/dev/null; then
+    echo "Installing sudo for the panel update helper..."
+    apt-get update -qq && apt-get install -y -qq sudo
+    return 0
+  fi
+  echo "WARNING: sudo is not installed. The web update button will stay unavailable."
+  return 1
+}
+
+install_update_helper() {
+  local update_url helper_dir
+  helper_dir="$(dirname "${UPDATE_SCRIPT_PATH}")"
+  update_url="https://raw.githubusercontent.com/${GITHUB_REPO}/main/scripts/update.sh"
+  echo "Installing Shilka update helper..."
+  install -d -m 0755 "${helper_dir}"
+  curl -fsSL "${update_url}" -o "${UPDATE_SCRIPT_PATH}"
+  chown root:root "${UPDATE_SCRIPT_PATH}"
+  chmod 0755 "${UPDATE_SCRIPT_PATH}"
+
+  if ensure_sudo; then
+    cat >"${UPDATE_SUDOERS_PATH}" <<SUDOERS
+${APP_USER} ALL=(root) NOPASSWD: ${UPDATE_SCRIPT_PATH}
+SUDOERS
+    chmod 0440 "${UPDATE_SUDOERS_PATH}"
+    if command -v visudo &>/dev/null; then
+      visudo -cf "${UPDATE_SUDOERS_PATH}" >/dev/null
+    fi
+  fi
+}
+
 gather_input() {
   local public_ip
   public_ip="$(detect_public_ip)"
@@ -535,6 +571,12 @@ logging:
   max_file_size_mb: 10
   max_file_backups: 3
 
+updates:
+  repo: "${GITHUB_REPO}"
+  script_path: "${UPDATE_SCRIPT_PATH}"
+  check_cache_ttl: "10m"
+  command_timeout: "10m"
+
 subscription:
   public_url: "${PANEL_PUBLIC_URL}"
   token_ttl: "720h"
@@ -564,7 +606,7 @@ Environment=SHILKA_CONFIG_PATH=${CONFIG_DIR}/prod.yaml
 ExecStart=${APP_HOME}/bin/shilka run
 Restart=on-failure
 RestartSec=3
-NoNewPrivileges=true
+NoNewPrivileges=false
 PrivateTmp=true
 ProtectSystem=full
 ReadWritePaths=${CONFIG_DIR} ${DATA_DIR} ${LOG_DIR}
@@ -713,6 +755,7 @@ main() {
   fi
   install_sing_box
   install_panel_binary
+  install_update_helper
   write_prod_config
   install_systemd
 

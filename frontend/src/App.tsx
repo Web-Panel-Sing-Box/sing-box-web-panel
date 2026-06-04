@@ -3,6 +3,7 @@ import { LazyMotion, MotionConfig, domMax } from "framer-motion";
 import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { RequireAuth } from "@/components/auth/require-auth";
+import { FrontendErrorReporter } from "@/components/logs/frontend-error-reporter";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/lib/auth";
 import { I18nProvider } from "@/lib/i18n";
@@ -37,6 +38,7 @@ export function App() {
         <MotionConfig reducedMotion="user">
         <Toaster>
           <AuthProvider>
+            <FrontendErrorReporter />
             <HashRouter>
               <Suspense
                 fallback={<div className="min-h-screen w-full bg-surface" />}

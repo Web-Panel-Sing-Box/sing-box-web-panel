@@ -11,6 +11,8 @@ definitions:
     type: object
   internal_transport_handler.clientDTO:
     properties:
+      enabled:
+        type: boolean
       expiry:
         type: string
       id:
@@ -19,9 +21,15 @@ definitions:
         type: string
       name:
         type: string
+      nodeId:
+        type: string
+      remoteId:
+        type: string
       startAfterFirstUse:
         type: boolean
       status:
+        type: string
+      subToken:
         type: string
       subscription:
         type: string
@@ -101,6 +109,17 @@ definitions:
       usedBytes:
         type: integer
     type: object
+  internal_transport_handler.frontendLogRequest:
+    properties:
+      fields:
+        additionalProperties:
+          type: string
+        type: object
+      level:
+        type: string
+      message:
+        type: string
+    type: object
   internal_transport_handler.inboundDTO:
     properties:
       clientCount:
@@ -113,11 +132,15 @@ definitions:
         type: boolean
       id:
         type: string
+      nodeId:
+        type: string
       port:
         type: integer
       protocol:
         type: string
       remark:
+        type: string
+      remoteId:
         type: string
       settings:
         $ref: '#/definitions/internal_transport_handler.inboundSettingsDTO'
@@ -126,6 +149,8 @@ definitions:
       tls:
         type: string
       transmission:
+        type: string
+      updatedAt:
         type: string
     type: object
   internal_transport_handler.inboundRequest:
@@ -226,11 +251,19 @@ definitions:
     type: object
   internal_transport_handler.logEntryDTO:
     properties:
+      fields:
+        additionalProperties:
+          type: string
+        type: object
       id:
         type: string
       level:
         type: string
       message:
+        type: string
+      requestId:
+        type: string
+      source:
         type: string
       t:
         type: integer
@@ -319,6 +352,21 @@ definitions:
         type: integer
       uptimeSeconds:
         type: integer
+    type: object
+  internal_transport_handler.panelVersionDTO:
+    properties:
+      checkedAt:
+        type: string
+      currentVersion:
+        type: string
+      latestVersion:
+        type: string
+      releaseURL:
+        type: string
+      status:
+        type: string
+      updateAvailable:
+        type: boolean
     type: object
   internal_transport_handler.setStatusRequest:
     properties:
@@ -616,6 +664,27 @@ paths:
       security:
       - BearerAuth: []
       summary: Disable TOTP
+      tags:
+      - auth
+  /auth/totp/qr:
+    get:
+      description: Returns a PNG QR code for the current admin's configured TOTP secret.
+      produces:
+      - image/png
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get TOTP QR code
       tags:
       - auth
   /auth/totp/setup:
@@ -1167,6 +1236,10 @@ paths:
         in: query
         name: level
         type: string
+      - description: panel | core | frontend
+        in: query
+        name: source
+        type: string
       - description: substring filter
         in: query
         name: q
@@ -1189,6 +1262,81 @@ paths:
       summary: Recent log lines
       tags:
       - logs
+  /logs/frontend:
+    post:
+      consumes:
+      - application/json
+      description: Stores authenticated frontend runtime errors in the in-memory log
+        buffer.
+      parameters:
+      - description: Log line
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_transport_handler.frontendLogRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Record a frontend log line
+      tags:
+      - logs
+  /panel/update:
+    post:
+      description: Starts the configured update helper asynchronously. Returns 409
+        if an update is already running.
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/internal_transport_handler.panelVersionDTO'
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Start panel update
+      tags:
+      - panel
+  /panel/version:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_transport_handler.panelVersionDTO'
+      security:
+      - BearerAuth: []
+      summary: Panel version and update status
+      tags:
+      - panel
   /subscription/{token}:
     get:
       description: Returns the client's connection config. ?format=base64|plain|json

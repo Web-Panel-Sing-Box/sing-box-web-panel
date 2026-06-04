@@ -19,6 +19,7 @@ export type ClientDTO = {
   subToken?: string;
   enabled?: boolean;
   startAfterFirstUse: boolean;
+  online: boolean;
 };
 
 export type ClientCreateRequest = {

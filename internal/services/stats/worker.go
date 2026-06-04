@@ -14,6 +14,7 @@ type ClientStore interface {
 	AddTraffic(ctx context.Context, deltas []domain.TrafficDelta) error
 	SetStatus(ctx context.Context, id int64, status domain.ClientStatus, enabled bool) error
 	SetFirstUsed(ctx context.Context, id int64, at any) error
+	SetLastUsedAt(ctx context.Context, id int64, at time.Time) error
 }
 
 // RollupStore persists the daily traffic rollup.

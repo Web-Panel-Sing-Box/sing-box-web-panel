@@ -12,6 +12,7 @@ import type { Client, ClientStatus } from "@/lib/store";
 import { useInbounds, useStoreActions } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
 
+import { StatusDot } from "@/components/ui/status-dot";
 import { QrModal } from "./qr-modal";
 
 const GB = 1024 ** 3;
@@ -74,6 +75,10 @@ export function ClientDetailModal({ client, onClose }: Props) {
       <Modal open={!!client} onClose={onClose} width="max-w-[640px]">
         <ModalHeader title={draft.name} onClose={onClose} />
         <ModalBody className="space-y-3">
+          <div className="-mt-2 flex items-center gap-1.5 text-xs text-ink-tertiary">
+            <StatusDot state={draft.online ? "online" : "neutral"} size={6} />
+            <span>{draft.online ? t("clients.online") : t("clients.offline")}</span>
+          </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label>{t("clients.userName")}</Label>

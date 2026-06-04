@@ -6,6 +6,8 @@ APP_HOME="${APP_HOME:-/opt/shilka}"
 CONFIG_DIR="${CONFIG_DIR:-/etc/shilka}"
 DATA_DIR="${DATA_DIR:-/var/lib/shilka}"
 LOG_DIR="${LOG_DIR:-/var/log/shilka}"
+UPDATE_SCRIPT_PATH="${UPDATE_SCRIPT_PATH:-/usr/local/sbin/shilka-update}"
+UPDATE_SUDOERS_PATH="${UPDATE_SUDOERS_PATH:-/etc/sudoers.d/shilka-update}"
 
 require_root() {
   if [[ "${EUID}" -ne 0 ]]; then
@@ -37,6 +39,14 @@ remove_cli() {
   if [[ -f /usr/local/bin/shilka ]]; then
     echo "Removing CLI script..."
     rm -f /usr/local/bin/shilka
+  fi
+  if [[ -f "${UPDATE_SCRIPT_PATH}" ]]; then
+    echo "Removing update helper..."
+    rm -f "${UPDATE_SCRIPT_PATH}"
+  fi
+  if [[ -f "${UPDATE_SUDOERS_PATH}" ]]; then
+    echo "Removing update sudoers rule..."
+    rm -f "${UPDATE_SUDOERS_PATH}"
   fi
 }
 
@@ -72,6 +82,8 @@ main() {
   echo "  ${DATA_DIR}"
   echo "  ${LOG_DIR}"
   echo "  /usr/local/bin/shilka"
+  echo "  ${UPDATE_SCRIPT_PATH}"
+  echo "  ${UPDATE_SUDOERS_PATH}"
   echo "  /etc/systemd/system/shilka.service"
   echo "  user: ${APP_USER}"
   echo ""
