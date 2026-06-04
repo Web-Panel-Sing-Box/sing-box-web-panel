@@ -48,6 +48,11 @@ func (r *ClientRepo) GetByID(ctx context.Context, id int64) (*domain.Client, err
 	return scanClient(row)
 }
 
+func (r *ClientRepo) GetByRemote(ctx context.Context, nodeID int64, remoteID string) (*domain.Client, error) {
+	row := r.db.QueryRowContext(ctx, `SELECT `+clientColumns+` FROM clients WHERE node_id = ? AND remote_id = ?`, nodeID, remoteID)
+	return scanClient(row)
+}
+
 func (r *ClientRepo) GetBySubToken(ctx context.Context, token string) (*domain.Client, error) {
 	row := r.db.QueryRowContext(ctx, `SELECT `+clientColumns+` FROM clients WHERE sub_token = ?`, token)
 	return scanClient(row)

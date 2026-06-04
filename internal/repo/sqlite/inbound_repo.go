@@ -51,6 +51,11 @@ func (r *InboundRepo) GetByID(ctx context.Context, id int64) (*domain.Inbound, e
 	return scanInbound(row)
 }
 
+func (r *InboundRepo) GetByRemote(ctx context.Context, nodeID int64, remoteID string) (*domain.Inbound, error) {
+	row := r.db.QueryRowContext(ctx, `SELECT `+inboundColumns+` FROM inbounds WHERE node_id = ? AND remote_id = ?`, nodeID, remoteID)
+	return scanInbound(row)
+}
+
 func (r *InboundRepo) List(ctx context.Context) ([]domain.Inbound, error) {
 	return r.query(ctx, `SELECT `+inboundColumns+` FROM inbounds ORDER BY id DESC`)
 }

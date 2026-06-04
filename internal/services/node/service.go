@@ -2,6 +2,7 @@ package node
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -9,7 +10,11 @@ import (
 	"time"
 
 	"sing-box-web-panel/internal/domain"
+	svcclient "sing-box-web-panel/internal/services/client"
+	svcinbound "sing-box-web-panel/internal/services/inbound"
 )
+
+var ErrValidation = errors.New("node validation error")
 
 type Repo interface {
 	Create(ctx context.Context, n *domain.Node) error
@@ -23,11 +28,17 @@ type Repo interface {
 }
 
 type InboundCache interface {
+	GetByID(ctx context.Context, id int64) (*domain.Inbound, error)
+	GetByRemote(ctx context.Context, nodeID int64, remoteID string) (*domain.Inbound, error)
 	UpsertRemote(ctx context.Context, nodeID int64, remoteID string, ib *domain.Inbound) (int64, error)
+	Delete(ctx context.Context, id int64) error
 }
 
 type ClientCache interface {
+	GetByID(ctx context.Context, id int64) (*domain.Client, error)
+	GetByRemote(ctx context.Context, nodeID int64, remoteID string) (*domain.Client, error)
 	UpsertRemote(ctx context.Context, nodeID int64, remoteID string, inboundID int64, c *domain.Client) error
+	Delete(ctx context.Context, id int64) error
 }
 
 type Service struct {
@@ -189,6 +200,248 @@ func (s *Service) Sync(ctx context.Context, id int64) (*SyncResult, error) {
 	return &SyncResult{NodeID: id, InboundCount: len(snap.Inbounds), ClientCount: len(snap.Clients), SyncedAt: now}, nil
 }
 
+func (s *Service) CreateInbound(ctx context.Context, nodeID int64, in svcinbound.Input) (*domain.Inbound, error) {
+	n, err := s.remoteNode(ctx, nodeID)
+	if err != nil {
+		return nil, err
+	}
+	rib, err := s.remote.CreateInbound(ctx, n, remoteInboundRequest(in))
+	if err != nil {
+		return nil, err
+	}
+	return s.cacheRemoteInbound(ctx, nodeID, rib)
+}
+
+func (s *Service) UpdateInbound(ctx context.Context, id int64, in svcinbound.Input) (*domain.Inbound, error) {
+	ib, nodeID, err := s.cachedRemoteInbound(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	n, err := s.remoteNode(ctx, nodeID)
+	if err != nil {
+		return nil, err
+	}
+	rib, err := s.remote.UpdateInbound(ctx, n, ib.RemoteID, remoteInboundRequest(in))
+	if err != nil {
+		return nil, err
+	}
+	return s.cacheRemoteInbound(ctx, nodeID, rib)
+}
+
+func (s *Service) DeleteInbound(ctx context.Context, id int64) error {
+	ib, nodeID, err := s.cachedRemoteInbound(ctx, id)
+	if err != nil {
+		return err
+	}
+	n, err := s.remoteNode(ctx, nodeID)
+	if err != nil {
+		return err
+	}
+	if err := s.remote.DeleteInbound(ctx, n, ib.RemoteID); err != nil && !IsRemoteStatus(err, 404) {
+		return err
+	}
+	return s.inbounds.Delete(ctx, id)
+}
+
+func (s *Service) ToggleInbound(ctx context.Context, id int64) (*domain.Inbound, error) {
+	ib, nodeID, err := s.cachedRemoteInbound(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	n, err := s.remoteNode(ctx, nodeID)
+	if err != nil {
+		return nil, err
+	}
+	rib, err := s.remote.ToggleInbound(ctx, n, ib.RemoteID)
+	if err != nil {
+		return nil, err
+	}
+	return s.cacheRemoteInbound(ctx, nodeID, rib)
+}
+
+func (s *Service) CreateClient(ctx context.Context, nodeID int64, in svcclient.CreateInput) (*domain.Client, error) {
+	ib, err := s.remoteClientInbound(ctx, nodeID, in.InboundID)
+	if err != nil {
+		return nil, err
+	}
+	n, err := s.remoteNode(ctx, nodeID)
+	if err != nil {
+		return nil, err
+	}
+	req := RemoteClientCreateRequest{
+		Name:               in.Name,
+		InboundID:          ib.RemoteID,
+		TotalQuota:         in.TotalQuota,
+		Expiry:             formatTimePtr(in.Expiry),
+		StartAfterFirstUse: in.StartAfterFirstUse,
+	}
+	rc, err := s.remote.CreateClient(ctx, n, req)
+	if err != nil {
+		return nil, err
+	}
+	return s.cacheRemoteClient(ctx, nodeID, rc)
+}
+
+func (s *Service) UpdateClient(ctx context.Context, id int64, in svcclient.UpdateInput) (*domain.Client, error) {
+	c, nodeID, err := s.cachedRemoteClient(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	n, err := s.remoteNode(ctx, nodeID)
+	if err != nil {
+		return nil, err
+	}
+	req := RemoteClientUpdateRequest{
+		Name:               in.Name,
+		TotalQuota:         in.TotalQuota,
+		StartAfterFirstUse: in.StartAfterFirstUse,
+	}
+	if in.InboundID != nil {
+		ib, err := s.remoteClientInbound(ctx, nodeID, *in.InboundID)
+		if err != nil {
+			return nil, err
+		}
+		req.InboundID = &ib.RemoteID
+	}
+	if in.Expiry != nil {
+		expiry := formatTimePtr(in.Expiry)
+		req.Expiry = &expiry
+	}
+	if in.Status != nil {
+		status := string(*in.Status)
+		req.Status = &status
+	}
+	rc, err := s.remote.UpdateClient(ctx, n, c.RemoteID, req)
+	if err != nil {
+		return nil, err
+	}
+	return s.cacheRemoteClient(ctx, nodeID, rc)
+}
+
+func (s *Service) DeleteClient(ctx context.Context, id int64) error {
+	c, nodeID, err := s.cachedRemoteClient(ctx, id)
+	if err != nil {
+		return err
+	}
+	n, err := s.remoteNode(ctx, nodeID)
+	if err != nil {
+		return err
+	}
+	if err := s.remote.DeleteClient(ctx, n, c.RemoteID); err != nil && !IsRemoteStatus(err, 404) {
+		return err
+	}
+	return s.clients.Delete(ctx, id)
+}
+
+func (s *Service) ResetClientTraffic(ctx context.Context, id int64) (*domain.Client, error) {
+	c, nodeID, err := s.cachedRemoteClient(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	n, err := s.remoteNode(ctx, nodeID)
+	if err != nil {
+		return nil, err
+	}
+	rc, err := s.remote.ResetClientTraffic(ctx, n, c.RemoteID)
+	if err != nil {
+		return nil, err
+	}
+	return s.cacheRemoteClient(ctx, nodeID, rc)
+}
+
+func (s *Service) SetClientStatus(ctx context.Context, id int64, status domain.ClientStatus) (*domain.Client, error) {
+	c, nodeID, err := s.cachedRemoteClient(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	n, err := s.remoteNode(ctx, nodeID)
+	if err != nil {
+		return nil, err
+	}
+	rc, err := s.remote.SetClientStatus(ctx, n, c.RemoteID, status)
+	if err != nil {
+		return nil, err
+	}
+	return s.cacheRemoteClient(ctx, nodeID, rc)
+}
+
+func (s *Service) remoteNode(ctx context.Context, nodeID int64) (*domain.Node, error) {
+	n, err := s.repo.GetByID(ctx, nodeID)
+	if err != nil {
+		return nil, err
+	}
+	if !n.Enabled {
+		return nil, fmt.Errorf("%w: node is disabled", ErrValidation)
+	}
+	if strings.TrimSpace(n.APITokenSecret) == "" {
+		return nil, fmt.Errorf("%w: node api token is required", ErrValidation)
+	}
+	return n, nil
+}
+
+func (s *Service) cachedRemoteInbound(ctx context.Context, id int64) (*domain.Inbound, int64, error) {
+	ib, err := s.inbounds.GetByID(ctx, id)
+	if err != nil {
+		return nil, 0, err
+	}
+	if ib.NodeID == nil || ib.RemoteID == "" {
+		return nil, 0, fmt.Errorf("%w: inbound is local", ErrValidation)
+	}
+	return ib, *ib.NodeID, nil
+}
+
+func (s *Service) cachedRemoteClient(ctx context.Context, id int64) (*domain.Client, int64, error) {
+	c, err := s.clients.GetByID(ctx, id)
+	if err != nil {
+		return nil, 0, err
+	}
+	if c.NodeID == nil || c.RemoteID == "" {
+		return nil, 0, fmt.Errorf("%w: client is local", ErrValidation)
+	}
+	return c, *c.NodeID, nil
+}
+
+func (s *Service) remoteClientInbound(ctx context.Context, nodeID int64, inboundID int64) (*domain.Inbound, error) {
+	ib, err := s.inbounds.GetByID(ctx, inboundID)
+	if err != nil {
+		return nil, err
+	}
+	if ib.NodeID == nil || *ib.NodeID != nodeID || ib.RemoteID == "" {
+		return nil, fmt.Errorf("%w: inbound belongs to a different node", ErrValidation)
+	}
+	return ib, nil
+}
+
+func (s *Service) cacheRemoteInbound(ctx context.Context, nodeID int64, rib *RemoteInbound) (*domain.Inbound, error) {
+	if rib == nil || rib.ID == "" {
+		return nil, fmt.Errorf("%w: remote inbound id is missing", ErrRemote)
+	}
+	ib := remoteInboundToDomain(nodeID, rib)
+	localID, err := s.inbounds.UpsertRemote(ctx, nodeID, rib.ID, ib)
+	if err != nil {
+		return nil, err
+	}
+	return s.inbounds.GetByID(ctx, localID)
+}
+
+func (s *Service) cacheRemoteClient(ctx context.Context, nodeID int64, rc *RemoteClient) (*domain.Client, error) {
+	if rc == nil || rc.ID == "" {
+		return nil, fmt.Errorf("%w: remote client id is missing", ErrRemote)
+	}
+	ib, err := s.inbounds.GetByRemote(ctx, nodeID, rc.InboundID)
+	if err != nil {
+		return nil, err
+	}
+	c, err := remoteClientToDomain(nodeID, ib.ID, rc)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.clients.UpsertRemote(ctx, nodeID, rc.ID, ib.ID, c); err != nil {
+		return nil, err
+	}
+	return s.clients.GetByRemote(ctx, nodeID, rc.ID)
+}
+
 func (s *Service) Run(ctx context.Context, heartbeatInterval, syncInterval time.Duration) {
 	if heartbeatInterval <= 0 {
 		heartbeatInterval = 10 * time.Second
@@ -301,6 +554,87 @@ func parseTimePtr(s string) (*time.Time, error) {
 		return nil, err
 	}
 	return &t, nil
+}
+
+func formatTimePtr(t *time.Time) string {
+	if t == nil {
+		return ""
+	}
+	return t.UTC().Format(time.RFC3339)
+}
+
+func remoteInboundRequest(in svcinbound.Input) RemoteInboundRequest {
+	return RemoteInboundRequest{
+		Remark:                   in.Remark,
+		Protocol:                 string(in.Protocol),
+		Port:                     in.Port,
+		Transmission:             string(in.Transmission),
+		TLS:                      string(in.TLS),
+		SNI:                      in.SNI,
+		Dest:                     in.Dest,
+		ACMEDomain:               in.ACMEDomain,
+		ACMEEmail:                in.ACMEEmail,
+		CertPath:                 in.CertPath,
+		KeyPath:                  in.KeyPath,
+		AllowInsecure:            in.AllowInsecure,
+		MultiplexEnabled:         in.MultiplexEnabled,
+		Hy2UpMbps:                in.Hy2UpMbps,
+		Hy2DownMbps:              in.Hy2DownMbps,
+		Hy2IgnoreClientBandwidth: in.Hy2IgnoreClientBandwidth,
+		Hy2ObfsPassword:          in.Hy2ObfsPassword,
+		Hy2ObfsMinPacketSize:     in.Hy2ObfsMinPacketSize,
+		Hy2ObfsMaxPacketSize:     in.Hy2ObfsMaxPacketSize,
+		Hy2Masquerade:            in.Hy2Masquerade,
+		Hy2Network:               in.Hy2Network,
+		Hy2BrutalDebug:           in.Hy2BrutalDebug,
+		Hy2BBRProfile:            in.Hy2BBRProfile,
+		NaiveNetwork:             in.NaiveNetwork,
+		NaiveQuicCongestionCtrl:  in.NaiveQuicCongestionCtrl,
+	}
+}
+
+func remoteInboundToDomain(nodeID int64, rib *RemoteInbound) *domain.Inbound {
+	return &domain.Inbound{
+		NodeID:       &nodeID,
+		RemoteID:     rib.ID,
+		Remark:       rib.Remark,
+		Protocol:     rib.Protocol,
+		Port:         rib.Port,
+		Transmission: rib.Transmission,
+		TLS:          rib.TLS,
+		SNI:          rib.SNI,
+		Dest:         rib.Dest,
+		Enabled:      rib.Enabled,
+		Settings:     rib.Settings,
+	}
+}
+
+func remoteClientToDomain(nodeID int64, inboundID int64, rc *RemoteClient) (*domain.Client, error) {
+	expiry, err := parseTimePtr(rc.Expiry)
+	if err != nil {
+		return nil, err
+	}
+	firstUsedAt, err := parseTimePtr(rc.FirstUsedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &domain.Client{
+		NodeID:             &nodeID,
+		RemoteID:           rc.ID,
+		InboundID:          inboundID,
+		Name:               rc.Name,
+		UUID:               rc.UUID,
+		Password:           rc.Password,
+		UsedUp:             rc.UsedUp,
+		UsedDown:           rc.UsedDown,
+		TotalQuota:         rc.TotalQuota,
+		Expiry:             expiry,
+		Status:             rc.Status,
+		SubToken:           rc.SubToken,
+		StartAfterFirstUse: rc.StartAfterFirstUse,
+		Enabled:            rc.Enabled,
+		FirstUsedAt:        firstUsedAt,
+	}, nil
 }
 
 func ParseID(s string) (int64, error) {

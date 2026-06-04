@@ -51,6 +51,7 @@ export type InboundDTO = {
 };
 
 export type InboundCreateRequest = {
+  nodeId?: string;
   remark: string;
   protocol: Protocol;
   port: number;

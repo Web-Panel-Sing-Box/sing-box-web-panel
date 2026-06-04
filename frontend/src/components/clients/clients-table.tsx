@@ -81,6 +81,7 @@ const Row = memo(function Row({
   onSelect: (client: Client) => void;
 }) {
   const [hover, setHover] = useState(false);
+  const { t } = useI18n();
   const handleClick = useCallback(() => onSelect(client), [onSelect, client]);
   const handleEnter = useCallback(() => setHover(true), []);
   const handleLeave = useCallback(() => setHover(false), []);
@@ -98,7 +99,7 @@ const Row = memo(function Row({
           <div className="truncate text-sm text-ink-primary">{client.name}</div>
         </div>
         <div className="truncate font-mono text-[11px] text-ink-tertiary">
-          {client.nodeId ? `node:${client.nodeId} · ` : "local · "}
+          {client.nodeId ? `node:${client.nodeId} · ` : `${t("common.local")} · `}
           {truncateMiddle(client.uuid, 8, 6)}
         </div>
       </div>

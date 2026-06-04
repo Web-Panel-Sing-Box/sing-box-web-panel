@@ -105,6 +105,85 @@ func TestHTTPClientSkipsTLSVerificationWhenExplicit(t *testing.T) {
 	}
 }
 
+func TestHTTPClientCreateInboundUsesBasePathBearerAndJSON(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Fatalf("method = %s, want POST", r.Method)
+		}
+		if r.URL.Path != "/panel/api/node/v1/inbounds" {
+			t.Fatalf("path = %s", r.URL.Path)
+		}
+		if r.Header.Get("Authorization") != "Bearer secret" {
+			t.Fatalf("missing bearer token")
+		}
+		var req node.RemoteInboundRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
+		if req.Remark != "edge" || req.ACMEDomain != "vpn.example.com" {
+			t.Fatalf("request = %+v", req)
+		}
+		_ = json.NewEncoder(w).Encode(node.RemoteInbound{ID: "42", Remark: req.Remark})
+	}))
+	defer srv.Close()
+
+	n := nodeFromServerURL(t, srv.URL)
+	n.BasePath = "/panel"
+	client := node.NewHTTPClient()
+	got, err := client.CreateInbound(context.Background(), n, node.RemoteInboundRequest{
+		Remark:     "edge",
+		Protocol:   "hysteria2",
+		Port:       8443,
+		TLS:        "tls",
+		ACMEDomain: "vpn.example.com",
+	})
+	if err != nil {
+		t.Fatalf("create inbound: %v", err)
+	}
+	if got.ID != "42" || got.Remark != "edge" {
+		t.Fatalf("response = %+v", got)
+	}
+}
+
+func TestHTTPClientSetClientStatusSendsBody(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/node/v1/clients/9/status" {
+			t.Fatalf("path = %s", r.URL.Path)
+		}
+		var req node.RemoteClientStatusRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
+		if req.Status != string(domain.ClientStatusDisabled) {
+			t.Fatalf("status = %q", req.Status)
+		}
+		_ = json.NewEncoder(w).Encode(node.RemoteClient{ID: "9", Status: domain.ClientStatusDisabled})
+	}))
+	defer srv.Close()
+
+	client := node.NewHTTPClient()
+	got, err := client.SetClientStatus(context.Background(), nodeFromServerURL(t, srv.URL), "9", domain.ClientStatusDisabled)
+	if err != nil {
+		t.Fatalf("set status: %v", err)
+	}
+	if got.Status != domain.ClientStatusDisabled {
+		t.Fatalf("response = %+v", got)
+	}
+}
+
+func TestHTTPClientRemoteStatusError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "missing", http.StatusNotFound)
+	}))
+	defer srv.Close()
+
+	client := node.NewHTTPClient()
+	err := client.DeleteClient(context.Background(), nodeFromServerURL(t, srv.URL), "9")
+	if !node.IsRemoteStatus(err, http.StatusNotFound) {
+		t.Fatalf("expected 404 remote status error, got %v", err)
+	}
+}
+
 func nodeFromServerURL(t *testing.T, rawURL string) *domain.Node {
 	t.Helper()
 	u, err := url.Parse(rawURL)
