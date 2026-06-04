@@ -73,6 +73,27 @@ func TestVersionStatusKeepsDevelopmentBuildNotUpgradeable(t *testing.T) {
 	}
 }
 
+func TestVersionStatusNormalizesVPrefixedCurrentVersion(t *testing.T) {
+	svc := updater.New(updater.Config{
+		Repo:           "owner/repo",
+		CurrentVersion: "v1.2.0",
+	}, fakeReleaseClient{release: updater.Release{Version: "v1.2.0", URL: "https://example.test/release"}}, nil, discardLogger())
+
+	status, err := svc.VersionStatus(context.Background())
+	if err != nil {
+		t.Fatalf("VersionStatus error = %v", err)
+	}
+	if status.UpdateAvailable {
+		t.Fatal("UpdateAvailable = true, want false")
+	}
+	if status.LatestVersion != "1.2.0" {
+		t.Fatalf("LatestVersion = %q, want 1.2.0", status.LatestVersion)
+	}
+	if status.Status != "up_to_date" {
+		t.Fatalf("Status = %q, want up_to_date", status.Status)
+	}
+}
+
 func TestStartUpdateRejectsMissingHelper(t *testing.T) {
 	svc := updater.New(updater.Config{
 		ScriptPath:     filepath.Join(t.TempDir(), "missing"),
