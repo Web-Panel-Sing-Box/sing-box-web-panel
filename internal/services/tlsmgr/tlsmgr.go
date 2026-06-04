@@ -109,39 +109,45 @@ func (m *Manager) TLSConfig() (*tls.Config, error) {
 // ensureSelfSigned loads a cached self-signed cert, generating one (with the
 // configured hosts plus loopback) if absent.
 func (m *Manager) ensureSelfSigned() (tls.Certificate, error) {
-	dir := m.cfg.SelfSignedDir
+	certPath, keyPath, err := EnsureSelfSigned(m.cfg.SelfSignedDir, m.cfg.SelfSignedHosts)
+	if err != nil {
+		return tls.Certificate{}, err
+	}
+	return tls.LoadX509KeyPair(certPath, keyPath)
+}
+
+// EnsureSelfSigned makes sure a self-signed keypair exists in dir, generating one
+// (covering loopback plus extraHosts) when absent, and returns the cert and key
+// file paths. Reused both for the panel's own HTTPS cert and as the default
+// certificate source for TLS inbounds that have no ACME/cert configured.
+func EnsureSelfSigned(dir string, extraHosts []string) (certPath, keyPath string, err error) {
 	if dir == "" {
 		dir = "./storage/tls"
 	}
 	if err := os.MkdirAll(dir, 0o700); err != nil {
-		return tls.Certificate{}, fmt.Errorf("create tls dir: %w", err)
+		return "", "", fmt.Errorf("create tls dir: %w", err)
 	}
-	certPath := filepath.Join(dir, "cert.pem")
-	keyPath := filepath.Join(dir, "key.pem")
+	certPath = filepath.Join(dir, "cert.pem")
+	keyPath = filepath.Join(dir, "key.pem")
 
-	if _, err := os.Stat(certPath); err == nil {
-		if _, err := os.Stat(keyPath); err == nil {
-			return tls.LoadX509KeyPair(certPath, keyPath)
-		}
+	_, certErr := os.Stat(certPath)
+	_, keyErr := os.Stat(keyPath)
+	if certErr == nil && keyErr == nil {
+		return certPath, keyPath, nil
 	}
 
-	certPEM, keyPEM, err := generateSelfSigned(m.hosts())
+	hosts := append([]string{"127.0.0.1", "::1", "localhost"}, extraHosts...)
+	certPEM, keyPEM, err := generateSelfSigned(hosts)
 	if err != nil {
-		return tls.Certificate{}, err
+		return "", "", err
 	}
 	if err := os.WriteFile(certPath, certPEM, 0o600); err != nil {
-		return tls.Certificate{}, fmt.Errorf("write cert: %w", err)
+		return "", "", fmt.Errorf("write cert: %w", err)
 	}
 	if err := os.WriteFile(keyPath, keyPEM, 0o600); err != nil {
-		return tls.Certificate{}, fmt.Errorf("write key: %w", err)
+		return "", "", fmt.Errorf("write key: %w", err)
 	}
-	return tls.X509KeyPair(certPEM, keyPEM)
-}
-
-func (m *Manager) hosts() []string {
-	hosts := []string{"127.0.0.1", "::1", "localhost"}
-	hosts = append(hosts, m.cfg.SelfSignedHosts...)
-	return hosts
+	return certPath, keyPath, nil
 }
 
 func generateSelfSigned(hosts []string) (certPEM, keyPEM []byte, err error) {

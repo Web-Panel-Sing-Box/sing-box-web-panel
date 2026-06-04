@@ -53,6 +53,12 @@ type inboundSettingsDTO struct {
 	NaiveQuicCongestionCtrl string `json:"naiveQuicCongestionCtrl,omitempty"`
 	// Client subscription TLS verification.
 	AllowInsecure *bool `json:"allowInsecure,omitempty"`
+	// TLS certificate source (tls mode). Empty cert/acme means the panel falls
+	// back to a self-signed cert (SIN-52).
+	ACMEDomain string `json:"acmeDomain,omitempty"`
+	ACMEEmail  string `json:"acmeEmail,omitempty"`
+	CertPath   string `json:"certPath,omitempty"`
+	KeyPath    string `json:"keyPath,omitempty"`
 }
 
 type inboundDTO struct {
@@ -112,6 +118,10 @@ func toInboundDTO(ib *domain.Inbound, clientCount int) inboundDTO {
 		NaiveNetwork:             ib.Settings.NaiveNetwork,
 		NaiveQuicCongestionCtrl:  ib.Settings.NaiveQuicCongestionCtrl,
 		AllowInsecure:            boolPtr(ib.EffectiveAllowInsecure()),
+		ACMEDomain:               ib.Settings.ACMEDomain,
+		ACMEEmail:                ib.Settings.ACMEEmail,
+		CertPath:                 ib.Settings.CertPath,
+		KeyPath:                  ib.Settings.KeyPath,
 	}
 	if s != (inboundSettingsDTO{}) {
 		dto.Settings = &s

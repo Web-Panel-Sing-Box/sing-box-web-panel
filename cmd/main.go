@@ -155,17 +155,29 @@ func runServer() {
 		go logBuf.TailFile(rootCtx, absCoreLogPath, logbuf.SourceCore, time.Second, log)
 	}
 
+	// Default certificate source for tls-mode inbounds (hysteria2/naive always
+	// require tls) that have no ACME/cert configured: a panel-managed self-signed
+	// keypair. Without it the generator emits empty certificate_path and sing-box
+	// fails to bring up TLS (SIN-52). Non-fatal: on error the paths stay empty and
+	// behaviour falls back to the previous (degraded) state.
+	inboundTLSCert, inboundTLSKey, err := tlsmgr.EnsureSelfSigned(absPath(cfg.TLS.SelfSignedDir), cfg.TLS.SelfSignedHosts)
+	if err != nil {
+		log.Warn("ensure inbound self-signed cert", sl.Error(err))
+	}
+
 	// sing-box config generation + lifecycle.
 	generator := singbox.NewGenerator(inboundRepo, clientRepo, singbox.GeneratorConfig{
-		LogLevel:        logLevel,
-		InboundListen:   "::",
-		ClashAPIAddress: cfg.SingBox.APIAddress,
-		ClashAPISecret:  cfg.SingBox.APISecret,
-		CacheFilePath:   filepath.Join(absWorkingDir, "cache.db"),
-		StatsSource:     cfg.Stats.Source,
-		V2RayAPIListen:  cfg.Stats.V2RayAPIAddress,
-		CoreLogPath:     absCoreLogPath,
-		Settings:        settingRepo,
+		LogLevel:           logLevel,
+		InboundListen:      "::",
+		ClashAPIAddress:    cfg.SingBox.APIAddress,
+		ClashAPISecret:     cfg.SingBox.APISecret,
+		CacheFilePath:      filepath.Join(absWorkingDir, "cache.db"),
+		StatsSource:        cfg.Stats.Source,
+		V2RayAPIListen:     cfg.Stats.V2RayAPIAddress,
+		CoreLogPath:        absCoreLogPath,
+		DefaultTLSCertPath: inboundTLSCert,
+		DefaultTLSKeyPath:  inboundTLSKey,
+		Settings:           settingRepo,
 	})
 	checker := singbox.NewChecker(cfg.SingBox.BinaryPath, cfg.SingBox.CheckTimeout)
 	processMgr := singbox.NewProcessManager(singbox.ProcessConfig{
