@@ -51,6 +51,8 @@ type inboundSettingsDTO struct {
 	// Naive.
 	NaiveNetwork            string `json:"naiveNetwork,omitempty"`
 	NaiveQuicCongestionCtrl string `json:"naiveQuicCongestionCtrl,omitempty"`
+	// Client subscription TLS verification.
+	AllowInsecure *bool `json:"allowInsecure,omitempty"`
 }
 
 type inboundDTO struct {
@@ -109,6 +111,7 @@ func toInboundDTO(ib *domain.Inbound, clientCount int) inboundDTO {
 		Hy2BBRProfile:            ib.Settings.Hy2BBRProfile,
 		NaiveNetwork:             ib.Settings.NaiveNetwork,
 		NaiveQuicCongestionCtrl:  ib.Settings.NaiveQuicCongestionCtrl,
+		AllowInsecure:            boolPtr(ib.EffectiveAllowInsecure()),
 	}
 	if s != (inboundSettingsDTO{}) {
 		dto.Settings = &s
@@ -117,17 +120,18 @@ func toInboundDTO(ib *domain.Inbound, clientCount int) inboundDTO {
 }
 
 type inboundRequest struct {
-	Remark       string `json:"remark"`
-	Protocol     string `json:"protocol"`
-	Port         int    `json:"port"`
-	Transmission string `json:"transmission"`
-	TLS          string `json:"tls"`
-	SNI          string `json:"sni"`
-	Dest         string `json:"dest"`
-	ACMEDomain   string `json:"acmeDomain,omitempty"`
-	ACMEEmail    string `json:"acmeEmail,omitempty"`
-	CertPath     string `json:"certPath,omitempty"`
-	KeyPath      string `json:"keyPath,omitempty"`
+	Remark        string `json:"remark"`
+	Protocol      string `json:"protocol"`
+	Port          int    `json:"port"`
+	Transmission  string `json:"transmission"`
+	TLS           string `json:"tls"`
+	SNI           string `json:"sni"`
+	Dest          string `json:"dest"`
+	ACMEDomain    string `json:"acmeDomain,omitempty"`
+	ACMEEmail     string `json:"acmeEmail,omitempty"`
+	CertPath      string `json:"certPath,omitempty"`
+	KeyPath       string `json:"keyPath,omitempty"`
+	AllowInsecure *bool  `json:"allowInsecure,omitempty"`
 	// VLESS multiplex.
 	MultiplexEnabled bool `json:"multiplexEnabled,omitempty"`
 	// Hysteria2.
@@ -159,6 +163,7 @@ func (req inboundRequest) toInput() svcinbound.Input {
 		ACMEEmail:                req.ACMEEmail,
 		CertPath:                 req.CertPath,
 		KeyPath:                  req.KeyPath,
+		AllowInsecure:            req.AllowInsecure,
 		MultiplexEnabled:         req.MultiplexEnabled,
 		Hy2UpMbps:                req.Hy2UpMbps,
 		Hy2DownMbps:              req.Hy2DownMbps,
@@ -173,6 +178,10 @@ func (req inboundRequest) toInput() svcinbound.Input {
 		NaiveNetwork:             req.NaiveNetwork,
 		NaiveQuicCongestionCtrl:  req.NaiveQuicCongestionCtrl,
 	}
+}
+
+func boolPtr(v bool) *bool {
+	return &v
 }
 
 // List godoc

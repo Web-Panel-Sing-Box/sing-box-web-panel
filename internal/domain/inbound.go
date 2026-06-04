@@ -71,6 +71,9 @@ type InboundSettings struct {
 	// ACME (Let's Encrypt) for the inbound, handled by the sing-box core.
 	ACMEDomain string `json:"acmeDomain,omitempty"`
 	ACMEEmail  string `json:"acmeEmail,omitempty"`
+	// Client-side TLS verification override for generated links/subscriptions.
+	// nil means automatic: allow insecure for TLS inbounds without trusted cert material.
+	AllowInsecure *bool `json:"allowInsecure,omitempty"`
 
 	// Hysteria2.
 	Hy2UpMbps                int    `json:"hy2UpMbps,omitempty"`
@@ -90,4 +93,16 @@ type InboundSettings struct {
 
 	// VLESS multiplex.
 	MultiplexEnabled bool `json:"multiplexEnabled,omitempty"`
+}
+
+// EffectiveAllowInsecure reports whether generated client subscription output
+// should skip server certificate verification for this inbound.
+func (ib *Inbound) EffectiveAllowInsecure() bool {
+	if ib == nil || ib.TLS != TLSModeTLS {
+		return false
+	}
+	if ib.Settings.AllowInsecure != nil {
+		return *ib.Settings.AllowInsecure
+	}
+	return ib.Settings.ACMEDomain == "" && ib.Settings.CertPath == "" && ib.Settings.KeyPath == ""
 }

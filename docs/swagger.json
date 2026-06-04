@@ -1576,6 +1576,9 @@
                 "nodeId": {
                     "type": "string"
                 },
+                "online": {
+                    "type": "boolean"
+                },
                 "remoteId": {
                     "type": "string"
                 },
@@ -1784,6 +1787,9 @@
                 "acmeEmail": {
                     "type": "string"
                 },
+                "allowInsecure": {
+                    "type": "boolean"
+                },
                 "certPath": {
                     "type": "string"
                 },
@@ -1858,6 +1864,10 @@
         "internal_transport_handler.inboundSettingsDTO": {
             "type": "object",
             "properties": {
+                "allowInsecure": {
+                    "description": "Client subscription TLS verification.",
+                    "type": "boolean"
+                },
                 "flow": {
                     "type": "string"
                 },

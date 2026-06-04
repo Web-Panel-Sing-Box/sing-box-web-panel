@@ -10,6 +10,39 @@ LOCK_DIR="${LOCK_DIR:-/run/shilka-update.lock}"
 BIN_PATH="${BIN_PATH:-${APP_HOME}/bin/shilka}"
 LOG_FILE="${LOG_FILE:-${LOG_DIR}/update.log}"
 
+# Network resilience for flaky VPS links (SIN-54): retry + resume downloads.
+DOWNLOAD_RETRIES="${DOWNLOAD_RETRIES:-5}"
+DOWNLOAD_RETRY_DELAY="${DOWNLOAD_RETRY_DELAY:-2}"
+DOWNLOAD_CONNECT_TIMEOUT="${DOWNLOAD_CONNECT_TIMEOUT:-10}"
+
+# --retry-all-errors needs curl >= 7.71; degrade gracefully on older curl.
+_curl_retry_flags() {
+  if curl --help all 2>/dev/null | grep -q -- '--retry-all-errors'; then
+    printf '%s\n' --retry-all-errors
+  fi
+}
+
+# download_file <url> <output-path> — resumable, retried download.
+download_file() {
+  local url="$1" out="$2" extra=()
+  mapfile -t extra < <(_curl_retry_flags)
+  curl --fail --location --show-error \
+    --connect-timeout "${DOWNLOAD_CONNECT_TIMEOUT}" \
+    --retry "${DOWNLOAD_RETRIES}" --retry-delay "${DOWNLOAD_RETRY_DELAY}" \
+    --retry-connrefused ${extra[@]+"${extra[@]}"} \
+    -C - -o "${out}" "${url}"
+}
+
+# fetch_url <url> — retried fetch to stdout (for GitHub API metadata).
+fetch_url() {
+  local url="$1" extra=()
+  mapfile -t extra < <(_curl_retry_flags)
+  curl --fail --location --show-error \
+    --connect-timeout "${DOWNLOAD_CONNECT_TIMEOUT}" \
+    --retry "${DOWNLOAD_RETRIES}" --retry-delay "${DOWNLOAD_RETRY_DELAY}" \
+    --retry-connrefused ${extra[@]+"${extra[@]}"} "${url}"
+}
+
 require_root() {
   if [[ "${EUID}" -ne 0 ]]; then
     echo "update.sh must run as root"
@@ -63,7 +96,7 @@ resolve_panel_version() {
     echo "${PANEL_VERSION#v}"
     return
   fi
-  curl -fsSL "https://api.github.com/repos/${GITHUB_REPO}/releases/latest" \
+  fetch_url "https://api.github.com/repos/${GITHUB_REPO}/releases/latest" \
     | sed -n 's/.*"tag_name": "v\{0,1\}\([^"]*\)".*/\1/p' \
     | head -n 1
 }
@@ -72,7 +105,7 @@ verify_panel_checksum() {
   local tmp="$1" asset="$2" version="$3" expected actual checksums_url
   checksums_url="https://github.com/${GITHUB_REPO}/releases/download/v${version}/checksums.txt"
   log "Verifying checksum for ${asset}"
-  curl -fL "${checksums_url}" -o "${tmp}/checksums.txt"
+  download_file "${checksums_url}" "${tmp}/checksums.txt"
   expected="$(awk -v asset="${asset}" '$2 == asset || $2 == "dist/" asset { print $1; found=1; exit } END { if (!found) exit 1 }' "${tmp}/checksums.txt")" || {
     log "ERROR: checksum for ${asset} not found"
     exit 1
@@ -106,7 +139,7 @@ install_panel_binary() {
   trap 'rm -rf "${tmp}"; rm -rf "${LOCK_DIR}"' EXIT
 
   log "Downloading Shilka ${version} (${asset})"
-  curl -fL "${url}" -o "${tmp}/${asset}"
+  download_file "${url}" "${tmp}/${asset}"
   verify_panel_checksum "${tmp}" "${asset}" "${version}"
 
   if [[ ! -x "${BIN_PATH}" ]]; then

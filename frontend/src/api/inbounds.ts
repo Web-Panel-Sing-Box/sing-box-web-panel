@@ -24,6 +24,7 @@ export type InboundSettings = {
   // Naive
   naiveNetwork?: string;
   naiveQuicCongestionCtrl?: string;
+  allowInsecure?: boolean;
 };
 
 export type InboundDTO = {
@@ -71,6 +72,7 @@ export type InboundCreateRequest = {
   // Naive
   naiveNetwork?: string;
   naiveQuicCongestionCtrl?: string;
+  allowInsecure?: boolean;
 };
 
 export type InboundUpdateRequest = InboundCreateRequest;

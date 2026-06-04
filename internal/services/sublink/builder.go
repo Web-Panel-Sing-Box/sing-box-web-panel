@@ -47,6 +47,9 @@ func buildVLESS(ib *domain.Inbound, c *domain.Client, host, port string) string 
 		if ib.SNI != "" {
 			q.Set("sni", ib.SNI)
 		}
+		if ib.EffectiveAllowInsecure() {
+			q.Set("allowInsecure", "1")
+		}
 		q.Set("fp", "chrome")
 	default:
 		q.Set("security", "none")
@@ -82,7 +85,11 @@ func buildHysteria2(ib *domain.Inbound, c *domain.Client, host, port string) str
 	if ib.SNI != "" {
 		q.Set("sni", ib.SNI)
 	}
-	q.Set("insecure", "0")
+	if ib.EffectiveAllowInsecure() {
+		q.Set("insecure", "1")
+	} else {
+		q.Set("insecure", "0")
+	}
 
 	u := url.URL{
 		Scheme:   "hysteria2",
@@ -95,10 +102,16 @@ func buildHysteria2(ib *domain.Inbound, c *domain.Client, host, port string) str
 }
 
 func buildNaive(ib *domain.Inbound, c *domain.Client, host, port string) string {
+	q := url.Values{}
+	if ib.EffectiveAllowInsecure() {
+		q.Set("allowInsecure", "1")
+	}
+
 	u := url.URL{
 		Scheme:   "naive+https",
 		User:     url.UserPassword(c.Name, c.Password),
 		Host:     net.JoinHostPort(host, port),
+		RawQuery: q.Encode(),
 		Fragment: c.Name,
 	}
 	return u.String()

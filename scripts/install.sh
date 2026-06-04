@@ -13,6 +13,39 @@ SING_BOX_VERSION="${SING_BOX_VERSION:-latest}"
 PANEL_VERSION="${PANEL_VERSION:-latest}"
 GITHUB_REPO="${GITHUB_REPO:-Web-Panel-Sing-Box/shilka-web-panel}"
 
+# Network resilience for flaky VPS links (SIN-54): retry + resume downloads.
+DOWNLOAD_RETRIES="${DOWNLOAD_RETRIES:-5}"
+DOWNLOAD_RETRY_DELAY="${DOWNLOAD_RETRY_DELAY:-2}"
+DOWNLOAD_CONNECT_TIMEOUT="${DOWNLOAD_CONNECT_TIMEOUT:-10}"
+
+# --retry-all-errors needs curl >= 7.71; degrade gracefully on older curl.
+_curl_retry_flags() {
+  if curl --help all 2>/dev/null | grep -q -- '--retry-all-errors'; then
+    printf '%s\n' --retry-all-errors
+  fi
+}
+
+# download_file <url> <output-path> — resumable, retried download.
+download_file() {
+  local url="$1" out="$2" extra=()
+  mapfile -t extra < <(_curl_retry_flags)
+  curl --fail --location --show-error \
+    --connect-timeout "${DOWNLOAD_CONNECT_TIMEOUT}" \
+    --retry "${DOWNLOAD_RETRIES}" --retry-delay "${DOWNLOAD_RETRY_DELAY}" \
+    --retry-connrefused ${extra[@]+"${extra[@]}"} \
+    -C - -o "${out}" "${url}"
+}
+
+# fetch_url <url> — retried fetch to stdout (for GitHub API metadata).
+fetch_url() {
+  local url="$1" extra=()
+  mapfile -t extra < <(_curl_retry_flags)
+  curl --fail --location --show-error \
+    --connect-timeout "${DOWNLOAD_CONNECT_TIMEOUT}" \
+    --retry "${DOWNLOAD_RETRIES}" --retry-delay "${DOWNLOAD_RETRY_DELAY}" \
+    --retry-connrefused ${extra[@]+"${extra[@]}"} "${url}"
+}
+
 require_root() {
   if [[ "${EUID}" -ne 0 ]]; then
     echo "install.sh must run as root"
@@ -46,7 +79,7 @@ resolve_sing_box_version() {
     echo "${SING_BOX_VERSION#v}"
     return
   fi
-  curl -fsSL https://api.github.com/repos/SagerNet/sing-box/releases/latest \
+  fetch_url https://api.github.com/repos/SagerNet/sing-box/releases/latest \
     | sed -n 's/.*"tag_name": "v\{0,1\}\([^"]*\)".*/\1/p' \
     | head -n 1
 }
@@ -110,7 +143,7 @@ install_acme() {
     fi
   fi
 
-  curl -s https://get.acme.sh | sh
+  fetch_url https://get.acme.sh | sh
   if [[ ! -x ~/.acme.sh/acme.sh ]]; then
     echo "ERROR: acme.sh installation failed"
     exit 1
@@ -196,22 +229,88 @@ create_user_and_dirs() {
   chown -R "${APP_USER}:${APP_USER}" "${APP_HOME}" "${CONFIG_DIR}" "${DATA_DIR}" "${LOG_DIR}"
 }
 
-install_sing_box() {
-  local arch version asset url tmp
+# Download + verify every binary into a staging dir BEFORE touching the live
+# install (SIN-54). Any network flap fails here, leaving the working node
+# untouched — no half-state. Sets STAGE_DIR for commit_binaries.
+STAGE_DIR=""
+
+stage_binaries() {
+  local arch sb_version sb_asset sb_url panel_version panel_asset panel_url update_url
   arch="$(detect_arch)"
   if [[ "${arch}" == "unsupported" ]]; then
     echo "Unsupported CPU architecture: $(uname -m)"
     exit 1
   fi
-  version="$(resolve_sing_box_version)"
-  echo "Installing sing-box ${version}..."
-  asset="sing-box-${version}-linux-${arch}.tar.gz"
-  url="https://github.com/SagerNet/sing-box/releases/download/v${version}/${asset}"
-  tmp="$(mktemp -d)"
-  curl -fL "${url}" -o "${tmp}/${asset}"
-  tar -xzf "${tmp}/${asset}" -C "${tmp}"
-  install -m 0755 "${tmp}/sing-box-${version}-linux-${arch}/sing-box" "${APP_HOME}/bin/sing-box"
-  rm -rf "${tmp}"
+
+  STAGE_DIR="$(mktemp -d)"
+  trap 'rm -rf "${STAGE_DIR}"' EXIT
+
+  # sing-box core
+  sb_version="$(resolve_sing_box_version)"
+  echo "Downloading sing-box ${sb_version}..."
+  sb_asset="sing-box-${sb_version}-linux-${arch}.tar.gz"
+  sb_url="https://github.com/SagerNet/sing-box/releases/download/v${sb_version}/${sb_asset}"
+  download_file "${sb_url}" "${STAGE_DIR}/${sb_asset}"
+  tar -xzf "${STAGE_DIR}/${sb_asset}" -C "${STAGE_DIR}"
+  cp "${STAGE_DIR}/sing-box-${sb_version}-linux-${arch}/sing-box" "${STAGE_DIR}/sing-box"
+
+  # Shilka panel
+  if [[ "${PANEL_VERSION}" == "latest" ]]; then
+    echo "Fetching latest Shilka release..."
+    panel_version="$(fetch_url "https://api.github.com/repos/${GITHUB_REPO}/releases/latest" \
+      | sed -n 's/.*"tag_name": "v\{0,1\}\([^"]*\)".*/\1/p' \
+      | head -n 1)"
+    if [[ -z "${panel_version}" ]]; then
+      echo "ERROR: could not find latest Shilka release. Set PANEL_VERSION manually."
+      exit 1
+    fi
+  else
+    panel_version="${PANEL_VERSION#v}"
+  fi
+  panel_asset="shilka-linux-${arch}"
+  panel_url="https://github.com/${GITHUB_REPO}/releases/download/v${panel_version}/${panel_asset}"
+  echo "Downloading Shilka ${panel_version} (linux-${arch})..."
+  download_file "${panel_url}" "${STAGE_DIR}/${panel_asset}"
+  verify_panel_checksum "${STAGE_DIR}" "${panel_asset}" "${panel_version}"
+  cp "${STAGE_DIR}/${panel_asset}" "${STAGE_DIR}/shilka"
+
+  # Update helper script
+  update_url="https://raw.githubusercontent.com/${GITHUB_REPO}/main/scripts/update.sh"
+  echo "Downloading Shilka update helper..."
+  download_file "${update_url}" "${STAGE_DIR}/shilka-update"
+}
+
+# Atomic swap with rollback (SIN-54): back up the live file to .previous, write
+# .new, then rename. If a later swap fails, restore everything already swapped.
+COMMITTED_TARGETS=()
+
+rollback_commit() {
+  local target
+  for target in "${COMMITTED_TARGETS[@]}"; do
+    if [[ -e "${target}.previous" ]]; then
+      echo "Rolling back ${target}..."
+      mv -f "${target}.previous" "${target}"
+    fi
+  done
+}
+
+commit_binary() {
+  local src="$1" dest="$2"
+  if [[ -e "${dest}" ]]; then
+    cp -a "${dest}" "${dest}.previous"
+  fi
+  install -m 0755 "${src}" "${dest}.new"
+  mv -f "${dest}.new" "${dest}"
+  COMMITTED_TARGETS+=("${dest}")
+}
+
+commit_binaries() {
+  trap 'rollback_commit' ERR
+  commit_binary "${STAGE_DIR}/sing-box" "${APP_HOME}/bin/sing-box"
+  commit_binary "${STAGE_DIR}/shilka" "${APP_HOME}/bin/shilka"
+  install -d -m 0755 "$(dirname "${UPDATE_SCRIPT_PATH}")"
+  commit_binary "${STAGE_DIR}/shilka-update" "${UPDATE_SCRIPT_PATH}"
+  trap - ERR
 }
 
 sha256_file() {
@@ -232,7 +331,7 @@ verify_panel_checksum() {
   local tmp="$1" asset="$2" version="$3" expected actual checksums_url
   checksums_url="https://github.com/${GITHUB_REPO}/releases/download/v${version}/checksums.txt"
   echo "Verifying Shilka release checksum..."
-  curl -fL "${checksums_url}" -o "${tmp}/checksums.txt"
+  download_file "${checksums_url}" "${tmp}/checksums.txt"
   expected="$(awk -v asset="${asset}" '$2 == asset || $2 == "dist/" asset { print $1; found=1; exit } END { if (!found) exit 1 }' "${tmp}/checksums.txt")" || {
     echo "ERROR: checksum for ${asset} not found in release checksums.txt"
     exit 1
@@ -244,37 +343,6 @@ verify_panel_checksum() {
     echo "Actual:   ${actual}"
     exit 1
   fi
-}
-
-install_panel_binary() {
-  local arch version asset url tmp
-  arch="$(detect_arch)"
-  if [[ "${arch}" == "unsupported" ]]; then
-    echo "Unsupported CPU architecture: $(uname -m)"
-    exit 1
-  fi
-
-  if [[ "${PANEL_VERSION}" == "latest" ]]; then
-    echo "Fetching latest Shilka release..."
-    version="$(curl -fsSL "https://api.github.com/repos/${GITHUB_REPO}/releases/latest" \
-      | sed -n 's/.*"tag_name": "v\{0,1\}\([^"]*\)".*/\1/p' \
-      | head -n 1)"
-    if [[ -z "${version}" ]]; then
-      echo "ERROR: could not find latest Shilka release. Set PANEL_VERSION manually."
-      exit 1
-    fi
-  else
-    version="${PANEL_VERSION#v}"
-  fi
-
-  asset="shilka-linux-${arch}"
-  url="https://github.com/${GITHUB_REPO}/releases/download/v${version}/${asset}"
-  echo "Downloading Shilka ${version} (linux-${arch})..."
-  tmp="$(mktemp -d)"
-  curl -fL "${url}" -o "${tmp}/${asset}"
-  verify_panel_checksum "${tmp}" "${asset}" "${version}"
-  install -m 0755 "${tmp}/${asset}" "${APP_HOME}/bin/shilka"
-  rm -rf "${tmp}"
 }
 
 ensure_sudo() {
@@ -290,13 +358,10 @@ ensure_sudo() {
   return 1
 }
 
-install_update_helper() {
-  local update_url helper_dir
-  helper_dir="$(dirname "${UPDATE_SCRIPT_PATH}")"
-  update_url="https://raw.githubusercontent.com/${GITHUB_REPO}/main/scripts/update.sh"
-  echo "Installing Shilka update helper..."
-  install -d -m 0755 "${helper_dir}"
-  curl -fsSL "${update_url}" -o "${UPDATE_SCRIPT_PATH}"
+# Sudoers wiring for the update helper; the script itself is placed by
+# commit_binaries (downloaded during stage_binaries).
+configure_update_helper() {
+  echo "Configuring Shilka update helper..."
   chown root:root "${UPDATE_SCRIPT_PATH}"
   chmod 0755 "${UPDATE_SCRIPT_PATH}"
 
@@ -745,6 +810,9 @@ main() {
   require_root
   gather_input
   create_user_and_dirs
+  # Pull + verify every binary first; a network flap fails here before any
+  # working install is touched (SIN-54).
+  stage_binaries
   if [[ "${USE_ACME}" == "true" ]]; then
     install_acme
     if [[ "${CERT_TYPE}" == "domain" ]]; then
@@ -753,9 +821,8 @@ main() {
       issue_ip_cert "${PANEL_HOST}"
     fi
   fi
-  install_sing_box
-  install_panel_binary
-  install_update_helper
+  commit_binaries
+  configure_update_helper
   write_prod_config
   install_systemd
 
