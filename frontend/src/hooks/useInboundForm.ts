@@ -24,6 +24,16 @@ import { makeUuid, randomHex, randomPort } from "@/lib/random";
 
 export type InboundFormMode = "create" | "edit" | "clone";
 
+// Where the cert for a tls-mode inbound comes from. "selfSigned" sends no cert
+// material so the backend falls back to a panel-managed self-signed cert (SIN-52).
+export type TlsSource = "selfSigned" | "acme" | "custom";
+
+function tlsSourceFromSettings(s: Inbound["settings"]): TlsSource {
+  if (s?.acmeDomain) return "acme";
+  if (s?.certPath || s?.keyPath) return "custom";
+  return "selfSigned";
+}
+
 type Params = {
   open: boolean;
   mode: InboundFormMode;
@@ -66,6 +76,12 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
   const [dest, setDest] = useState("www.cloudflare.com:443");
   const [sni, setSni] = useState("www.cloudflare.com");
   const [allowInsecure, setAllowInsecure] = useState(true);
+  // TLS certificate source (tls mode).
+  const [tlsSource, setTlsSource] = useState<TlsSource>("selfSigned");
+  const [acmeDomain, setAcmeDomain] = useState("");
+  const [acmeEmail, setAcmeEmail] = useState("");
+  const [certPath, setCertPath] = useState("");
+  const [keyPath, setKeyPath] = useState("");
   const [shortIds, setShortIds] = useState("");
   const [privateKey, setPrivateKey] = useState("");
   const [publicKey, setPublicKey] = useState("");
@@ -104,6 +120,11 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
     setSni(inbound?.sni ?? "www.cloudflare.com");
     setDest(inbound?.dest ?? "www.cloudflare.com:443");
     setAllowInsecure(s?.allowInsecure ?? true);
+    setTlsSource(tlsSourceFromSettings(s));
+    setAcmeDomain(s?.acmeDomain ?? "");
+    setAcmeEmail(s?.acmeEmail ?? "");
+    setCertPath(s?.certPath ?? "");
+    setKeyPath(s?.keyPath ?? "");
     setNetwork(networkFromApi(s?.naiveNetwork));
     setQuicCc((s?.naiveQuicCongestionCtrl as QuicCc) ?? DEFAULT_QUIC_CC);
     setObfsType(s?.hy2ObfsPassword ? "salamander" : "none");
@@ -152,6 +173,17 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
     setPublicKey(randomHex(64));
   }, []);
 
+  // Cert material for tls mode. selfSigned sends nothing → backend self-signed.
+  const tlsCertFields = useCallback((): Partial<InboundCreateRequest> => {
+    if (tlsSource === "acme") {
+      return { acmeDomain: acmeDomain.trim() || undefined, acmeEmail: acmeEmail.trim() || undefined };
+    }
+    if (tlsSource === "custom") {
+      return { certPath: certPath.trim() || undefined, keyPath: keyPath.trim() || undefined };
+    }
+    return {};
+  }, [tlsSource, acmeDomain, acmeEmail, certPath, keyPath]);
+
   const buildPayload = useCallback((): InboundCreateRequest => {
     const safePort = Number(port) || randomPort();
     const base = { remark: remark.trim(), protocol, port: safePort };
@@ -163,6 +195,7 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
         sni: tls === "none" ? undefined : sni,
         dest: tls === "reality" ? dest : undefined,
         allowInsecure: tls === "tls" ? allowInsecure : undefined,
+        ...(tls === "tls" ? tlsCertFields() : {}),
       };
     }
     if (protocol === "naive") {
@@ -171,6 +204,7 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
         tls: "tls",
         sni,
         allowInsecure,
+        ...tlsCertFields(),
         naiveNetwork: networkToApi(network),
         naiveQuicCongestionCtrl: quicCc,
       };
@@ -181,6 +215,7 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
       tls: "tls",
       sni,
       allowInsecure,
+      ...tlsCertFields(),
       hy2UpMbps: Number(upMbps) || undefined,
       hy2DownMbps: Number(downMbps) || undefined,
       hy2ObfsPassword: obfsType === "salamander" ? obfsPassword : undefined,
@@ -194,6 +229,7 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
     sni,
     dest,
     allowInsecure,
+    tlsCertFields,
     network,
     quicCc,
     obfsType,
@@ -264,6 +300,11 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
     dest, setDest,
     sni, setSni,
     allowInsecure, setAllowInsecure,
+    tlsSource, setTlsSource,
+    acmeDomain, setAcmeDomain,
+    acmeEmail, setAcmeEmail,
+    certPath, setCertPath,
+    keyPath, setKeyPath,
     shortIds, setShortIds,
     privateKey, publicKey, generateKeypair,
     network, setNetwork,

@@ -362,6 +362,12 @@ func validate(in Input) error {
 	if in.Protocol == domain.ProtocolHysteria2 && in.TLS == domain.TLSModeReality {
 		return fmt.Errorf("%w: hysteria2 does not support reality", ErrValidation)
 	}
+	// Custom cert material must be complete: a lone cert or key path produces a
+	// broken tls block. (No source at all is fine: the generator falls back to a
+	// panel-managed self-signed cert — SIN-52.)
+	if (in.CertPath == "") != (in.KeyPath == "") {
+		return fmt.Errorf("%w: cert_path and key_path must both be set", ErrValidation)
+	}
 	// Hysteria2: bandwidth limits.
 	if in.Protocol == domain.ProtocolHysteria2 {
 		if in.Hy2UpMbps < 0 {

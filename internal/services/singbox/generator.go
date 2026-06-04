@@ -38,6 +38,14 @@ type GeneratorConfig struct {
 	V2RayAPIListen  string
 	CoreLogPath     string // sing-box log output file path
 
+	// DefaultTLSCertPath/DefaultTLSKeyPath point at a panel-managed self-signed
+	// keypair used as the fallback certificate source for tls-mode inbounds that
+	// have neither ACME nor explicit cert/key configured. Without this fallback
+	// such inbounds emit empty certificate_path/key_path and sing-box can't bring
+	// up TLS (SIN-52). Empty when the boot-time ensure failed.
+	DefaultTLSCertPath string
+	DefaultTLSKeyPath  string
+
 	// Settings are the database-backed panel settings used to override hardcoded
 	// defaults at render time. When nil, static GeneratorConfig fields are used.
 	Settings SettingReader
@@ -168,7 +176,7 @@ func (g *Generator) buildInbound(ib *domain.Inbound, clients []domain.Client) (a
 			Listen:     g.cfg.InboundListen,
 			ListenPort: ib.Port,
 			Users:      users,
-			TLS:        buildTLS(ib, nil),
+			TLS:        g.buildTLS(ib, nil),
 			Transport:  buildTransport(ib),
 		}
 		if ib.Settings.MultiplexEnabled {
@@ -187,7 +195,7 @@ func (g *Generator) buildInbound(ib *domain.Inbound, clients []domain.Client) (a
 			Listen:                 g.cfg.InboundListen,
 			ListenPort:             ib.Port,
 			Users:                  users,
-			TLS:                    buildTLS(ib, []string{"h3"}),
+			TLS:                    g.buildTLS(ib, []string{"h3"}),
 			UpMbps:                 ib.Settings.Hy2UpMbps,
 			DownMbps:               ib.Settings.Hy2DownMbps,
 			IgnoreClientBandwidth:  ib.Settings.Hy2IgnoreClientBandwidth,
@@ -219,7 +227,7 @@ func (g *Generator) buildInbound(ib *domain.Inbound, clients []domain.Client) (a
 			Listen:                g.cfg.InboundListen,
 			ListenPort:            ib.Port,
 			Users:                 users,
-			TLS:                   buildTLS(ib, []string{"h2", "http/1.1"}),
+			TLS:                   g.buildTLS(ib, []string{"h2", "http/1.1"}),
 			Network:               ib.Settings.NaiveNetwork,
 			QuicCongestionControl: ib.Settings.NaiveQuicCongestionCtrl,
 		}, nil
@@ -240,7 +248,7 @@ func buildTransport(ib *domain.Inbound) *sbTransport {
 	}
 }
 
-func buildTLS(ib *domain.Inbound, defaultALPN []string) *sbInboundTLS {
+func (g *Generator) buildTLS(ib *domain.Inbound, defaultALPN []string) *sbInboundTLS {
 	switch ib.TLS {
 	case domain.TLSModeReality:
 		host, port := parseDest(ib.Dest)
@@ -260,11 +268,18 @@ func buildTLS(ib *domain.Inbound, defaultALPN []string) *sbInboundTLS {
 			ServerName: ib.SNI,
 			ALPN:       defaultALPN,
 		}
-		if ib.Settings.ACMEDomain != "" {
+		switch {
+		case ib.Settings.ACMEDomain != "":
 			tls.ACME = &sbACME{Domain: []string{ib.Settings.ACMEDomain}, Email: ib.Settings.ACMEEmail}
-		} else {
+		case ib.Settings.CertPath != "" && ib.Settings.KeyPath != "":
 			tls.CertPath = ib.Settings.CertPath
 			tls.KeyPath = ib.Settings.KeyPath
+		default:
+			// No ACME and no explicit cert: fall back to the panel-managed
+			// self-signed keypair so tls inbounds (hysteria2/naive always need
+			// tls) come up instead of emitting empty paths (SIN-52).
+			tls.CertPath = g.cfg.DefaultTLSCertPath
+			tls.KeyPath = g.cfg.DefaultTLSKeyPath
 		}
 		return tls
 	default:

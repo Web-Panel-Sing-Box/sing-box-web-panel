@@ -10,7 +10,7 @@ import { Modal, ModalBody, ModalFooter, ModalHeader } from "@/components/ui/moda
 import { Segmented } from "@/components/ui/tabs";
 import { Select } from "@/components/ui/select";
 import { Toggle } from "@/components/ui/toggle";
-import { useInboundForm, type InboundFormMode } from "@/hooks/useInboundForm";
+import { useInboundForm, type InboundFormMode, type TlsSource } from "@/hooks/useInboundForm";
 import {
   NETWORK_OPTIONS,
   OBFS_OPTIONS,
@@ -214,12 +214,56 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
             </div>
 
             {f.tls === "tls" ? (
-              <Toggle
-                checked={f.allowInsecure}
-                onChange={f.setAllowInsecure}
-                label={t("inbounds.allowInsecure")}
-                description={t("inbounds.allowInsecureDesc")}
-              />
+              <div className="space-y-3">
+                <div>
+                  <Label>{t("inbounds.tlsCertSource")}</Label>
+                  <Segmented<TlsSource>
+                    value={f.tlsSource}
+                    onChange={f.setTlsSource}
+                    options={[
+                      { value: "selfSigned", label: t("inbounds.certSourceSelfSigned") },
+                      { value: "acme", label: t("inbounds.certSourceAcme") },
+                      { value: "custom", label: t("inbounds.certSourceCustom") },
+                    ]}
+                  />
+                </div>
+                {f.tlsSource === "selfSigned" ? (
+                  <div className="flex items-start gap-2 rounded-lg border border-subtle bg-canvas/60 px-3 py-2 text-xs text-ink-secondary">
+                    <ShieldCheck size={14} className="mt-0.5 shrink-0 text-success" />
+                    <span>{t("inbounds.certSourceSelfSignedNote")}</span>
+                  </div>
+                ) : null}
+                {f.tlsSource === "acme" ? (
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                      <Label>{t("inbounds.acmeDomain")}</Label>
+                      <Input value={f.acmeDomain} onChange={(e) => f.setAcmeDomain(e.target.value)} mono placeholder="vpn.example.com" />
+                    </div>
+                    <div>
+                      <Label>{t("inbounds.acmeEmail")}</Label>
+                      <Input value={f.acmeEmail} onChange={(e) => f.setAcmeEmail(e.target.value)} mono placeholder="admin@example.com" />
+                    </div>
+                  </div>
+                ) : null}
+                {f.tlsSource === "custom" ? (
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                      <Label>{t("inbounds.certPath")}</Label>
+                      <Input value={f.certPath} onChange={(e) => f.setCertPath(e.target.value)} mono placeholder="/var/lib/shilka/tls/cert.pem" />
+                    </div>
+                    <div>
+                      <Label>{t("inbounds.keyPath")}</Label>
+                      <Input value={f.keyPath} onChange={(e) => f.setKeyPath(e.target.value)} mono placeholder="/var/lib/shilka/tls/key.pem" />
+                    </div>
+                  </div>
+                ) : null}
+                <Toggle
+                  checked={f.allowInsecure}
+                  onChange={f.setAllowInsecure}
+                  label={t("inbounds.allowInsecure")}
+                  description={t("inbounds.allowInsecureDesc")}
+                />
+              </div>
             ) : null}
 
             {isVless && f.tls === "reality" ? (

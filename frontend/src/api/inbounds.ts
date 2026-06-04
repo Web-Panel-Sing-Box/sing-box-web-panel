@@ -25,6 +25,11 @@ export type InboundSettings = {
   naiveNetwork?: string;
   naiveQuicCongestionCtrl?: string;
   allowInsecure?: boolean;
+  // TLS certificate source (tls mode). Empty acme/cert ⇒ panel self-signed.
+  acmeDomain?: string;
+  acmeEmail?: string;
+  certPath?: string;
+  keyPath?: string;
 };
 
 export type InboundDTO = {
