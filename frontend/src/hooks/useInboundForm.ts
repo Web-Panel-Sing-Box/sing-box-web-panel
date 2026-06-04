@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useToast } from "@/components/ui/toast";
+import { listNodes, type NodeDTO } from "@/api";
 import { ApiError } from "@/api/client";
 import { useI18n } from "@/lib/i18n";
 import {
@@ -54,6 +55,8 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
   const remarkRef = useRef<HTMLInputElement>(null);
 
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [nodes, setNodes] = useState<NodeDTO[]>([]);
+  const [nodeId, setNodeId] = useState("local");
   const [remark, setRemark] = useState("");
   const [protocol, setProtocolState] = useState<Protocol>("naive");
   const [port, setPort] = useState<number | string>(() => randomPort());
@@ -109,8 +112,12 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
 
   useEffect(() => {
     if (!open) return;
+    void listNodes()
+      .then(setNodes)
+      .catch(() => setNodes([]));
     const nextProtocol = inbound?.protocol ?? "naive";
     const s = inbound?.settings;
+    setNodeId(mode === "edit" && inbound?.nodeId ? inbound.nodeId : "local");
     setRemark(mode === "clone" && inbound ? `${inbound.remark}-copy` : (inbound?.remark ?? ""));
     setProtocolState(nextProtocol);
     setPort(mode === "clone" ? randomPort() : (inbound?.port ?? randomPort()));
@@ -186,7 +193,13 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
 
   const buildPayload = useCallback((): InboundCreateRequest => {
     const safePort = Number(port) || randomPort();
-    const base = { remark: remark.trim(), protocol, port: safePort };
+    const selectedNodeId = mode === "edit" && inbound?.nodeId ? inbound.nodeId : nodeId;
+    const base = {
+      ...(selectedNodeId !== "local" ? { nodeId: selectedNodeId } : {}),
+      remark: remark.trim(),
+      protocol,
+      port: safePort,
+    };
     if (protocol === "vless") {
       return {
         ...base,
@@ -222,6 +235,9 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
     };
   }, [
     remark,
+    mode,
+    inbound,
+    nodeId,
     protocol,
     port,
     transmission,
@@ -266,12 +282,21 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
     }
   }, [remark, buildPayload, mode, inbound, push, t, addInbound, updateInbound, onClose]);
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = useCallback(async () => {
     if (!inbound) return;
-    removeInbound(inbound.id);
-    push(t("inbounds.deleted", { remark: inbound.remark }), "success");
-    setConfirmDelete(false);
-    onClose();
+    try {
+      await removeInbound(inbound.id);
+      push(t("inbounds.deleted", { remark: inbound.remark }), "success");
+      setConfirmDelete(false);
+      onClose();
+    } catch (err) {
+      const body = err instanceof ApiError ? err.body : null;
+      const message =
+        body && typeof body === "object" && body !== null && "error" in body
+          ? String((body as { error: unknown }).error)
+          : t("inbounds.deleteFailed");
+      push(message, "error");
+    }
   }, [inbound, removeInbound, push, t, onClose]);
 
   const openConfirmDelete = useCallback(() => setConfirmDelete(true), []);
@@ -282,6 +307,8 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
     confirmDelete,
     openConfirmDelete,
     closeConfirmDelete,
+    nodes,
+    nodeId, setNodeId,
     remark, setRemark,
     protocol, setProtocol,
     port, setPort,

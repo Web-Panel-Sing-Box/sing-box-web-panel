@@ -40,6 +40,20 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
   const isVless = f.protocol === "vless";
   const isNaive = f.protocol === "naive";
   const isHy2 = f.protocol === "hysteria2";
+  const isEdit = mode === "edit";
+  const nodeOptions = useMemo(
+    () => [
+      { value: "local", label: t("common.local") },
+      ...f.nodes
+        .filter((node) => node.enabled && node.hasApiToken)
+        .map((node) => ({ value: node.id, label: node.name })),
+    ],
+    [f.nodes, t],
+  );
+  const currentNodeLabel = useMemo(() => {
+    if (!inbound?.nodeId) return t("common.local");
+    return f.nodes.find((node) => node.id === inbound.nodeId)?.name ?? `node:${inbound.nodeId}`;
+  }, [f.nodes, inbound?.nodeId, t]);
 
   // Transport-specific extra fields — VLESS only (naive/hysteria2 have no v2ray transport).
   const transportFields = useMemo(() => {
@@ -125,7 +139,15 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
                 className={mode === "clone" ? "selection:bg-brand/40" : undefined}
               />
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div>
+                <Label>{t("common.node")}</Label>
+                {isEdit ? (
+                  <Input value={currentNodeLabel} readOnly />
+                ) : (
+                  <Select value={f.nodeId} options={nodeOptions} onChange={f.setNodeId} />
+                )}
+              </div>
               <div>
                 <Label>{t("common.protocol")}</Label>
                 <Select value={f.protocol} options={PROTOCOL_OPTIONS} onChange={f.setProtocol} />
@@ -292,11 +314,11 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
                   </div>
                   <div>
                     <Label>{t("inbounds.privateKey")}</Label>
-                    <Input value={f.privateKey} mono readOnly placeholder="—" />
+                    <Input value={f.privateKey} mono readOnly placeholder="-" />
                   </div>
                   <div>
                     <Label>{t("inbounds.publicKey")}</Label>
-                    <Input value={f.publicKey} mono readOnly placeholder="—" />
+                    <Input value={f.publicKey} mono readOnly placeholder="-" />
                   </div>
                 </div>
               </div>
@@ -415,9 +437,11 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
       <ModalFooter>
         {mode === "edit" && inbound ? (
           <>
-            <IconActionButton title={t("common.clone")} onClick={() => onClone?.(inbound)}>
-              <Copy size={16} />
-            </IconActionButton>
+            {!inbound.nodeId ? (
+              <IconActionButton title={t("common.clone")} onClick={() => onClone?.(inbound)}>
+                <Copy size={16} />
+              </IconActionButton>
+            ) : null}
             <IconActionButton title={t("common.delete")} danger onClick={f.openConfirmDelete}>
               <Trash2 size={16} />
             </IconActionButton>

@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import { ApiError } from "@/api/client";
+import { listNodes, type NodeDTO } from "@/api";
 import { Button } from "@/components/ui/button";
 import { DateInput, Input, Label, NumberInput } from "@/components/ui/input";
 import { Modal, ModalBody, ModalFooter, ModalHeader } from "@/components/ui/modal";
@@ -22,31 +24,68 @@ type Props = {
   onClose: () => void;
   /** Optional inbound pre-selection — e.g. when navigated from the filter bar. */
   defaultInboundId?: string;
+  defaultNodeId?: string;
 };
 
-export function AddClientModal({ open, onClose, defaultInboundId }: Props) {
+export function AddClientModal({ open, onClose, defaultInboundId, defaultNodeId }: Props) {
   const inbounds = useInbounds();
   const { addClient } = useStoreActions();
   const { push } = useToast();
   const { t } = useI18n();
 
   const [name, setName] = useState("");
+  const [nodes, setNodes] = useState<NodeDTO[]>([]);
+  const [nodeId, setNodeId] = useState("local");
   const [inboundId, setInboundId] = useState("");
   const [totalFlowGb, setTotalFlowGb] = useState("100");
   const [expiry, setExpiry] = useState("");
   const [startAfterFirstUse, setStartAfterFirstUse] = useState(false);
   const [saving, setSaving] = useState(false);
   const [nameError, setNameError] = useState<string | undefined>(undefined);
+  const nodeOptions = useMemo(
+    () => [
+      { value: "local", label: t("common.local") },
+      ...nodes
+        .filter((node) => node.enabled && node.hasApiToken)
+        .map((node) => ({ value: node.id, label: node.name })),
+    ],
+    [nodes, t],
+  );
+  const inboundOptions = useMemo(
+    () =>
+      inbounds
+        .filter((inbound) => (nodeId === "local" ? !inbound.nodeId : inbound.nodeId === nodeId))
+        .map((inbound) => ({ value: inbound.id, label: inbound.remark })),
+    [inbounds, nodeId],
+  );
 
   useEffect(() => {
     if (!open) return;
+    void listNodes()
+      .then(setNodes)
+      .catch(() => setNodes([]));
     setName("");
     setNameError(undefined);
-    setInboundId(defaultInboundId ?? inbounds[0]?.id ?? "");
+    const defaultInbound = defaultInboundId
+      ? inbounds.find((inbound) => inbound.id === defaultInboundId)
+      : undefined;
+    const nextNodeId = defaultInbound?.nodeId ?? (defaultNodeId && defaultNodeId !== "all" ? defaultNodeId : "local");
+    const nextInbound =
+      defaultInbound && (nextNodeId === "local" ? !defaultInbound.nodeId : defaultInbound.nodeId === nextNodeId)
+        ? defaultInbound.id
+        : (inbounds.find((inbound) => (nextNodeId === "local" ? !inbound.nodeId : inbound.nodeId === nextNodeId))?.id ?? "");
+    setNodeId(nextNodeId);
+    setInboundId(nextInbound);
     setTotalFlowGb("100");
     setExpiry(defaultExpiryIso().slice(0, 10));
     setStartAfterFirstUse(false);
-  }, [open, defaultInboundId, inbounds]);
+  }, [open, defaultInboundId, defaultNodeId, inbounds]);
+
+  useEffect(() => {
+    if (!open) return;
+    if (inboundOptions.some((option) => option.value === inboundId)) return;
+    setInboundId(inboundOptions[0]?.value ?? "");
+  }, [open, inboundId, inboundOptions]);
 
   async function handleSave() {
     if (!name.trim()) {
@@ -58,17 +97,27 @@ export function AddClientModal({ open, onClose, defaultInboundId }: Props) {
       return;
     }
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 500));
-    addClient({
-      name: name.trim(),
-      inboundId,
-      totalQuota: (Number(totalFlowGb) || 0) * GB,
-      expiry: expiry ? new Date(expiry).toISOString() : defaultExpiryIso(),
-      startAfterFirstUse
-    });
-    setSaving(false);
-    push(t("clients.created"), "success");
-    onClose();
+    try {
+      await addClient({
+        ...(nodeId !== "local" ? { nodeId } : {}),
+        name: name.trim(),
+        inboundId,
+        totalQuota: (Number(totalFlowGb) || 0) * GB,
+        expiry: expiry ? new Date(expiry).toISOString() : defaultExpiryIso(),
+        startAfterFirstUse,
+      });
+      push(t("clients.created"), "success");
+      onClose();
+    } catch (err) {
+      const body = err instanceof ApiError ? err.body : null;
+      const message =
+        body && typeof body === "object" && body !== null && "error" in body
+          ? String((body as { error: unknown }).error)
+          : t("clients.createFailed");
+      push(message, "error");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -88,10 +137,18 @@ export function AddClientModal({ open, onClose, defaultInboundId }: Props) {
           />
         </div>
         <div>
+          <Label>{t("common.node")}</Label>
+          <Select
+            value={nodeId}
+            options={nodeOptions}
+            onChange={setNodeId}
+          />
+        </div>
+        <div>
           <Label>{t("clients.inbound")}</Label>
           <Select
             value={inboundId}
-            options={inbounds.map((i) => ({ value: i.id, label: i.remark }))}
+            options={inboundOptions}
             onChange={setInboundId}
           />
         </div>

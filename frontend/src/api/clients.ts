@@ -23,6 +23,7 @@ export type ClientDTO = {
 };
 
 export type ClientCreateRequest = {
+  nodeId?: string;
   name: string;
   inboundId: string;
   totalQuota?: number;
@@ -31,9 +32,12 @@ export type ClientCreateRequest = {
 };
 
 export type ClientUpdateRequest = {
+  nodeId?: string;
   name?: string;
+  inboundId?: string;
   totalQuota?: number;
   expiry?: string;
+  status?: ClientStatus;
   startAfterFirstUse?: boolean;
 };
 

@@ -280,8 +280,8 @@ func runServer() {
 	}, log)
 	statsWorker.Run(rootCtx)
 
-	handler.NewInboundHandler(inboundSvc, log).Register(mux)
-	handler.NewClientHandler(clientSvc, cfg.Sub.PublicURL, log).Register(mux)
+	handler.NewInboundHandler(inboundSvc, log, nodeSvc).Register(mux)
+	handler.NewClientHandler(clientSvc, cfg.Sub.PublicURL, log, nodeSvc).Register(mux)
 	handler.NewAPITokenHandler(apiTokenSvc, log).Register(mux)
 	handler.NewCoreHandler(processMgr, applier, log, absCoreLogPath).Register(mux)
 	handler.NewNodeHandler(nodeSvc, inboundSvc, clientSvc, sysReader, processMgr, log).Register(mux)

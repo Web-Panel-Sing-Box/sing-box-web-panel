@@ -185,6 +185,9 @@ func (s *Service) Update(ctx context.Context, id int64, in Input) (*domain.Inbou
 	if err != nil {
 		return nil, err
 	}
+	if ib.NodeID != nil {
+		return nil, fmt.Errorf("%w: remote inbound must be updated through its node", ErrValidation)
+	}
 
 	wasReality := ib.TLS == domain.TLSModeReality
 	ib.Remark = in.Remark
@@ -218,6 +221,9 @@ func (s *Service) Toggle(ctx context.Context, id int64) (*domain.Inbound, error)
 	if err != nil {
 		return nil, err
 	}
+	if ib.NodeID != nil {
+		return nil, fmt.Errorf("%w: remote inbound must be toggled through its node", ErrValidation)
+	}
 	ib.Enabled = !ib.Enabled
 	if err := s.repo.SetEnabled(ctx, id, ib.Enabled); err != nil {
 		return nil, err
@@ -230,6 +236,9 @@ func (s *Service) Clone(ctx context.Context, id int64) (*domain.Inbound, error) 
 	src, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+	if src.NodeID != nil {
+		return nil, fmt.Errorf("%w: remote inbound clone is not supported", ErrValidation)
 	}
 	clone := &domain.Inbound{
 		Remark:       src.Remark + "-copy",
@@ -263,6 +272,13 @@ func cloneBoolPtr(v *bool) *bool {
 }
 
 func (s *Service) Delete(ctx context.Context, id int64) error {
+	ib, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if ib.NodeID != nil {
+		return fmt.Errorf("%w: remote inbound must be deleted through its node", ErrValidation)
+	}
 	if err := s.repo.Delete(ctx, id); err != nil {
 		return err
 	}

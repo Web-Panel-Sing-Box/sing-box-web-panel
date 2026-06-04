@@ -50,7 +50,7 @@ function InboundRowImpl({ inbound, onEdit }: { inbound: Inbound; onEdit: (inboun
       <span className="font-mono text-sm text-ink-secondary">{inbound.port}</span>
       <span className="truncate text-sm text-ink-primary">{inbound.remark}</span>
       <span className="w-fit rounded-full border border-subtle bg-canvas px-2.5 py-1 font-mono text-[11px] text-ink-tertiary">
-        {inbound.nodeId ? `node:${inbound.nodeId}` : "local"}
+        {inbound.nodeId ? `node:${inbound.nodeId}` : t("common.local")}
       </span>
       <TransportChip inbound={inbound} />
       <Link

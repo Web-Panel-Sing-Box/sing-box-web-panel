@@ -46,6 +46,37 @@ type RemoteInbound struct {
 	UpdatedAt    string                 `json:"updatedAt,omitempty"`
 }
 
+type RemoteInboundRequest struct {
+	Remark        string `json:"remark"`
+	Protocol      string `json:"protocol"`
+	Port          int    `json:"port"`
+	Transmission  string `json:"transmission"`
+	TLS           string `json:"tls"`
+	SNI           string `json:"sni"`
+	Dest          string `json:"dest"`
+	ACMEDomain    string `json:"acmeDomain,omitempty"`
+	ACMEEmail     string `json:"acmeEmail,omitempty"`
+	CertPath      string `json:"certPath,omitempty"`
+	KeyPath       string `json:"keyPath,omitempty"`
+	AllowInsecure *bool  `json:"allowInsecure,omitempty"`
+
+	MultiplexEnabled bool `json:"multiplexEnabled,omitempty"`
+
+	Hy2UpMbps                int    `json:"hy2UpMbps,omitempty"`
+	Hy2DownMbps              int    `json:"hy2DownMbps,omitempty"`
+	Hy2IgnoreClientBandwidth bool   `json:"hy2IgnoreClientBandwidth,omitempty"`
+	Hy2ObfsPassword          string `json:"hy2ObfsPassword,omitempty"`
+	Hy2ObfsMinPacketSize     int    `json:"hy2ObfsMinPacketSize,omitempty"`
+	Hy2ObfsMaxPacketSize     int    `json:"hy2ObfsMaxPacketSize,omitempty"`
+	Hy2Masquerade            string `json:"hy2Masquerade,omitempty"`
+	Hy2Network               string `json:"hy2Network,omitempty"`
+	Hy2BrutalDebug           bool   `json:"hy2BrutalDebug,omitempty"`
+	Hy2BBRProfile            string `json:"hy2BbrProfile,omitempty"`
+
+	NaiveNetwork            string `json:"naiveNetwork,omitempty"`
+	NaiveQuicCongestionCtrl string `json:"naiveQuicCongestionCtrl,omitempty"`
+}
+
 type RemoteClient struct {
 	ID                 string              `json:"id"`
 	InboundID          string              `json:"inboundId"`
@@ -61,6 +92,27 @@ type RemoteClient struct {
 	StartAfterFirstUse bool                `json:"startAfterFirstUse"`
 	Enabled            bool                `json:"enabled"`
 	FirstUsedAt        string              `json:"firstUsedAt,omitempty"`
+}
+
+type RemoteClientCreateRequest struct {
+	Name               string `json:"name"`
+	InboundID          string `json:"inboundId"`
+	TotalQuota         int64  `json:"totalQuota"`
+	Expiry             string `json:"expiry,omitempty"`
+	StartAfterFirstUse bool   `json:"startAfterFirstUse"`
+}
+
+type RemoteClientUpdateRequest struct {
+	Name               *string `json:"name,omitempty"`
+	InboundID          *string `json:"inboundId,omitempty"`
+	TotalQuota         *int64  `json:"totalQuota,omitempty"`
+	Expiry             *string `json:"expiry,omitempty"`
+	Status             *string `json:"status,omitempty"`
+	StartAfterFirstUse *bool   `json:"startAfterFirstUse,omitempty"`
+}
+
+type RemoteClientStatusRequest struct {
+	Status string `json:"status"`
 }
 
 type RemoteSnapshot struct {

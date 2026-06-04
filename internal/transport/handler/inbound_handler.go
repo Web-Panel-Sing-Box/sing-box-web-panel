@@ -8,15 +8,21 @@ import (
 
 	"sing-box-web-panel/internal/domain"
 	svcinbound "sing-box-web-panel/internal/services/inbound"
+	svcnode "sing-box-web-panel/internal/services/node"
 )
 
 type InboundHandler struct {
-	svc *svcinbound.Service
-	log *slog.Logger
+	svc   *svcinbound.Service
+	nodes *svcnode.Service
+	log   *slog.Logger
 }
 
-func NewInboundHandler(svc *svcinbound.Service, log *slog.Logger) *InboundHandler {
-	return &InboundHandler{svc: svc, log: log}
+func NewInboundHandler(svc *svcinbound.Service, log *slog.Logger, nodes ...*svcnode.Service) *InboundHandler {
+	h := &InboundHandler{svc: svc, log: log}
+	if len(nodes) > 0 {
+		h.nodes = nodes[0]
+	}
+	return h
 }
 
 func (h *InboundHandler) Register(mux *http.ServeMux) {
@@ -27,6 +33,7 @@ func (h *InboundHandler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("DELETE /api/inbounds/{id}", h.Delete)
 	mux.HandleFunc("POST /api/inbounds/{id}/toggle", h.Toggle)
 	mux.HandleFunc("POST /api/inbounds/{id}/clone", h.Clone)
+	mux.HandleFunc("POST /api/nodes/{id}/inbounds", h.CreateOnNode)
 }
 
 type inboundSettingsDTO struct {
@@ -130,6 +137,7 @@ func toInboundDTO(ib *domain.Inbound, clientCount int) inboundDTO {
 }
 
 type inboundRequest struct {
+	NodeID        string `json:"nodeId,omitempty"`
 	Remark        string `json:"remark"`
 	Protocol      string `json:"protocol"`
 	Port          int    `json:"port"`
@@ -230,9 +238,46 @@ func (h *InboundHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &req) {
 		return
 	}
+	if req.NodeID != "" {
+		nodeID, ok := parsePositiveID(w, req.NodeID, "invalid nodeId")
+		if !ok {
+			return
+		}
+		h.createRemote(w, r, nodeID, req)
+		return
+	}
 	ib, err := h.svc.Create(r.Context(), req.toInput())
 	if err != nil {
 		writeServiceError(w, h.log, "create inbound", err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, toInboundDTO(ib, 0))
+}
+
+func (h *InboundHandler) CreateOnNode(w http.ResponseWriter, r *http.Request) {
+	nodeID, ok := idParam(r)
+	if !ok {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid nodeId"})
+		return
+	}
+	var req inboundRequest
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+	if req.NodeID != "" && !matchesNodeID(w, req.NodeID, nodeID) {
+		return
+	}
+	h.createRemote(w, r, nodeID, req)
+}
+
+func (h *InboundHandler) createRemote(w http.ResponseWriter, r *http.Request, nodeID int64, req inboundRequest) {
+	if h.nodes == nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "node mutations are not configured"})
+		return
+	}
+	ib, err := h.nodes.CreateInbound(r.Context(), nodeID, req.toInput())
+	if err != nil {
+		writeServiceError(w, h.log, "create remote inbound", err)
 		return
 	}
 	writeJSON(w, http.StatusCreated, toInboundDTO(ib, 0))
@@ -282,6 +327,31 @@ func (h *InboundHandler) Update(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &req) {
 		return
 	}
+	existing, err := h.svc.Get(r.Context(), id)
+	if err != nil {
+		writeServiceError(w, h.log, "get inbound", err)
+		return
+	}
+	if existing.NodeID != nil {
+		if h.nodes == nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "node mutations are not configured"})
+			return
+		}
+		if req.NodeID != "" && !matchesNodeID(w, req.NodeID, *existing.NodeID) {
+			return
+		}
+		ib, err := h.nodes.UpdateInbound(r.Context(), id, req.toInput())
+		if err != nil {
+			writeServiceError(w, h.log, "update remote inbound", err)
+			return
+		}
+		writeJSON(w, http.StatusOK, toInboundDTO(ib, 0))
+		return
+	}
+	if req.NodeID != "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "cannot move inbound between nodes"})
+		return
+	}
 	ib, err := h.svc.Update(r.Context(), id, req.toInput())
 	if err != nil {
 		writeServiceError(w, h.log, "update inbound", err)
@@ -305,6 +375,23 @@ func (h *InboundHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
 		return
 	}
+	existing, err := h.svc.Get(r.Context(), id)
+	if err != nil {
+		writeServiceError(w, h.log, "get inbound", err)
+		return
+	}
+	if existing.NodeID != nil {
+		if h.nodes == nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "node mutations are not configured"})
+			return
+		}
+		if err := h.nodes.DeleteInbound(r.Context(), id); err != nil {
+			writeServiceError(w, h.log, "delete remote inbound", err)
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]string{"message": "deleted"})
+		return
+	}
 	if err := h.svc.Delete(r.Context(), id); err != nil {
 		writeServiceError(w, h.log, "delete inbound", err)
 		return
@@ -325,6 +412,24 @@ func (h *InboundHandler) Toggle(w http.ResponseWriter, r *http.Request) {
 	id, ok := idParam(r)
 	if !ok {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
+		return
+	}
+	existing, err := h.svc.Get(r.Context(), id)
+	if err != nil {
+		writeServiceError(w, h.log, "get inbound", err)
+		return
+	}
+	if existing.NodeID != nil {
+		if h.nodes == nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "node mutations are not configured"})
+			return
+		}
+		ib, err := h.nodes.ToggleInbound(r.Context(), id)
+		if err != nil {
+			writeServiceError(w, h.log, "toggle remote inbound", err)
+			return
+		}
+		writeJSON(w, http.StatusOK, toInboundDTO(ib, 0))
 		return
 	}
 	ib, err := h.svc.Toggle(r.Context(), id)
