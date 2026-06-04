@@ -1582,6 +1582,9 @@ const docTemplate = `{
                 "nodeId": {
                     "type": "string"
                 },
+                "online": {
+                    "type": "boolean"
+                },
                 "remoteId": {
                     "type": "string"
                 },
@@ -1790,6 +1793,9 @@ const docTemplate = `{
                 "acmeEmail": {
                     "type": "string"
                 },
+                "allowInsecure": {
+                    "type": "boolean"
+                },
                 "certPath": {
                     "type": "string"
                 },
@@ -1864,6 +1870,10 @@ const docTemplate = `{
         "internal_transport_handler.inboundSettingsDTO": {
             "type": "object",
             "properties": {
+                "allowInsecure": {
+                    "description": "Client subscription TLS verification.",
+                    "type": "boolean"
+                },
                 "flow": {
                     "type": "string"
                 },

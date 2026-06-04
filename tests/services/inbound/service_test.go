@@ -105,6 +105,65 @@ func TestCreateNaiveNormalizesBothNetwork(t *testing.T) {
 	}
 }
 
+func TestCreateTLSAllowInsecureAutoMode(t *testing.T) {
+	svc := newService()
+	ib, err := svc.Create(context.Background(), svcinbound.Input{
+		Remark: "hy2", Protocol: domain.ProtocolHysteria2, Port: 8443,
+		TLS: domain.TLSModeTLS,
+	})
+	if err != nil {
+		t.Fatalf("create: %v", err)
+	}
+	if ib.Settings.AllowInsecure != nil {
+		t.Fatalf("allow insecure override = %#v, want nil auto mode", *ib.Settings.AllowInsecure)
+	}
+	if !ib.EffectiveAllowInsecure() {
+		t.Fatal("effective allow insecure should default to true without trusted cert material")
+	}
+}
+
+func TestCreateTLSAllowInsecureExplicitFalse(t *testing.T) {
+	svc := newService()
+	ib, err := svc.Create(context.Background(), svcinbound.Input{
+		Remark: "hy2", Protocol: domain.ProtocolHysteria2, Port: 8443,
+		TLS: domain.TLSModeTLS, AllowInsecure: boolPtr(false),
+	})
+	if err != nil {
+		t.Fatalf("create: %v", err)
+	}
+	if ib.Settings.AllowInsecure == nil || *ib.Settings.AllowInsecure {
+		t.Fatalf("allow insecure override = %#v, want explicit false", ib.Settings.AllowInsecure)
+	}
+	if ib.EffectiveAllowInsecure() {
+		t.Fatal("effective allow insecure should honor explicit false")
+	}
+}
+
+func TestUpdateTLSAllowInsecureExplicitTrue(t *testing.T) {
+	repo := newFakeRepo()
+	svc := svcinbound.NewService(repo, fakeCounter{}, nil)
+	ib, err := svc.Create(context.Background(), svcinbound.Input{
+		Remark: "hy2", Protocol: domain.ProtocolHysteria2, Port: 8443,
+		TLS: domain.TLSModeTLS, AllowInsecure: boolPtr(false),
+	})
+	if err != nil {
+		t.Fatalf("create: %v", err)
+	}
+	updated, err := svc.Update(context.Background(), ib.ID, svcinbound.Input{
+		Remark: "hy2", Protocol: domain.ProtocolHysteria2, Port: 8443,
+		TLS: domain.TLSModeTLS, AllowInsecure: boolPtr(true),
+	})
+	if err != nil {
+		t.Fatalf("update: %v", err)
+	}
+	if updated.Settings.AllowInsecure == nil || !*updated.Settings.AllowInsecure {
+		t.Fatalf("allow insecure override = %#v, want explicit true", updated.Settings.AllowInsecure)
+	}
+	if !updated.EffectiveAllowInsecure() {
+		t.Fatal("effective allow insecure should honor explicit true")
+	}
+}
+
 func TestToggleFlips(t *testing.T) {
 	svc := newService()
 	ib, err := svc.Create(context.Background(), svcinbound.Input{
@@ -120,4 +179,8 @@ func TestToggleFlips(t *testing.T) {
 	if toggled.Enabled == ib.Enabled {
 		t.Errorf("toggle should flip enabled: before=%v after=%v", ib.Enabled, toggled.Enabled)
 	}
+}
+
+func boolPtr(v bool) *bool {
+	return &v
 }

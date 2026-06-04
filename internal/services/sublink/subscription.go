@@ -49,9 +49,10 @@ type clientConfig struct {
 }
 
 type clientOutTLS struct {
-	Enabled    bool             `json:"enabled"`
-	ServerName string           `json:"server_name,omitempty"`
-	ALPN       []string         `json:"alpn,omitempty"`
+	Enabled    bool              `json:"enabled"`
+	ServerName string            `json:"server_name,omitempty"`
+	Insecure   bool              `json:"insecure,omitempty"`
+	ALPN       []string          `json:"alpn,omitempty"`
 	Reality    *clientOutReality `json:"reality,omitempty"`
 	UTLS       *clientOutUTLS    `json:"utls,omitempty"`
 }
@@ -157,7 +158,7 @@ func clientTLS(ib *domain.Inbound) *clientOutTLS {
 			},
 		}
 	case domain.TLSModeTLS:
-		tls := &clientOutTLS{Enabled: true, ServerName: ib.SNI}
+		tls := &clientOutTLS{Enabled: true, ServerName: ib.SNI, Insecure: ib.EffectiveAllowInsecure()}
 		if ib.Protocol == domain.ProtocolHysteria2 {
 			tls.ALPN = []string{"h3"}
 		}

@@ -23,6 +23,8 @@ definitions:
         type: string
       nodeId:
         type: string
+      online:
+        type: boolean
       remoteId:
         type: string
       startAfterFirstUse:
@@ -159,6 +161,8 @@ definitions:
         type: string
       acmeEmail:
         type: string
+      allowInsecure:
+        type: boolean
       certPath:
         type: string
       dest:
@@ -209,6 +213,9 @@ definitions:
     type: object
   internal_transport_handler.inboundSettingsDTO:
     properties:
+      allowInsecure:
+        description: Client subscription TLS verification.
+        type: boolean
       flow:
         type: string
       grpcServiceName:

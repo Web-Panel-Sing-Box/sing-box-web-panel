@@ -213,6 +213,15 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
               )}
             </div>
 
+            {f.tls === "tls" ? (
+              <Toggle
+                checked={f.allowInsecure}
+                onChange={f.setAllowInsecure}
+                label={t("inbounds.allowInsecure")}
+                description={t("inbounds.allowInsecureDesc")}
+              />
+            ) : null}
+
             {isVless && f.tls === "reality" ? (
               <div className="grid grid-cols-1 gap-3">
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
