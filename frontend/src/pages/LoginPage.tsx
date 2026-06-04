@@ -58,7 +58,7 @@ export function LoginPage() {
     try {
       const result = await login(username.trim(), password);
       if (!result.ok) {
-        push(t("login.invalidCredentials"), "error");
+        push(t(result.rateLimited ? "login.tooManyRequests" : "login.invalidCredentials"), "error");
         return;
       }
       if (result.needsTwoFactor) {
@@ -77,12 +77,12 @@ export function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const ok = await verifyTwoFactor(tempToken, code.trim());
-      if (ok) {
+      const res = await verifyTwoFactor(tempToken, code.trim());
+      if (res.ok) {
         navigate(from, { replace: true });
         return;
       }
-      push(t("login.invalidCode"), "error");
+      push(t(res.rateLimited ? "login.tooManyRequests" : "login.invalidCode"), "error");
     } finally {
       setLoading(false);
     }
