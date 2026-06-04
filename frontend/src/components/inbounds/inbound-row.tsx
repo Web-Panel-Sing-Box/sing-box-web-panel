@@ -8,6 +8,7 @@ import type { Inbound, Network, Protocol, TlsMode, Transmission } from "@/lib/st
 import { useStoreActions } from "@/lib/store";
 import { useToast } from "@/components/ui/toast";
 import { useI18n } from "@/lib/i18n";
+import { networkFromApi } from "@/api/types";
 
 const ROW_GRID =
   "grid-cols-[minmax(96px,1fr)_minmax(90px,0.8fr)_minmax(180px,1.5fr)_minmax(110px,0.8fr)_minmax(150px,1.2fr)_minmax(100px,0.8fr)_minmax(90px,0.7fr)_minmax(110px,0.8fr)]";
@@ -113,7 +114,7 @@ function TransportChip({ inbound }: { inbound: Inbound }) {
 
 function connectionLabel(inbound: Inbound) {
   if (inbound.protocol === "vless") return transmissionLabel(inbound.transmission ?? "tcp");
-  if (inbound.protocol === "naive") return networkLabel((inbound.settings?.naiveNetwork as Network) ?? "both");
+  if (inbound.protocol === "naive") return networkLabel(networkFromApi(inbound.settings?.naiveNetwork));
   return "QUIC"; // hysteria2
 }
 

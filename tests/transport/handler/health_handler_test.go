@@ -32,6 +32,9 @@ func TestHealthHandler_Root(t *testing.T) {
 	if resp["version"] == "" {
 		t.Error("version should not be empty")
 	}
+	if resp["version"] == "0.0.0" {
+		t.Error("version should not use placeholder 0.0.0")
+	}
 }
 
 func TestHealthHandler_Health(t *testing.T) {

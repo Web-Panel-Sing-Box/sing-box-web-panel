@@ -40,7 +40,7 @@ Shilka is a **local-first web panel** for managing a `sing-box` proxy server. It
 One command. Handles everything: user, directories, sing-box binary, TLS cert, systemd unit.
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/Web-Panel-Sing-Box/sing-box-web-panel/main/scripts/install.sh)
+curl -fsSL https://raw.githubusercontent.com/Web-Panel-Sing-Box/shilka-web-panel/main/scripts/install.sh | bash
 ```
 
 The script will ask:
@@ -134,7 +134,7 @@ The first admin is auto-seeded from these values. The sing-box config is generat
 
 ```bash
 # Backend (API + Swagger)
-go run ./cmd/
+go run ./cmd
 # http://127.0.0.1:8080
 # Swagger: http://127.0.0.1:8080/swagger/
 

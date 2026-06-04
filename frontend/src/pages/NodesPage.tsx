@@ -25,6 +25,7 @@ import {
 } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type NodeForm = {
@@ -35,6 +36,7 @@ type NodeForm = {
   basePath: string;
   apiToken: string;
   allowPrivateAddress: boolean;
+  skipTlsVerify: boolean;
 };
 
 const emptyForm: NodeForm = {
@@ -45,6 +47,7 @@ const emptyForm: NodeForm = {
   basePath: "",
   apiToken: "",
   allowPrivateAddress: false,
+  skipTlsVerify: false,
 };
 
 export function NodesPage() {
@@ -55,6 +58,7 @@ export function NodesPage() {
   const [createdToken, setCreatedToken] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const { t } = useI18n();
 
   const load = useCallback(async () => {
     const [nodeList, tokenList] = await Promise.all([
@@ -91,6 +95,7 @@ export function NodesPage() {
         apiToken: form.apiToken,
         enabled: true,
         allowPrivateAddress: form.allowPrivateAddress,
+        skipTlsVerify: form.skipTlsVerify,
       });
       setForm(emptyForm);
       await load();
@@ -269,6 +274,20 @@ export function NodesPage() {
               className="size-4"
             />
             Allow private or loopback address
+          </label>
+          <label className="mt-3 flex items-center gap-2 text-xs text-ink-secondary">
+            <input
+              type="checkbox"
+              checked={form.skipTlsVerify}
+              onChange={(event) =>
+                setForm((prev) => ({
+                  ...prev,
+                  skipTlsVerify: event.target.checked,
+                }))
+              }
+              className="size-4"
+            />
+            {t("nodes.skipTlsVerify")}
           </label>
           <div className="mt-4 flex justify-end">
             <Button
