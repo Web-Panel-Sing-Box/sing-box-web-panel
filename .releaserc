@@ -3,6 +3,9 @@
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
+    ["@semantic-release/exec", {
+      "prepareCmd": "bash ./scripts/build-release-assets.sh v${nextRelease.version}"
+    }],
     ["@semantic-release/github", {
       "assets": [
         {"path": "dist/shilka-linux-amd64", "label": "shilka linux amd64"},

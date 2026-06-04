@@ -7,9 +7,14 @@ import (
 	"testing"
 
 	"sing-box-web-panel/internal/transport/handler"
+	"sing-box-web-panel/internal/version"
 )
 
 func TestHealthHandler_Root(t *testing.T) {
+	oldVersion := version.Version
+	version.Version = "v7.8.9"
+	t.Cleanup(func() { version.Version = oldVersion })
+
 	h := handler.NewHealthHandler()
 	mux := http.NewServeMux()
 	h.Register(mux)
@@ -31,6 +36,9 @@ func TestHealthHandler_Root(t *testing.T) {
 
 	if resp["version"] == "" {
 		t.Error("version should not be empty")
+	}
+	if resp["version"] != "v7.8.9" {
+		t.Errorf("version = %q, want v7.8.9", resp["version"])
 	}
 	if resp["version"] == "0.0.0" {
 		t.Error("version should not use placeholder 0.0.0")
