@@ -186,7 +186,7 @@ func (c *HTTPClient) do(ctx context.Context, n *domain.Node, method, suffix stri
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return classifyTransportError(err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {

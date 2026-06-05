@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strconv"
 	"testing"
+	"time"
 
 	"sing-box-web-panel/internal/domain"
 	"sing-box-web-panel/internal/services/node"
@@ -181,6 +182,50 @@ func TestHTTPClientRemoteStatusError(t *testing.T) {
 	err := client.DeleteClient(context.Background(), nodeFromServerURL(t, srv.URL), "9")
 	if !node.IsRemoteStatus(err, http.StatusNotFound) {
 		t.Fatalf("expected 404 remote status error, got %v", err)
+	}
+}
+
+func TestHTTPClientClassifiesRefusedConnectionAsUnreachable(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	n := nodeFromServerURL(t, srv.URL)
+	srv.Close() // free the port so connections are refused
+
+	client := node.NewHTTPClient()
+	_, _, err := client.Status(context.Background(), n)
+	if !errors.Is(err, node.ErrNodeUnreachable) {
+		t.Fatalf("expected ErrNodeUnreachable, got %v", err)
+	}
+	var ue *node.UnreachableError
+	if !errors.As(err, &ue) {
+		t.Fatalf("expected *node.UnreachableError, got %T (%v)", err, err)
+	}
+	if ue.Timeout {
+		t.Fatalf("connection refused must not be classified as timeout: %+v", ue)
+	}
+}
+
+func TestHTTPClientClassifiesTimeoutAsUnreachable(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(node.RemoteStatus{PanelVersion: "shilka-test"})
+	}))
+	defer srv.Close()
+	n := nodeFromServerURL(t, srv.URL)
+
+	// A deadline already in the past forces context.DeadlineExceeded from Do.
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(-time.Hour))
+	defer cancel()
+
+	client := node.NewHTTPClient()
+	_, _, err := client.Status(ctx, n)
+	if !errors.Is(err, node.ErrNodeUnreachable) {
+		t.Fatalf("expected ErrNodeUnreachable, got %v", err)
+	}
+	var ue *node.UnreachableError
+	if !errors.As(err, &ue) {
+		t.Fatalf("expected *node.UnreachableError, got %T (%v)", err, err)
+	}
+	if !ue.Timeout || ue.Detail != "timeout" {
+		t.Fatalf("expected timeout classification, got %+v", ue)
 	}
 }
 
