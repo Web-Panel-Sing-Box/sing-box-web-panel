@@ -18,6 +18,69 @@ DOWNLOAD_RETRIES="${DOWNLOAD_RETRIES:-5}"
 DOWNLOAD_RETRY_DELAY="${DOWNLOAD_RETRY_DELAY:-2}"
 DOWNLOAD_CONNECT_TIMEOUT="${DOWNLOAD_CONNECT_TIMEOUT:-10}"
 
+# Non-interactive install + local binary (SIN-59).
+ASSUME_YES="${SHILKA_ASSUME_YES:-false}"
+PANEL_BINARY="${PANEL_BINARY:-}"
+
+usage() {
+  cat <<'USAGE'
+Usage: install.sh [--yes] [--panel-binary PATH] [--help]
+
+  --yes, -y            Non-interactive: skip all prompts, use env/defaults.
+  --panel-binary PATH  Install the panel from a local file (skip GitHub download).
+  --help, -h           Show this help.
+
+Non-interactive env knobs (used with --yes; env always wins over prompts):
+  SHILKA_HOST            Domain or IP users reach the panel on.
+  SHILKA_PORT            Panel port (default: random 10000-65535).
+  SHILKA_PATH            Web path prefix (default: random hex).
+  SHILKA_EXPOSURE        direct | reverse_proxy (default: direct).
+  SHILKA_TLS_MODE        self_signed | letsencrypt | off (default: self_signed).
+  SHILKA_ACME_EMAIL      Email for Let's Encrypt (required when letsencrypt).
+  SHILKA_ADMIN_USER      Admin username (default: random).
+  SHILKA_ADMIN_PASSWORD  Admin password (default: auto-generated).
+  PANEL_BINARY=/path     Same as --panel-binary.
+USAGE
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -y | --yes) ASSUME_YES=true ;;
+    --panel-binary) PANEL_BINARY="${2:-}"; shift ;;
+    --panel-binary=*) PANEL_BINARY="${1#*=}" ;;
+    -h | --help) usage; exit 0 ;;
+    *) echo "unknown argument: $1" >&2; usage; exit 1 ;;
+  esac
+  shift
+done
+
+# Public SHILKA_* env knobs -> internal variables. Initialised here so the
+# rest of the script (under `set -u`) can reference them unconditionally.
+PANEL_HOST="${PANEL_HOST:-${SHILKA_HOST:-}}"
+PANEL_PORT="${PANEL_PORT:-${SHILKA_PORT:-}}"
+PANEL_PATH="${PANEL_PATH:-${SHILKA_PATH:-}}"
+PANEL_EXPOSURE="${PANEL_EXPOSURE:-${SHILKA_EXPOSURE:-}}"
+ADMIN_USER="${ADMIN_USER:-${SHILKA_ADMIN_USER:-}}"
+ADMIN_PASSWORD="${ADMIN_PASSWORD:-${SHILKA_ADMIN_PASSWORD:-}}"
+ACME_EMAIL="${ACME_EMAIL:-${SHILKA_ACME_EMAIL:-}}"
+TLS_MODE="${SHILKA_TLS_MODE:-}" # letsencrypt | self_signed | off
+CERT_TYPE="${CERT_TYPE:-}"
+
+# ask <varname> <prompt> <default>: keep an existing (env) value; otherwise use
+# the default in non-interactive mode; otherwise prompt.
+ask() {
+  local __var="$1" __prompt="$2" __default="$3" __reply
+  if [[ -n "${!__var:-}" ]]; then
+    return
+  fi
+  if [[ "${ASSUME_YES}" == "true" ]]; then
+    printf -v "${__var}" '%s' "${__default}"
+    return
+  fi
+  read -rp "${__prompt} [${__default}]: " __reply
+  printf -v "${__var}" '%s' "${__reply:-${__default}}"
+}
+
 # --retry-all-errors needs curl >= 7.71; degrade gracefully on older curl.
 _curl_retry_flags() {
   if curl --help all 2>/dev/null | grep -q -- '--retry-all-errors'; then
@@ -254,25 +317,34 @@ stage_binaries() {
   tar -xzf "${STAGE_DIR}/${sb_asset}" -C "${STAGE_DIR}"
   cp "${STAGE_DIR}/sing-box-${sb_version}-linux-${arch}/sing-box" "${STAGE_DIR}/sing-box"
 
-  # Shilka panel
-  if [[ "${PANEL_VERSION}" == "latest" ]]; then
-    echo "Fetching latest Shilka release..."
-    panel_version="$(fetch_url "https://api.github.com/repos/${GITHUB_REPO}/releases/latest" \
-      | sed -n 's/.*"tag_name": "v\{0,1\}\([^"]*\)".*/\1/p' \
-      | head -n 1)"
-    if [[ -z "${panel_version}" ]]; then
-      echo "ERROR: could not find latest Shilka release. Set PANEL_VERSION manually."
+  # Shilka panel — local file (SIN-59) or release download.
+  if [[ -n "${PANEL_BINARY}" ]]; then
+    if [[ ! -f "${PANEL_BINARY}" ]]; then
+      echo "ERROR: PANEL_BINARY not found: ${PANEL_BINARY}"
       exit 1
     fi
+    echo "Using local Shilka binary ${PANEL_BINARY} (skipping download + checksum)..."
+    install -m 0755 "${PANEL_BINARY}" "${STAGE_DIR}/shilka"
   else
-    panel_version="${PANEL_VERSION#v}"
+    if [[ "${PANEL_VERSION}" == "latest" ]]; then
+      echo "Fetching latest Shilka release..."
+      panel_version="$(fetch_url "https://api.github.com/repos/${GITHUB_REPO}/releases/latest" \
+        | sed -n 's/.*"tag_name": "v\{0,1\}\([^"]*\)".*/\1/p' \
+        | head -n 1)"
+      if [[ -z "${panel_version}" ]]; then
+        echo "ERROR: could not find latest Shilka release. Set PANEL_VERSION manually."
+        exit 1
+      fi
+    else
+      panel_version="${PANEL_VERSION#v}"
+    fi
+    panel_asset="shilka-linux-${arch}"
+    panel_url="https://github.com/${GITHUB_REPO}/releases/download/v${panel_version}/${panel_asset}"
+    echo "Downloading Shilka ${panel_version} (linux-${arch})..."
+    download_file "${panel_url}" "${STAGE_DIR}/${panel_asset}"
+    verify_panel_checksum "${STAGE_DIR}" "${panel_asset}" "${panel_version}"
+    cp "${STAGE_DIR}/${panel_asset}" "${STAGE_DIR}/shilka"
   fi
-  panel_asset="shilka-linux-${arch}"
-  panel_url="https://github.com/${GITHUB_REPO}/releases/download/v${panel_version}/${panel_asset}"
-  echo "Downloading Shilka ${panel_version} (linux-${arch})..."
-  download_file "${panel_url}" "${STAGE_DIR}/${panel_asset}"
-  verify_panel_checksum "${STAGE_DIR}" "${panel_asset}" "${panel_version}"
-  cp "${STAGE_DIR}/${panel_asset}" "${STAGE_DIR}/shilka"
 
   # Update helper script
   update_url="https://raw.githubusercontent.com/${GITHUB_REPO}/main/scripts/update.sh"
@@ -389,24 +461,59 @@ gather_input() {
   # Domain / IP
   local default_host="${public_ip:-127.0.0.1}"
   echo "Enter the domain or IP address users will use to reach the panel."
-  read -rp "Domain/IP [${default_host}]: " input_host
-  PANEL_HOST="${input_host:-${default_host}}"
+  ask PANEL_HOST "Domain/IP" "${default_host}"
 
-  PANEL_EXPOSURE="${PANEL_EXPOSURE:-direct}"
-  echo ""
-  echo "Panel exposure mode:"
-  echo "  1) Direct high port - Shilka listens publicly on the selected port."
-  echo "  2) Reverse proxy - Shilka listens on 127.0.0.1 and nginx/Caddy handles public TLS."
-  read -rp "Mode [1]: " input_exposure
-  if [[ "${input_exposure}" == "2" || "${input_exposure,,}" == "reverse" || "${input_exposure,,}" == "proxy" ]]; then
-    PANEL_EXPOSURE="reverse_proxy"
+  if [[ -z "${PANEL_EXPOSURE}" ]]; then
+    if [[ "${ASSUME_YES}" == "true" ]]; then
+      PANEL_EXPOSURE="direct"
+    else
+      echo ""
+      echo "Panel exposure mode:"
+      echo "  1) Direct high port - Shilka listens publicly on the selected port."
+      echo "  2) Reverse proxy - Shilka listens on 127.0.0.1 and nginx/Caddy handles public TLS."
+      read -rp "Mode [1]: " input_exposure
+      PANEL_EXPOSURE="${input_exposure:-direct}"
+    fi
   fi
+  case "${PANEL_EXPOSURE,,}" in
+    2 | reverse | proxy | reverse_proxy) PANEL_EXPOSURE="reverse_proxy" ;;
+    *) PANEL_EXPOSURE="direct" ;;
+  esac
 
   # Detect whether this is a domain (eligible for Let's Encrypt) or a bare IP.
   USE_ACME=false
   if [[ "${PANEL_EXPOSURE}" == "reverse_proxy" ]]; then
     echo ""
     echo "Reverse proxy mode selected. Panel TLS will be off and the panel will bind to 127.0.0.1."
+  elif [[ -n "${TLS_MODE}" || "${ASSUME_YES}" == "true" ]]; then
+    # Deterministic TLS for non-interactive / explicit SHILKA_TLS_MODE.
+    case "${TLS_MODE:-self_signed}" in
+      letsencrypt)
+        if is_domain "${PANEL_HOST}"; then
+          CERT_TYPE="domain"
+        elif is_ipv4 "${PANEL_HOST}"; then
+          CERT_TYPE="ip"
+        else
+          echo "ERROR: SHILKA_TLS_MODE=letsencrypt requires a domain or IPv4 host"
+          exit 1
+        fi
+        if [[ -z "${ACME_EMAIL}" ]]; then
+          echo "ERROR: SHILKA_ACME_EMAIL is required for SHILKA_TLS_MODE=letsencrypt"
+          exit 1
+        fi
+        USE_ACME=true
+        if port_in_use 80; then
+          echo "WARNING: port 80 is already in use. Standalone Let's Encrypt may fail."
+        fi
+        ;;
+      self_signed | off)
+        USE_ACME=false
+        ;;
+      *)
+        echo "ERROR: invalid SHILKA_TLS_MODE='${TLS_MODE}' (use letsencrypt|self_signed|off)"
+        exit 1
+        ;;
+    esac
   elif is_domain "${PANEL_HOST}"; then
     echo ""
     echo "This looks like a domain. Let's Encrypt can provide a trusted certificate."
@@ -443,7 +550,7 @@ gather_input() {
     fi
   fi
 
-  if [[ "${USE_ACME}" == "true" ]]; then
+  if [[ "${USE_ACME}" == "true" && -z "${ACME_EMAIL}" ]]; then
     echo ""
     echo "Enter your email address for Let's Encrypt notifications."
     read -rp "Email: " input_email
@@ -458,15 +565,13 @@ gather_input() {
   fi
 
   # Port
-  PANEL_PORT="${PANEL_PORT:-$(random_port)}"
   echo ""
   if [[ "${PANEL_EXPOSURE}" == "reverse_proxy" ]]; then
     echo "Panel local port for the reverse proxy target (must be free on 127.0.0.1)."
   else
     echo "Panel public port (must be free)."
   fi
-  read -rp "Port [${PANEL_PORT}]: " input_port
-  PANEL_PORT="${input_port:-${PANEL_PORT}}"
+  ask PANEL_PORT "Port" "$(random_port)"
   if port_in_use "${PANEL_PORT}"; then
     echo "ERROR: port ${PANEL_PORT} is already in use"
     exit 1
@@ -479,12 +584,9 @@ gather_input() {
   fi
 
   # Base path
-  local default_path
-  default_path="$(random_base_path)"
   echo ""
   echo "Web panel path prefix for obscurity (starts with /)."
-  read -rp "Path [${default_path}]: " input_path
-  PANEL_PATH="${input_path:-${default_path}}"
+  ask PANEL_PATH "Path" "$(random_base_path)"
   # Ensure leading /
   [[ "${PANEL_PATH}" != /* ]] && PANEL_PATH="/${PANEL_PATH}"
 
@@ -495,20 +597,14 @@ gather_input() {
   fi
 
   # Admin username
-  local default_user
-  default_user="$(random_username)"
   echo ""
   echo "Admin username."
-  read -rp "Username [${default_user}]: " input_user
-  ADMIN_USER="${input_user:-${default_user}}"
+  ask ADMIN_USER "Username" "$(random_username)"
 
   # Admin password
-  local default_pass
-  default_pass="$(openssl rand -base64 18)"
   echo ""
   echo "Admin password (leave empty for auto-generated)."
-  read -rp "Password [auto]: " input_pass
-  ADMIN_PASSWORD="${input_pass:-${default_pass}}"
+  ask ADMIN_PASSWORD "Password" "$(openssl rand -base64 18)"
 
   echo ""
   echo "--------------------------------------------"
@@ -522,10 +618,12 @@ gather_input() {
   echo "  Password:   ${ADMIN_PASSWORD}"
   echo "--------------------------------------------"
   echo ""
-  read -rp "Proceed with installation? [Y/n] " confirm
-  if [[ "${confirm,,}" == "n" || "${confirm,,}" == "no" ]]; then
-    echo "Installation cancelled."
-    exit 0
+  if [[ "${ASSUME_YES}" != "true" ]]; then
+    read -rp "Proceed with installation? [Y/n] " confirm
+    if [[ "${confirm,,}" == "n" || "${confirm,,}" == "no" ]]; then
+      echo "Installation cancelled."
+      exit 0
+    fi
   fi
 }
 
