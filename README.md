@@ -59,6 +59,40 @@ systemctl status shilka   # check service
 journalctl -u shilka -f   # follow logs
 ```
 
+#### Non-interactive (headless) install
+
+Pass `--yes` to skip every prompt and drive the installer with environment
+variables (any unset value falls back to the same default the prompt would
+offer). Handy for CI, smoke tests, and provisioning:
+
+```bash
+sudo SHILKA_HOST=1.2.3.4 \
+     SHILKA_TLS_MODE=self_signed \
+     SHILKA_ADMIN_USER=admin \
+     SHILKA_ADMIN_PASSWORD=secret \
+     bash scripts/install.sh --yes
+```
+
+| Env var                 | Meaning                                        | Default            |
+| ----------------------- | ---------------------------------------------- | ------------------ |
+| `SHILKA_HOST`           | Domain or IP users reach the panel on          | detected public IP |
+| `SHILKA_PORT`           | Panel port                                     | random 10000–65535 |
+| `SHILKA_PATH`           | Web path prefix                                | random hex         |
+| `SHILKA_EXPOSURE`       | `direct` or `reverse_proxy`                    | `direct`           |
+| `SHILKA_TLS_MODE`       | `self_signed`, `letsencrypt`, or `off`         | `self_signed`      |
+| `SHILKA_ACME_EMAIL`     | Email for Let's Encrypt (required for that mode) | —                |
+| `SHILKA_ADMIN_USER`     | Admin username                                 | random             |
+| `SHILKA_ADMIN_PASSWORD` | Admin password                                 | auto-generated     |
+
+Install a locally built panel binary instead of downloading a release asset
+(skips the GitHub download + checksum for the panel; sing-box is still fetched):
+
+```bash
+sudo PANEL_BINARY=./dist/shilka-linux-amd64 \
+     SHILKA_HOST=1.2.3.4 SHILKA_TLS_MODE=self_signed \
+     bash scripts/install.sh --yes        # or: --panel-binary ./dist/shilka-linux-amd64
+```
+
 ---
 
 ### Build from Source

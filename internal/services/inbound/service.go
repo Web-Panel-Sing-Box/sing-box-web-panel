@@ -143,6 +143,14 @@ func (s *Service) List(ctx context.Context) ([]View, error) {
 	return views, nil
 }
 
+func (s *Service) ClientCount(ctx context.Context, inboundID int64) (int, error) {
+	counts, err := s.clients.CountByInbound(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return counts[inboundID], nil
+}
+
 func (s *Service) Get(ctx context.Context, id int64) (*domain.Inbound, error) {
 	return s.repo.GetByID(ctx, id)
 }

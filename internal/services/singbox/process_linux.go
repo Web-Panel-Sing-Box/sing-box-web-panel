@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func externalProcessStatus(ctx context.Context, cfg ProcessConfig) (externalProcess, bool) {
@@ -38,10 +39,58 @@ func externalProcessStatus(ctx context.Context, cfg ProcessConfig) (externalProc
 		}
 		args := splitProcCmdline(cmdline)
 		if matchesSingBoxRun(args, cfg) {
-			return externalProcess{PID: pid}, true
+			return externalProcess{PID: pid, Uptime: processUptime(entry.Name())}, true
 		}
 	}
 	return externalProcess{}, false
+}
+
+// processUptime returns how long the process has been running, derived from
+// /proc/<pid>/stat field 22 (starttime in clock ticks since boot) measured
+// against /proc/uptime. Any parse failure yields 0 so that Running/PID
+// detection is never broken by an uptime hiccup.
+func processUptime(pidDir string) time.Duration {
+	statRaw, err := os.ReadFile(filepath.Join("/proc", pidDir, "stat"))
+	if err != nil {
+		return 0
+	}
+	// comm (field 2) is wrapped in parentheses and may contain spaces or
+	// parentheses, so split after the last ')'. The first token after it is
+	// state (field 3), which makes starttime (field 22) index 19.
+	idx := bytes.LastIndexByte(statRaw, ')')
+	if idx < 0 || idx+2 >= len(statRaw) {
+		return 0
+	}
+	fields := strings.Fields(string(statRaw[idx+2:]))
+	if len(fields) < 20 {
+		return 0
+	}
+	startTicks, err := strconv.ParseInt(fields[19], 10, 64)
+	if err != nil {
+		return 0
+	}
+	upRaw, err := os.ReadFile("/proc/uptime")
+	if err != nil {
+		return 0
+	}
+	upFields := strings.Fields(string(upRaw))
+	if len(upFields) == 0 {
+		return 0
+	}
+	sysUptime, err := strconv.ParseFloat(upFields[0], 64)
+	if err != nil {
+		return 0
+	}
+	const userHZ = 100 // sysconf(_SC_CLK_TCK); 100 on Linux in practice
+	startSec := float64(startTicks) / userHZ
+	if d := sysUptime - startSec; d >= 0 {
+		uptime := time.Duration(d * float64(time.Second))
+		if uptime <= 0 {
+			return time.Millisecond
+		}
+		return uptime
+	}
+	return 0
 }
 
 func splitProcCmdline(data []byte) []string {

@@ -265,6 +265,15 @@ func cliNode(args []string) error {
 	}
 }
 
+// cliCoreStatusDTO mirrors the panel's GET /api/core/status response so that
+// `shilka core status` reports Uptime in seconds (not raw nanoseconds).
+type cliCoreStatusDTO struct {
+	Running       bool   `json:"running"`
+	PID           int    `json:"pid"`
+	Version       string `json:"version"`
+	UptimeSeconds int64  `json:"uptimeSeconds"`
+}
+
 func cliCore(args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("usage: shilka core start|stop|restart|reload|status|config-check")
@@ -293,7 +302,12 @@ func cliCore(args []string) error {
 		if err != nil {
 			return err
 		}
-		return printJSON(st)
+		return printJSON(cliCoreStatusDTO{
+			Running:       st.Running,
+			PID:           st.PID,
+			Version:       st.Version,
+			UptimeSeconds: int64(st.Uptime.Seconds()),
+		})
 	case "config-check":
 		return singbox.NewChecker(cfg.SingBox.BinaryPath, cfg.SingBox.CheckTimeout).Check(ctx, cfg.SingBox.ConfigPath)
 	default:

@@ -94,10 +94,81 @@ func (r *inboundFakeRepo) UpsertRemote(_ context.Context, nodeID int64, remoteID
 	return cp.ID, nil
 }
 
-type inboundFakeCounter struct{}
+type inboundFakeCounter struct {
+	counts map[int64]int
+}
 
-func (inboundFakeCounter) CountByInbound(context.Context) (map[int64]int, error) {
+func (c inboundFakeCounter) CountByInbound(context.Context) (map[int64]int, error) {
+	if c.counts != nil {
+		return c.counts, nil
+	}
 	return map[int64]int{}, nil
+}
+
+func TestInboundHandlerGetReturnsClientCount(t *testing.T) {
+	repo := newInboundFakeRepo()
+	ib := seedInbound(t, repo)
+	mux := testInboundMuxWithCounter(repo, inboundFakeCounter{counts: map[int64]int{ib.ID: 3}})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/inbounds/1", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200; body: %s", rec.Code, rec.Body.String())
+	}
+	if got := responseInbound(t, rec.Body.Bytes()).ClientCount; got != 3 {
+		t.Fatalf("clientCount = %d, want 3", got)
+	}
+}
+
+func TestInboundHandlerUpdateReturnsClientCount(t *testing.T) {
+	repo := newInboundFakeRepo()
+	ib := seedInbound(t, repo)
+	mux := testInboundMuxWithCounter(repo, inboundFakeCounter{counts: map[int64]int{ib.ID: 4}})
+
+	body, _ := json.Marshal(map[string]any{
+		"remark":       "edge-updated",
+		"protocol":     "vless",
+		"port":         9443,
+		"transmission": "tcp",
+		"tls":          "none",
+	})
+	req := httptest.NewRequest(http.MethodPut, "/api/inbounds/1", bytes.NewReader(body))
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200; body: %s", rec.Code, rec.Body.String())
+	}
+	resp := responseInbound(t, rec.Body.Bytes())
+	if resp.ClientCount != 4 {
+		t.Fatalf("clientCount = %d, want 4", resp.ClientCount)
+	}
+	if resp.Remark != "edge-updated" {
+		t.Fatalf("remark = %q, want edge-updated", resp.Remark)
+	}
+}
+
+func TestInboundHandlerToggleReturnsClientCount(t *testing.T) {
+	repo := newInboundFakeRepo()
+	ib := seedInbound(t, repo)
+	mux := testInboundMuxWithCounter(repo, inboundFakeCounter{counts: map[int64]int{ib.ID: 5}})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/inbounds/1/toggle", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200; body: %s", rec.Code, rec.Body.String())
+	}
+	resp := responseInbound(t, rec.Body.Bytes())
+	if resp.ClientCount != 5 {
+		t.Fatalf("clientCount = %d, want 5", resp.ClientCount)
+	}
+	if resp.Enabled {
+		t.Fatal("enabled = true, want false")
+	}
 }
 
 func TestInboundHandlerCreateAllowInsecureExplicitFalse(t *testing.T) {
@@ -190,7 +261,11 @@ func TestInboundHandlerCreateOnNodeRejectsBodyNodeMismatch(t *testing.T) {
 }
 
 func testInboundMux(repo *inboundFakeRepo) *http.ServeMux {
-	svc := svcinbound.NewService(repo, inboundFakeCounter{}, nil)
+	return testInboundMuxWithCounter(repo, inboundFakeCounter{})
+}
+
+func testInboundMuxWithCounter(repo *inboundFakeRepo, counter inboundFakeCounter) *http.ServeMux {
+	svc := svcinbound.NewService(repo, counter, nil)
 	h := handler.NewInboundHandler(svc, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	mux := http.NewServeMux()
 	h.Register(mux)
@@ -223,6 +298,40 @@ func responseSettings(t *testing.T, body []byte) map[string]any {
 		t.Fatalf("settings missing or invalid in response: %s", body)
 	}
 	return settings
+}
+
+type inboundResponse struct {
+	Remark      string `json:"remark"`
+	Enabled     bool   `json:"enabled"`
+	ClientCount int    `json:"clientCount"`
+}
+
+func responseInbound(t *testing.T, body []byte) inboundResponse {
+	t.Helper()
+	var resp inboundResponse
+	if err := json.Unmarshal(body, &resp); err != nil {
+		t.Fatalf("unmarshal inbound response: %v", err)
+	}
+	return resp
+}
+
+func seedInbound(t *testing.T, repo *inboundFakeRepo) *domain.Inbound {
+	t.Helper()
+	now := time.Date(2026, 6, 5, 0, 0, 0, 0, time.UTC)
+	ib := &domain.Inbound{
+		Remark:       "edge",
+		Protocol:     domain.ProtocolVLESS,
+		Port:         443,
+		Transmission: domain.TransmissionTCP,
+		TLS:          domain.TLSModeNone,
+		Enabled:      true,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+	if err := repo.Create(context.Background(), ib); err != nil {
+		t.Fatalf("seed inbound: %v", err)
+	}
+	return ib
 }
 
 type handlerNodeRepo struct {

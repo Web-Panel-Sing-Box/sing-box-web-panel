@@ -52,6 +52,12 @@ func TestSubprocessStatusDetectsExternalSingBoxRun(t *testing.T) {
 			if st.Version != "sing-box 1.2.3" {
 				t.Fatalf("version = %q, want sing-box 1.2.3", st.Version)
 			}
+			if st.Uptime <= 0 {
+				t.Fatalf("uptime = %v, want > 0 for a detected external process", st.Uptime)
+			}
+			if st.Uptime > time.Minute {
+				t.Fatalf("uptime = %v, implausibly large for a just-started process", st.Uptime)
+			}
 			return
 		}
 		time.Sleep(20 * time.Millisecond)
