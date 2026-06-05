@@ -83,8 +83,12 @@ func processUptime(pidDir string) time.Duration {
 	}
 	const userHZ = 100 // sysconf(_SC_CLK_TCK); 100 on Linux in practice
 	startSec := float64(startTicks) / userHZ
-	if d := sysUptime - startSec; d > 0 {
-		return time.Duration(d * float64(time.Second))
+	if d := sysUptime - startSec; d >= 0 {
+		uptime := time.Duration(d * float64(time.Second))
+		if uptime <= 0 {
+			return time.Millisecond
+		}
+		return uptime
 	}
 	return 0
 }
