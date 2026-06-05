@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ApiError } from "@/api/client";
 import { listNodes, type NodeDTO } from "@/api";
@@ -29,6 +29,10 @@ type Props = {
 
 export function AddClientModal({ open, onClose, defaultInboundId, defaultNodeId }: Props) {
   const inbounds = useInbounds();
+  // Keep the latest inbounds in a ref so the init effect can read them without
+  // re-running every time polling delivers a new array (SIN-35).
+  const inboundsRef = useRef(inbounds);
+  inboundsRef.current = inbounds;
   const { addClient } = useStoreActions();
   const { push } = useToast();
   const { t } = useI18n();
@@ -66,20 +70,21 @@ export function AddClientModal({ open, onClose, defaultInboundId, defaultNodeId 
       .catch(() => setNodes([]));
     setName("");
     setNameError(undefined);
+    const currentInbounds = inboundsRef.current;
     const defaultInbound = defaultInboundId
-      ? inbounds.find((inbound) => inbound.id === defaultInboundId)
+      ? currentInbounds.find((inbound) => inbound.id === defaultInboundId)
       : undefined;
     const nextNodeId = defaultInbound?.nodeId ?? (defaultNodeId && defaultNodeId !== "all" ? defaultNodeId : "local");
     const nextInbound =
       defaultInbound && (nextNodeId === "local" ? !defaultInbound.nodeId : defaultInbound.nodeId === nextNodeId)
         ? defaultInbound.id
-        : (inbounds.find((inbound) => (nextNodeId === "local" ? !inbound.nodeId : inbound.nodeId === nextNodeId))?.id ?? "");
+        : (currentInbounds.find((inbound) => (nextNodeId === "local" ? !inbound.nodeId : inbound.nodeId === nextNodeId))?.id ?? "");
     setNodeId(nextNodeId);
     setInboundId(nextInbound);
     setTotalFlowGb("100");
     setExpiry(defaultExpiryIso().slice(0, 10));
     setStartAfterFirstUse(false);
-  }, [open, defaultInboundId, defaultNodeId, inbounds]);
+  }, [open, defaultInboundId, defaultNodeId]);
 
   useEffect(() => {
     if (!open) return;
