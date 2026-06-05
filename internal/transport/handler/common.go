@@ -88,6 +88,18 @@ func writeServiceError(w http.ResponseWriter, log *slog.Logger, op string, err e
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 	case errors.Is(err, svcnode.ErrRemote):
 		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "remote node error"})
+	case errors.Is(err, svcnode.ErrNodeUnreachable):
+		status := http.StatusBadGateway // 502
+		detail := "unreachable"
+		var ue *svcnode.UnreachableError
+		if errors.As(err, &ue) {
+			detail = ue.Detail
+			if ue.Timeout {
+				status = http.StatusGatewayTimeout // 504
+			}
+		}
+		log.Warn(op, slog.String("reason", "node unreachable"), slog.String("detail", detail))
+		writeJSON(w, status, map[string]string{"error": "node unreachable", "detail": detail})
 	default:
 		log.Error(op, slog.String("error", err.Error()))
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
