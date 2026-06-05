@@ -303,7 +303,12 @@ func (h *InboundHandler) Get(w http.ResponseWriter, r *http.Request) {
 		writeServiceError(w, h.log, "get inbound", err)
 		return
 	}
-	writeJSON(w, http.StatusOK, toInboundDTO(ib, 0))
+	clientCount, err := h.svc.ClientCount(r.Context(), id)
+	if err != nil {
+		writeServiceError(w, h.log, "count inbound clients", err)
+		return
+	}
+	writeJSON(w, http.StatusOK, toInboundDTO(ib, clientCount))
 }
 
 // Update godoc
@@ -332,6 +337,11 @@ func (h *InboundHandler) Update(w http.ResponseWriter, r *http.Request) {
 		writeServiceError(w, h.log, "get inbound", err)
 		return
 	}
+	clientCount, err := h.svc.ClientCount(r.Context(), id)
+	if err != nil {
+		writeServiceError(w, h.log, "count inbound clients", err)
+		return
+	}
 	if existing.NodeID != nil {
 		if h.nodes == nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "node mutations are not configured"})
@@ -345,7 +355,7 @@ func (h *InboundHandler) Update(w http.ResponseWriter, r *http.Request) {
 			writeServiceError(w, h.log, "update remote inbound", err)
 			return
 		}
-		writeJSON(w, http.StatusOK, toInboundDTO(ib, 0))
+		writeJSON(w, http.StatusOK, toInboundDTO(ib, clientCount))
 		return
 	}
 	if req.NodeID != "" {
@@ -357,7 +367,7 @@ func (h *InboundHandler) Update(w http.ResponseWriter, r *http.Request) {
 		writeServiceError(w, h.log, "update inbound", err)
 		return
 	}
-	writeJSON(w, http.StatusOK, toInboundDTO(ib, 0))
+	writeJSON(w, http.StatusOK, toInboundDTO(ib, clientCount))
 }
 
 // Delete godoc
@@ -419,6 +429,11 @@ func (h *InboundHandler) Toggle(w http.ResponseWriter, r *http.Request) {
 		writeServiceError(w, h.log, "get inbound", err)
 		return
 	}
+	clientCount, err := h.svc.ClientCount(r.Context(), id)
+	if err != nil {
+		writeServiceError(w, h.log, "count inbound clients", err)
+		return
+	}
 	if existing.NodeID != nil {
 		if h.nodes == nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "node mutations are not configured"})
@@ -429,7 +444,7 @@ func (h *InboundHandler) Toggle(w http.ResponseWriter, r *http.Request) {
 			writeServiceError(w, h.log, "toggle remote inbound", err)
 			return
 		}
-		writeJSON(w, http.StatusOK, toInboundDTO(ib, 0))
+		writeJSON(w, http.StatusOK, toInboundDTO(ib, clientCount))
 		return
 	}
 	ib, err := h.svc.Toggle(r.Context(), id)
@@ -437,7 +452,7 @@ func (h *InboundHandler) Toggle(w http.ResponseWriter, r *http.Request) {
 		writeServiceError(w, h.log, "toggle inbound", err)
 		return
 	}
-	writeJSON(w, http.StatusOK, toInboundDTO(ib, 0))
+	writeJSON(w, http.StatusOK, toInboundDTO(ib, clientCount))
 }
 
 // Clone godoc
