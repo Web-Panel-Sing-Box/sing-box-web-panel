@@ -89,7 +89,7 @@ type Input struct {
 	Hy2Masquerade            string
 	Hy2Network               string
 	Hy2BrutalDebug           bool
-	Hy2BBRProfile            string
+	Hy2BbrProfile            string
 	// Naive.
 	NaiveNetwork            string
 	NaiveQuicCongestionCtrl string
@@ -115,7 +115,7 @@ func applyProtocolSettings(ib *domain.Inbound, in Input) {
 	ib.Settings.Hy2Masquerade = in.Hy2Masquerade
 	ib.Settings.Hy2Network = in.Hy2Network
 	ib.Settings.Hy2BrutalDebug = in.Hy2BrutalDebug
-	ib.Settings.Hy2BBRProfile = in.Hy2BBRProfile
+	ib.Settings.Hy2BbrProfile = in.Hy2BbrProfile
 	ib.Settings.NaiveNetwork = normalizeNaiveNetwork(in.NaiveNetwork)
 	ib.Settings.NaiveQuicCongestionCtrl = in.NaiveQuicCongestionCtrl
 }
@@ -408,7 +408,7 @@ func validate(in Input) error {
 		default:
 			return fmt.Errorf("%w: hysteria2 network must be tcp, udp, or empty", ErrValidation)
 		}
-		switch in.Hy2BBRProfile {
+		switch in.Hy2BbrProfile {
 		case "", "conservative", "standard", "aggressive":
 		default:
 			return fmt.Errorf("%w: bbr_profile must be conservative, standard, or aggressive", ErrValidation)

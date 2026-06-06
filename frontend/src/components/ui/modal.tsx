@@ -100,8 +100,6 @@ export function ModalFooter({
   className
 }: {
   children: ReactNode;
-  /** @deprecated kept for backwards compatibility; ignored — footer is now borderless */
-  accent?: "violet" | "cyan";
   className?: string;
 }) {
   return (
