@@ -106,6 +106,7 @@ func toInboundDTO(ib *domain.Inbound, clientCount int) inboundDTO {
 		dto.NodeID = strconv.FormatInt(*ib.NodeID, 10)
 	}
 	// Surface only non-secret settings; never expose the Reality private key.
+	allowInsecure := ib.EffectiveAllowInsecure()
 	s := inboundSettingsDTO{
 		PublicKey:                ib.Settings.RealityPublicKey,
 		ShortID:                  ib.Settings.RealityShortID,
@@ -124,7 +125,7 @@ func toInboundDTO(ib *domain.Inbound, clientCount int) inboundDTO {
 		Hy2BbrProfile:            ib.Settings.Hy2BbrProfile,
 		NaiveNetwork:             ib.Settings.NaiveNetwork,
 		NaiveQuicCongestionCtrl:  ib.Settings.NaiveQuicCongestionCtrl,
-		AllowInsecure:            boolPtr(ib.EffectiveAllowInsecure()),
+		AllowInsecure:            &allowInsecure,
 		ACMEDomain:               ib.Settings.ACMEDomain,
 		ACMEEmail:                ib.Settings.ACMEEmail,
 		CertPath:                 ib.Settings.CertPath,
@@ -196,10 +197,6 @@ func (req inboundRequest) toInput() svcinbound.Input {
 		NaiveNetwork:             req.NaiveNetwork,
 		NaiveQuicCongestionCtrl:  req.NaiveQuicCongestionCtrl,
 	}
-}
-
-func boolPtr(v bool) *bool {
-	return &v
 }
 
 // List godoc
