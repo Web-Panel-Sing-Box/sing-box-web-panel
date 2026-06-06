@@ -54,7 +54,7 @@ type inboundSettingsDTO struct {
 	Hy2Masquerade            string `json:"hy2Masquerade,omitempty"`
 	Hy2Network               string `json:"hy2Network,omitempty"`
 	Hy2BrutalDebug           bool   `json:"hy2BrutalDebug,omitempty"`
-	Hy2BBRProfile            string `json:"hy2BbrProfile,omitempty"`
+	Hy2BbrProfile            string `json:"hy2BbrProfile,omitempty"`
 	// Naive.
 	NaiveNetwork            string `json:"naiveNetwork,omitempty"`
 	NaiveQuicCongestionCtrl string `json:"naiveQuicCongestionCtrl,omitempty"`
@@ -106,6 +106,7 @@ func toInboundDTO(ib *domain.Inbound, clientCount int) inboundDTO {
 		dto.NodeID = strconv.FormatInt(*ib.NodeID, 10)
 	}
 	// Surface only non-secret settings; never expose the Reality private key.
+	allowInsecure := ib.EffectiveAllowInsecure()
 	s := inboundSettingsDTO{
 		PublicKey:                ib.Settings.RealityPublicKey,
 		ShortID:                  ib.Settings.RealityShortID,
@@ -121,10 +122,10 @@ func toInboundDTO(ib *domain.Inbound, clientCount int) inboundDTO {
 		Hy2Masquerade:            ib.Settings.Hy2Masquerade,
 		Hy2Network:               ib.Settings.Hy2Network,
 		Hy2BrutalDebug:           ib.Settings.Hy2BrutalDebug,
-		Hy2BBRProfile:            ib.Settings.Hy2BBRProfile,
+		Hy2BbrProfile:            ib.Settings.Hy2BbrProfile,
 		NaiveNetwork:             ib.Settings.NaiveNetwork,
 		NaiveQuicCongestionCtrl:  ib.Settings.NaiveQuicCongestionCtrl,
-		AllowInsecure:            boolPtr(ib.EffectiveAllowInsecure()),
+		AllowInsecure:            &allowInsecure,
 		ACMEDomain:               ib.Settings.ACMEDomain,
 		ACMEEmail:                ib.Settings.ACMEEmail,
 		CertPath:                 ib.Settings.CertPath,
@@ -162,7 +163,7 @@ type inboundRequest struct {
 	Hy2Masquerade            string `json:"hy2Masquerade,omitempty"`
 	Hy2Network               string `json:"hy2Network,omitempty"`
 	Hy2BrutalDebug           bool   `json:"hy2BrutalDebug,omitempty"`
-	Hy2BBRProfile            string `json:"hy2BbrProfile,omitempty"`
+	Hy2BbrProfile            string `json:"hy2BbrProfile,omitempty"`
 	// Naive.
 	NaiveNetwork            string `json:"naiveNetwork,omitempty"`
 	NaiveQuicCongestionCtrl string `json:"naiveQuicCongestionCtrl,omitempty"`
@@ -192,14 +193,10 @@ func (req inboundRequest) toInput() svcinbound.Input {
 		Hy2Masquerade:            req.Hy2Masquerade,
 		Hy2Network:               req.Hy2Network,
 		Hy2BrutalDebug:           req.Hy2BrutalDebug,
-		Hy2BBRProfile:            req.Hy2BBRProfile,
+		Hy2BbrProfile:            req.Hy2BbrProfile,
 		NaiveNetwork:             req.NaiveNetwork,
 		NaiveQuicCongestionCtrl:  req.NaiveQuicCongestionCtrl,
 	}
-}
-
-func boolPtr(v bool) *bool {
-	return &v
 }
 
 // List godoc

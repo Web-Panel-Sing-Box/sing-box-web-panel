@@ -85,7 +85,7 @@ type InboundSettings struct {
 	Hy2Masquerade            string `json:"hy2Masquerade,omitempty"`
 	Hy2Network               string `json:"hy2Network,omitempty"` // tcp, udp, ""
 	Hy2BrutalDebug           bool   `json:"hy2BrutalDebug,omitempty"`
-	Hy2BBRProfile            string `json:"hy2BbrProfile,omitempty"` // conservative, standard, aggressive
+	Hy2BbrProfile            string `json:"hy2BbrProfile,omitempty"` // conservative, standard, aggressive
 
 	// Naive.
 	NaiveNetwork            string `json:"naiveNetwork,omitempty"`            // tcp, udp, ""

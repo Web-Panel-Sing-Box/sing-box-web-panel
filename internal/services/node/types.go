@@ -42,7 +42,7 @@ type RemoteInbound struct {
 	SNI          string                 `json:"sni,omitempty"`
 	Dest         string                 `json:"dest,omitempty"`
 	Enabled      bool                   `json:"enabled"`
-	Settings     domain.InboundSettings `json:"settings,omitempty"`
+	Settings     domain.InboundSettings `json:"settings"`
 	UpdatedAt    string                 `json:"updatedAt,omitempty"`
 }
 
@@ -71,7 +71,7 @@ type RemoteInboundRequest struct {
 	Hy2Masquerade            string `json:"hy2Masquerade,omitempty"`
 	Hy2Network               string `json:"hy2Network,omitempty"`
 	Hy2BrutalDebug           bool   `json:"hy2BrutalDebug,omitempty"`
-	Hy2BBRProfile            string `json:"hy2BbrProfile,omitempty"`
+	Hy2BbrProfile            string `json:"hy2BbrProfile,omitempty"`
 
 	NaiveNetwork            string `json:"naiveNetwork,omitempty"`
 	NaiveQuicCongestionCtrl string `json:"naiveQuicCongestionCtrl,omitempty"`

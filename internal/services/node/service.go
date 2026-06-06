@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -587,7 +586,7 @@ func remoteInboundRequest(in svcinbound.Input) RemoteInboundRequest {
 		Hy2Masquerade:            in.Hy2Masquerade,
 		Hy2Network:               in.Hy2Network,
 		Hy2BrutalDebug:           in.Hy2BrutalDebug,
-		Hy2BBRProfile:            in.Hy2BBRProfile,
+		Hy2BbrProfile:            in.Hy2BbrProfile,
 		NaiveNetwork:             in.NaiveNetwork,
 		NaiveQuicCongestionCtrl:  in.NaiveQuicCongestionCtrl,
 	}
@@ -635,8 +634,4 @@ func remoteClientToDomain(nodeID int64, inboundID int64, rc *RemoteClient) (*dom
 		Enabled:            rc.Enabled,
 		FirstUsedAt:        firstUsedAt,
 	}, nil
-}
-
-func ParseID(s string) (int64, error) {
-	return strconv.ParseInt(s, 10, 64)
 }
