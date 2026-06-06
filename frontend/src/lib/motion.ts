@@ -1,8 +1,4 @@
-import type { Transition, Variants } from "framer-motion";
-
-export const ease = [0.22, 1, 0.36, 1] as const;
-
-export const easeOut: Transition = { duration: 0.15, ease: "easeOut" };
+import type { Variants } from "framer-motion";
 
 export const pageVariants: Variants = {
   initial: { opacity: 0, y: 4 },
@@ -33,5 +29,3 @@ export const accordionVariants: Variants = {
   animate: { height: "auto", opacity: 1, transition: { duration: 0.22, ease: "easeOut" } },
   exit: { height: 0, opacity: 0, transition: { duration: 0.18, ease: "easeOut" } }
 };
-
-export const tapScale = { scale: 0.98 } as const;

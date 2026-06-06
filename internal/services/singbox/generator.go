@@ -201,7 +201,7 @@ func (g *Generator) buildInbound(ib *domain.Inbound, clients []domain.Client) (a
 			IgnoreClientBandwidth:  ib.Settings.Hy2IgnoreClientBandwidth,
 			Network:                ib.Settings.Hy2Network,
 			BrutalDebug:            ib.Settings.Hy2BrutalDebug,
-			BBRProfile:             ib.Settings.Hy2BBRProfile,
+			BBRProfile:             ib.Settings.Hy2BbrProfile,
 		}
 		if ib.Settings.Hy2ObfsPassword != "" {
 			hy2.Obfs = &sbHysteria2Obfs{
