@@ -42,7 +42,7 @@ type RemoteInbound struct {
 	SNI          string                 `json:"sni,omitempty"`
 	Dest         string                 `json:"dest,omitempty"`
 	Enabled      bool                   `json:"enabled"`
-	Settings     domain.InboundSettings `json:"settings,omitempty"`
+	Settings     domain.InboundSettings `json:"settings"`
 	UpdatedAt    string                 `json:"updatedAt,omitempty"`
 }
 
