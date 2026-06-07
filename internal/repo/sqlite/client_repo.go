@@ -229,6 +229,19 @@ func (r *ClientRepo) Count(ctx context.Context) (int, error) {
 	return n, nil
 }
 
+// CountOnline returns the number of clients whose last_used_at is at or after
+// `since` — i.e. the heartbeat-based "online now" gauge.
+func (r *ClientRepo) CountOnline(ctx context.Context, since time.Time) (int, error) {
+	var n int
+	err := r.db.QueryRowContext(ctx,
+		`SELECT COUNT(*) FROM clients WHERE last_used_at IS NOT NULL AND last_used_at >= ?`,
+		since.UTC()).Scan(&n)
+	if err != nil {
+		return 0, fmt.Errorf("count online clients: %w", err)
+	}
+	return n, nil
+}
+
 // CountByInbound returns a map of inbound id -> client count.
 func (r *ClientRepo) CountByInbound(ctx context.Context) (map[int64]int, error) {
 	rows, err := r.db.QueryContext(ctx, `SELECT inbound_id, COUNT(*) FROM clients GROUP BY inbound_id`)

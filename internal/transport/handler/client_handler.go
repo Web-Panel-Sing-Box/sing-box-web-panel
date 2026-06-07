@@ -467,7 +467,7 @@ func (h *ClientHandler) SetStatus(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, h.toDTO(c))
 }
 
-const onlineThreshold = 5 * time.Minute
+const onlineThreshold = time.Second * 5
 
 func isOnline(lastUsedAt *time.Time) bool {
 	return lastUsedAt != nil && time.Since(*lastUsedAt) < onlineThreshold

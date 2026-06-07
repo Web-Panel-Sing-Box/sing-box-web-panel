@@ -104,6 +104,78 @@ func TestGeneratorV2RaySource(t *testing.T) {
 	}
 }
 
+func TestGeneratorEmitsPerClientOutboundAndRouteRule(t *testing.T) {
+	gen := singbox.NewGenerator(
+		fakeInbounds{list: []domain.Inbound{realityInbound()}},
+		fakeClients{list: []domain.Client{
+			{ID: 1, InboundID: 1, Name: "alice", UUID: "uuid-1", Status: domain.ClientStatusActive},
+			{ID: 42, InboundID: 1, Name: "тоха", UUID: "uuid-42", Status: domain.ClientStatusActive},
+			{ID: 99, InboundID: 1, Name: "expired", Status: domain.ClientStatusExpired},
+		}},
+		singbox.GeneratorConfig{ClashAPIAddress: "127.0.0.1:9090"},
+	)
+	data, err := gen.Render(context.Background())
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	var cfg map[string]any
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	outbounds := cfg["outbounds"].([]any)
+	wantTags := map[string]bool{"direct": false, "user-1": false, "user-42": false}
+	for _, ob := range outbounds {
+		entry := ob.(map[string]any)
+		tag, _ := entry["tag"].(string)
+		if _, expected := wantTags[tag]; expected {
+			wantTags[tag] = true
+		}
+		if expected := tag == "user-1" || tag == "user-42"; expected {
+			if entry["type"] != "direct" {
+				t.Errorf("per-client outbound %s should be direct, got %v", tag, entry["type"])
+			}
+		}
+		if tag == "user-99" {
+			t.Errorf("inactive client must not produce an outbound")
+		}
+	}
+	for tag, found := range wantTags {
+		if !found {
+			t.Errorf("missing outbound tag %q in %v", tag, outbounds)
+		}
+	}
+
+	route := cfg["route"].(map[string]any)
+	rules := route["rules"].([]any)
+	if len(rules) == 0 || rules[0].(map[string]any)["protocol"] != "bittorrent" {
+		t.Fatalf("first route rule must be bittorrent reject, got %v", rules)
+	}
+
+	userRules := map[string]string{} // userName → outbound
+	for _, r := range rules[1:] {
+		entry := r.(map[string]any)
+		users, _ := entry["auth_user"].([]any)
+		ob, _ := entry["outbound"].(string)
+		if len(users) == 1 {
+			userRules[users[0].(string)] = ob
+		}
+	}
+	if userRules["alice"] != "user-1" {
+		t.Errorf("alice rule outbound = %q, want user-1; rules=%v", userRules["alice"], rules)
+	}
+	if userRules["тоха"] != "user-42" {
+		t.Errorf("тоха rule outbound = %q, want user-42; rules=%v", userRules["тоха"], rules)
+	}
+	if _, ok := userRules["expired"]; ok {
+		t.Errorf("inactive client must not produce a route rule")
+	}
+
+	if route["final"] != "direct" {
+		t.Errorf("route.final = %v, want direct", route["final"])
+	}
+}
+
 func TestGeneratorSkipsInactiveClients(t *testing.T) {
 	gen := singbox.NewGenerator(
 		fakeInbounds{list: []domain.Inbound{realityInbound()}},

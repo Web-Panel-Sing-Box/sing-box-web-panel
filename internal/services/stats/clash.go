@@ -12,16 +12,20 @@ import (
 // ClashSource reads aggregate metrics from the sing-box Clash API (REST). It
 // derives throughput from the delta of cumulative totals between samples, which
 // avoids the streaming /traffic websocket.
+//
+// Per-user attribution is not done here: sing-box's /connections payload does
+// not carry a user identity field. Use V2RaySource (UserSource) for per-client
+// byte deltas and the online heartbeat.
 type ClashSource struct {
 	baseURL string
 	secret  string
 	client  *http.Client
 
-	mu        sync.Mutex
-	prevUp    int64
-	prevDown  int64
-	prevAt    time.Time
-	havePrev  bool
+	mu       sync.Mutex
+	prevUp   int64
+	prevDown int64
+	prevAt   time.Time
+	havePrev bool
 }
 
 // NewClashSource builds a source for a Clash external_controller address such as

@@ -30,10 +30,17 @@ type sbRoute struct {
 
 // sbRouteRule uses rule actions (sing-box 1.11+) rather than a block outbound,
 // keeping the config valid through sing-box 1.14 where block/dns outbounds and
-// the legacy DNS server format were removed.
+// the legacy DNS server format were removed. `AuthUser` + `Outbound` carry the
+// per-client routing that lets the panel attribute /connections.chains[0] back
+// to a single client.
+//
+// Note: the matcher MUST be `auth_user` (inbound auth identity), not `user`
+// (which sing-box ties to the OS process owner — see route/rule/rule_item_user.go).
 type sbRouteRule struct {
-	Protocol string `json:"protocol,omitempty"`
-	Action   string `json:"action,omitempty"`
+	Protocol string   `json:"protocol,omitempty"`
+	Action   string   `json:"action,omitempty"`
+	AuthUser []string `json:"auth_user,omitempty"`
+	Outbound string   `json:"outbound,omitempty"`
 }
 
 type sbExperimental struct {
