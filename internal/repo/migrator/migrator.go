@@ -24,12 +24,17 @@ type migration struct {
 }
 
 func loadMigrations() ([]migration, error) {
-	entries, err := fs.ReadDir(migrationsFS, "migrations")
+	return loadMigrationsFS(migrationsFS, "migrations")
+}
+
+func loadMigrationsFS(fsys fs.FS, dir string) ([]migration, error) {
+	entries, err := fs.ReadDir(fsys, dir)
 	if err != nil {
 		return nil, fmt.Errorf("read migrations dir: %w", err)
 	}
 
 	var migrations []migration
+	seen := make(map[int]string)
 	for _, entry := range entries {
 		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".sql") {
 			continue
@@ -42,7 +47,17 @@ func loadMigrations() ([]migration, error) {
 			return nil, fmt.Errorf("parse migration version from %q: %w", name, err)
 		}
 
-		data, err := migrationsFS.ReadFile("migrations/" + name)
+		// Fail fast on duplicate versions. Two migrations sharing a version
+		// collide on schema_migrations.version (INTEGER PRIMARY KEY): the
+		// second INSERT hits a UNIQUE constraint and its whole transaction —
+		// including any schema change — is rolled back, leaving a silently
+		// broken schema. Refusing to start is safer than a partial migration.
+		if prev, ok := seen[version]; ok {
+			return nil, fmt.Errorf("duplicate migration version %d: %q and %q", version, prev, name)
+		}
+		seen[version] = name
+
+		data, err := fs.ReadFile(fsys, dir+"/"+name)
 		if err != nil {
 			return nil, fmt.Errorf("read migration %q: %w", name, err)
 		}
