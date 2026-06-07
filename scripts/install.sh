@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+ORIGINAL_ARGS=("$@")
+
 APP_USER="${APP_USER:-shilka}"
 APP_HOME="${APP_HOME:-/opt/shilka}"
 CONFIG_DIR="${CONFIG_DIR:-/etc/shilka}"
@@ -21,6 +23,34 @@ DOWNLOAD_CONNECT_TIMEOUT="${DOWNLOAD_CONNECT_TIMEOUT:-10}"
 # Non-interactive install + local binary (SIN-59).
 ASSUME_YES="${SHILKA_ASSUME_YES:-false}"
 PANEL_BINARY="${PANEL_BINARY:-}"
+
+if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
+  red=$'\033[0;31m'
+  green=$'\033[0;32m'
+  blue=$'\033[0;34m'
+  yellow=$'\033[0;33m'
+  bold=$'\033[1m'
+  plain=$'\033[0m'
+else
+  red=''
+  green=''
+  blue=''
+  yellow=''
+  bold=''
+  plain=''
+fi
+
+log_info() { printf '%b[INF]%b %s\n' "${green}" "${plain}" "$*"; }
+log_warn() { printf '%b[WRN]%b %s\n' "${yellow}" "${plain}" "$*" >&2; }
+log_error() { printf '%b[ERR]%b %s\n' "${red}" "${plain}" "$*" >&2; }
+die() {
+  log_error "$*"
+  exit 1
+}
+section() {
+  printf '\n%b%s%b\n' "${bold}" "$1" "${plain}"
+  printf '%s\n' "--------------------------------------------"
+}
 
 usage() {
   cat <<'USAGE'
@@ -63,13 +93,112 @@ PANEL_EXPOSURE="${PANEL_EXPOSURE:-${SHILKA_EXPOSURE:-}}"
 ADMIN_USER="${ADMIN_USER:-${SHILKA_ADMIN_USER:-}}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-${SHILKA_ADMIN_PASSWORD:-}}"
 ACME_EMAIL="${ACME_EMAIL:-${SHILKA_ACME_EMAIL:-}}"
-TLS_MODE="${SHILKA_TLS_MODE:-}" # letsencrypt | self_signed | off
+TLS_MODE="${TLS_MODE:-${SHILKA_TLS_MODE:-}}" # letsencrypt | self_signed | off
 CERT_TYPE="${CERT_TYPE:-}"
 
-# ask <varname> <prompt> <default>: keep an existing (env) value; otherwise use
-# the default in non-interactive mode; otherwise prompt.
+# ask <varname> <prompt> <default> [validator]: keep an existing (env) value;
+# otherwise use the default in non-interactive mode; otherwise prompt.
 ask() {
-  local __var="$1" __prompt="$2" __default="$3" __reply
+  local __var="$1" __prompt="$2" __default="$3" __validator="${4:-}" __reply __value
+  if [[ -n "${!__var:-}" ]]; then
+    __value="${!__var}"
+    if [[ -n "${__validator}" ]] && ! "${__validator}" "${__value}"; then
+      die "Invalid ${__prompt}: ${__value}"
+    fi
+    return
+  fi
+  if [[ "${ASSUME_YES}" == "true" ]]; then
+    printf -v "${__var}" '%s' "${__default}"
+    if [[ -n "${__validator}" ]] && ! "${__validator}" "${__default}"; then
+      die "Invalid default for ${__prompt}: ${__default}"
+    fi
+    return
+  fi
+  while true; do
+    printf '%b?%b %s [%s]: ' "${blue}" "${plain}" "${__prompt}" "${__default}"
+    if ! read -r __reply; then
+      die "Input aborted"
+    fi
+    __value="${__reply:-${__default}}"
+    if [[ -z "${__validator}" ]] || "${__validator}" "${__value}"; then
+      printf -v "${__var}" '%s' "${__value}"
+      return
+    fi
+  done
+}
+
+confirm_prompt() {
+  local prompt="$1" default="${2:-y}" reply
+  if [[ "${ASSUME_YES}" == "true" ]]; then
+    [[ "${default,,}" == "y" || "${default,,}" == "yes" ]]
+    return
+  fi
+  while true; do
+    if [[ "${default,,}" == "y" || "${default,,}" == "yes" ]]; then
+      printf '%b?%b %s [Y/n]: ' "${blue}" "${plain}" "${prompt}"
+    else
+      printf '%b?%b %s [y/N]: ' "${blue}" "${plain}" "${prompt}"
+    fi
+    if ! read -r reply; then
+      die "Input aborted"
+    fi
+    reply="${reply:-${default}}"
+    case "${reply,,}" in
+      y | yes) return 0 ;;
+      n | no) return 1 ;;
+      *) log_warn "Enter y or n." ;;
+    esac
+  done
+}
+
+validate_non_empty() {
+  if [[ -z "$1" ]]; then
+    log_warn "Value cannot be empty."
+    return 1
+  fi
+}
+
+validate_host() {
+  if [[ -z "$1" || "$1" =~ [[:space:]/] ]]; then
+    log_warn "Enter a domain, hostname, or IP without spaces or slashes."
+    return 1
+  fi
+}
+
+validate_port() {
+  if ! [[ "$1" =~ ^[0-9]+$ ]] || (( 10#${1} < 1 || 10#${1} > 65535 )); then
+    log_warn "Enter a port from 1 to 65535."
+    return 1
+  fi
+  if port_in_use "$1"; then
+    log_warn "Port $1 is already in use."
+    return 1
+  fi
+}
+
+validate_panel_path() {
+  if [[ -z "$1" || ! "$1" =~ ^/?[A-Za-z0-9._~/-]+$ || "$1" == *"//"* ]]; then
+    log_warn "Use letters, digits, dots, dashes, underscores, tildes, and slashes only."
+    return 1
+  fi
+}
+
+validate_admin_user() {
+  if [[ -z "$1" || ! "$1" =~ ^[A-Za-z0-9._-]{3,64}$ ]]; then
+    log_warn "Use 3-64 letters, digits, dots, dashes, or underscores."
+    return 1
+  fi
+}
+
+validate_email() {
+  if [[ -z "$1" || ! "$1" =~ ^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$ ]]; then
+    log_warn "Enter a valid email address."
+    return 1
+  fi
+}
+
+ask_password() {
+  local __var="$1" __default="$2" first second
   if [[ -n "${!__var:-}" ]]; then
     return
   fi
@@ -77,8 +206,28 @@ ask() {
     printf -v "${__var}" '%s' "${__default}"
     return
   fi
-  read -rp "${__prompt} [${__default}]: " __reply
-  printf -v "${__var}" '%s' "${__reply:-${__default}}"
+  while true; do
+    printf '%b?%b Admin password [auto-generate]: ' "${blue}" "${plain}"
+    if ! read -rs first; then
+      die "Input aborted"
+    fi
+    echo
+    if [[ -z "${first}" ]]; then
+      printf -v "${__var}" '%s' "${__default}"
+      log_info "Generated admin password."
+      return
+    fi
+    printf '%b?%b Confirm admin password: ' "${blue}" "${plain}"
+    if ! read -rs second; then
+      die "Input aborted"
+    fi
+    echo
+    if [[ "${first}" == "${second}" ]]; then
+      printf -v "${__var}" '%s' "${first}"
+      return
+    fi
+    log_warn "Passwords do not match."
+  done
 }
 
 # --retry-all-errors needs curl >= 7.71; degrade gracefully on older curl.
@@ -111,8 +260,41 @@ fetch_url() {
 
 require_root() {
   if [[ "${EUID}" -ne 0 ]]; then
-    echo "install.sh must run as root"
-    exit 1
+    if ! command -v sudo &>/dev/null; then
+      die "Root privileges are required and sudo is not installed. Re-run as root."
+    fi
+    if [[ ! -r "$0" || "$(basename "$0")" == "bash" ]]; then
+      die "Non-root bootstrap needs a readable script file. Re-run with sudo bash scripts/install.sh or pipe the installer into sudo bash."
+    fi
+    log_info "Root privileges required. Re-running installer through sudo..."
+    local env_args=(
+      "APP_USER=${APP_USER}"
+      "APP_HOME=${APP_HOME}"
+      "CONFIG_DIR=${CONFIG_DIR}"
+      "DATA_DIR=${DATA_DIR}"
+      "LOG_DIR=${LOG_DIR}"
+      "TLS_CERT_DIR=${TLS_CERT_DIR}"
+      "UPDATE_SCRIPT_PATH=${UPDATE_SCRIPT_PATH}"
+      "UPDATE_SUDOERS_PATH=${UPDATE_SUDOERS_PATH}"
+      "SING_BOX_VERSION=${SING_BOX_VERSION}"
+      "PANEL_VERSION=${PANEL_VERSION}"
+      "GITHUB_REPO=${GITHUB_REPO}"
+      "DOWNLOAD_RETRIES=${DOWNLOAD_RETRIES}"
+      "DOWNLOAD_RETRY_DELAY=${DOWNLOAD_RETRY_DELAY}"
+      "DOWNLOAD_CONNECT_TIMEOUT=${DOWNLOAD_CONNECT_TIMEOUT}"
+      "SHILKA_ASSUME_YES=${ASSUME_YES}"
+      "PANEL_BINARY=${PANEL_BINARY}"
+      "PANEL_HOST=${PANEL_HOST}"
+      "PANEL_PORT=${PANEL_PORT}"
+      "PANEL_PATH=${PANEL_PATH}"
+      "PANEL_EXPOSURE=${PANEL_EXPOSURE}"
+      "ADMIN_USER=${ADMIN_USER}"
+      "ADMIN_PASSWORD=${ADMIN_PASSWORD}"
+      "ACME_EMAIL=${ACME_EMAIL}"
+      "TLS_MODE=${TLS_MODE}"
+      "CERT_TYPE=${CERT_TYPE}"
+    )
+    exec sudo env "${env_args[@]}" bash "$0" "${ORIGINAL_ARGS[@]}"
   fi
 }
 
@@ -177,6 +359,18 @@ is_ipv4() {
   [[ "$1" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]
 }
 
+is_ipv6() {
+  [[ "$1" == *:* ]]
+}
+
+url_host() {
+  if is_ipv6 "$1" && [[ "$1" != \[*\] ]]; then
+    printf '[%s]\n' "$1"
+  else
+    printf '%s\n' "$1"
+  fi
+}
+
 is_domain() {
   local host="$1"
   [[ -z "${host}" ]] && return 1
@@ -187,7 +381,19 @@ is_domain() {
 
 port_in_use() {
   local port="$1"
-  ss -tuln | awk '{print $5}' | grep -Eq ":${port}$"
+  if command -v ss >/dev/null 2>&1; then
+    ss -tuln 2>/dev/null | awk '{print $5}' | grep -Eq ":${port}$"
+    return
+  fi
+  if command -v netstat >/dev/null 2>&1; then
+    netstat -lnt 2>/dev/null | awk '{print $4}' | grep -Eq ":${port}$|:${port} "
+    return
+  fi
+  if command -v lsof >/dev/null 2>&1; then
+    lsof -nP -iTCP:"${port}" -sTCP:LISTEN >/dev/null 2>&1
+    return
+  fi
+  return 1
 }
 
 install_acme() {
@@ -470,27 +676,23 @@ gather_input() {
   local public_ip
   public_ip="$(detect_public_ip)"
 
-  echo ""
-  echo "============================================"
-  echo "        Shilka Panel Installer"
-  echo "============================================"
-  echo ""
+  printf '\n%bShilka Panel Installer%b\n' "${bold}" "${plain}"
+  printf '%s\n' "============================================"
 
   # Domain / IP
   local default_host="${public_ip:-127.0.0.1}"
-  echo "Enter the domain or IP address users will use to reach the panel."
-  ask PANEL_HOST "Domain/IP" "${default_host}"
+  section "Access"
+  log_info "Enter the domain, hostname, or IP users will use to reach the panel."
+  ask PANEL_HOST "Domain/IP" "${default_host}" validate_host
 
   if [[ -z "${PANEL_EXPOSURE}" ]]; then
     if [[ "${ASSUME_YES}" == "true" ]]; then
       PANEL_EXPOSURE="direct"
     else
-      echo ""
       echo "Panel exposure mode:"
       echo "  1) Direct high port - Shilka listens publicly on the selected port."
       echo "  2) Reverse proxy - Shilka listens on 127.0.0.1 and nginx/Caddy handles public TLS."
-      read -rp "Mode [1]: " input_exposure
-      PANEL_EXPOSURE="${input_exposure:-direct}"
+      ask PANEL_EXPOSURE "Mode" "1" validate_non_empty
     fi
   fi
   case "${PANEL_EXPOSURE,,}" in
@@ -501,8 +703,7 @@ gather_input() {
   # Detect whether this is a domain (eligible for Let's Encrypt) or a bare IP.
   USE_ACME=false
   if [[ "${PANEL_EXPOSURE}" == "reverse_proxy" ]]; then
-    echo ""
-    echo "Reverse proxy mode selected. Panel TLS will be off and the panel will bind to 127.0.0.1."
+    log_info "Reverse proxy mode selected. Panel TLS will be off and the panel will bind to 127.0.0.1."
   elif [[ -n "${TLS_MODE}" || "${ASSUME_YES}" == "true" ]]; then
     # Deterministic TLS for non-interactive / explicit SHILKA_TLS_MODE.
     case "${TLS_MODE:-self_signed}" in
@@ -512,56 +713,50 @@ gather_input() {
         elif is_ipv4 "${PANEL_HOST}"; then
           CERT_TYPE="ip"
         else
-          echo "ERROR: SHILKA_TLS_MODE=letsencrypt requires a domain or IPv4 host"
-          exit 1
+          die "SHILKA_TLS_MODE=letsencrypt requires a domain or IPv4 host"
         fi
         if [[ -z "${ACME_EMAIL}" ]]; then
-          echo "ERROR: SHILKA_ACME_EMAIL is required for SHILKA_TLS_MODE=letsencrypt"
-          exit 1
+          die "SHILKA_ACME_EMAIL is required for SHILKA_TLS_MODE=letsencrypt"
         fi
+        validate_email "${ACME_EMAIL}" || die "Invalid SHILKA_ACME_EMAIL: ${ACME_EMAIL}"
         USE_ACME=true
         if port_in_use 80; then
-          echo "WARNING: port 80 is already in use. Standalone Let's Encrypt may fail."
+          log_warn "Port 80 is already in use. Standalone Let's Encrypt may fail."
         fi
         ;;
       self_signed | off)
         USE_ACME=false
         ;;
       *)
-        echo "ERROR: invalid SHILKA_TLS_MODE='${TLS_MODE}' (use letsencrypt|self_signed|off)"
-        exit 1
+        die "Invalid SHILKA_TLS_MODE='${TLS_MODE}' (use letsencrypt|self_signed|off)"
         ;;
     esac
   elif is_domain "${PANEL_HOST}"; then
-    echo ""
-    echo "This looks like a domain. Let's Encrypt can provide a trusted certificate."
+    section "TLS"
+    log_info "This looks like a domain. Let's Encrypt can provide a trusted certificate."
     if port_in_use 80; then
-      echo "WARNING: port 80 is already in use. Standalone Let's Encrypt may disrupt the existing service or fail."
-      read -rp "Use Let's Encrypt anyway? [y/N] " use_le
-      if [[ "${use_le,,}" == "y" || "${use_le,,}" == "yes" ]]; then
+      log_warn "Port 80 is already in use. Standalone Let's Encrypt may disrupt the existing service or fail."
+      if confirm_prompt "Use Let's Encrypt anyway?" "n"; then
         USE_ACME=true
         CERT_TYPE="domain"
       fi
     else
-      read -rp "Use Let's Encrypt? [Y/n] " use_le
-      if [[ "${use_le,,}" != "n" && "${use_le,,}" != "no" ]]; then
+      if confirm_prompt "Use Let's Encrypt?" "y"; then
         USE_ACME=true
         CERT_TYPE="domain"
       fi
     fi
   elif is_ipv4 "${PANEL_HOST}"; then
-    echo ""
-    echo "Let's Encrypt supports IP addresses via the shortlived profile (6-day validity, auto-renews)."
+    section "TLS"
+    log_info "Let's Encrypt supports IP addresses via the shortlived profile (6-day validity, auto-renews)."
     if port_in_use 80; then
-      echo "WARNING: port 80 is already in use. Standalone Let's Encrypt may disrupt the existing service or fail."
-      read -rp "Use Let's Encrypt for this IP anyway? [y/N] " use_le
-      if [[ "${use_le,,}" == "y" || "${use_le,,}" == "yes" ]]; then
+      log_warn "Port 80 is already in use. Standalone Let's Encrypt may disrupt the existing service or fail."
+      if confirm_prompt "Use Let's Encrypt for this IP anyway?" "n"; then
         USE_ACME=true
         CERT_TYPE="ip"
       fi
     else
-      read -rp "Use Let's Encrypt for this IP? [Y/n] " use_le
-      if [[ "${use_le,,}" != "n" && "${use_le,,}" != "no" ]]; then
+      if confirm_prompt "Use Let's Encrypt for this IP?" "y"; then
         USE_ACME=true
         CERT_TYPE="ip"
       fi
@@ -569,31 +764,19 @@ gather_input() {
   fi
 
   if [[ "${USE_ACME}" == "true" && -z "${ACME_EMAIL}" ]]; then
-    echo ""
-    echo "Enter your email address for Let's Encrypt notifications."
-    read -rp "Email: " input_email
-    ACME_EMAIL="${input_email}"
-    if [[ -z "${ACME_EMAIL}" ]]; then
-      echo "Email is required for Let's Encrypt."
-      exit 1
-    fi
-    echo ""
-    echo "Make sure port 80 is reachable from the internet and not in use."
-    echo "(acme.sh needs it briefly for HTTP-01 validation)"
+    ask ACME_EMAIL "Let's Encrypt email" "" validate_email
+    log_info "Make sure port 80 is reachable from the internet and not in use."
+    log_info "acme.sh needs it briefly for HTTP-01 validation."
   fi
 
   # Port
-  echo ""
+  section "Panel"
   if [[ "${PANEL_EXPOSURE}" == "reverse_proxy" ]]; then
-    echo "Panel local port for the reverse proxy target (must be free on 127.0.0.1)."
+    log_info "Panel local port for the reverse proxy target. It must be free on 127.0.0.1."
   else
-    echo "Panel public port (must be free)."
+    log_info "Panel public port. It must be free."
   fi
-  ask PANEL_PORT "Port" "$(random_port)"
-  if port_in_use "${PANEL_PORT}"; then
-    echo "ERROR: port ${PANEL_PORT} is already in use"
-    exit 1
-  fi
+  ask PANEL_PORT "Port" "$(random_port)" validate_port
 
   if [[ "${PANEL_EXPOSURE}" == "reverse_proxy" ]]; then
     PANEL_LISTEN_ADDRESS="127.0.0.1:${PANEL_PORT}"
@@ -602,44 +785,49 @@ gather_input() {
   fi
 
   # Base path
-  echo ""
-  echo "Web panel path prefix for obscurity (starts with /)."
-  ask PANEL_PATH "Path" "$(random_base_path)"
+  log_info "Web panel path prefix for obscurity."
+  ask PANEL_PATH "Path" "$(random_base_path)" validate_panel_path
   # Ensure leading /
   [[ "${PANEL_PATH}" != /* ]] && PANEL_PATH="/${PANEL_PATH}"
 
+  local panel_url_host
+  panel_url_host="$(url_host "${PANEL_HOST}")"
   if [[ "${PANEL_EXPOSURE}" == "reverse_proxy" ]]; then
-    PANEL_PUBLIC_URL="https://${PANEL_HOST}${PANEL_PATH}"
+    PANEL_PUBLIC_URL="https://${panel_url_host}${PANEL_PATH}"
   else
-    PANEL_PUBLIC_URL="https://${PANEL_HOST}:${PANEL_PORT}${PANEL_PATH}"
+    PANEL_PUBLIC_URL="https://${panel_url_host}:${PANEL_PORT}${PANEL_PATH}"
   fi
 
   # Admin username
-  echo ""
-  echo "Admin username."
-  ask ADMIN_USER "Username" "$(random_username)"
+  section "Admin"
+  ask ADMIN_USER "Username" "$(random_username)" validate_admin_user
 
   # Admin password
-  echo ""
-  echo "Admin password (leave empty for auto-generated)."
-  ask ADMIN_PASSWORD "Password" "$(openssl rand -base64 18)"
+  ask_password ADMIN_PASSWORD "$(openssl rand -base64 18)"
 
-  echo ""
-  echo "--------------------------------------------"
-  echo "Summary:"
-  echo "  Domain/IP:  ${PANEL_HOST}"
-  echo "  Listen:     ${PANEL_LISTEN_ADDRESS}"
-  echo "  Public URL: ${PANEL_PUBLIC_URL}"
-  echo "  Path:       ${PANEL_PATH}"
-  echo "  TLS:        $(if [[ "${PANEL_EXPOSURE}" == "reverse_proxy" ]]; then echo "off (reverse proxy)"; elif [[ "${USE_ACME}" == "true" ]]; then echo "Let's Encrypt (acme.sh)"; else echo "self-signed"; fi)"
-  echo "  Username:   ${ADMIN_USER}"
-  echo "  Password:   ${ADMIN_PASSWORD}"
-  echo "--------------------------------------------"
+  local tls_summary
+  if [[ "${PANEL_EXPOSURE}" == "reverse_proxy" ]]; then
+    tls_summary="off (reverse proxy)"
+  elif [[ "${TLS_MODE:-}" == "off" ]]; then
+    tls_summary="off"
+  elif [[ "${USE_ACME}" == "true" ]]; then
+    tls_summary="Let's Encrypt (acme.sh)"
+  else
+    tls_summary="self-signed"
+  fi
+
+  section "Summary"
+  printf '  %-11s %s\n' "Domain/IP:" "${PANEL_HOST}"
+  printf '  %-11s %s\n' "Listen:" "${PANEL_LISTEN_ADDRESS}"
+  printf '  %-11s %s\n' "Public URL:" "${PANEL_PUBLIC_URL}"
+  printf '  %-11s %s\n' "Path:" "${PANEL_PATH}"
+  printf '  %-11s %s\n' "TLS:" "${tls_summary}"
+  printf '  %-11s %s\n' "Username:" "${ADMIN_USER}"
+  printf '  %-11s %s\n' "Password:" "${ADMIN_PASSWORD}"
   echo ""
   if [[ "${ASSUME_YES}" != "true" ]]; then
-    read -rp "Proceed with installation? [Y/n] " confirm
-    if [[ "${confirm,,}" == "n" || "${confirm,,}" == "no" ]]; then
-      echo "Installation cancelled."
+    if ! confirm_prompt "Proceed with installation?" "y"; then
+      log_warn "Installation cancelled."
       exit 0
     fi
   fi
@@ -650,7 +838,7 @@ write_prod_config() {
   jwt_secret="$(openssl rand -hex 32)"
   clash_secret="$(openssl rand -hex 24)"
 
-  if [[ "${PANEL_EXPOSURE}" == "reverse_proxy" ]]; then
+  if [[ "${PANEL_EXPOSURE}" == "reverse_proxy" || "${TLS_MODE:-}" == "off" ]]; then
     tls_mode="off"
     tls_cert_file=""
     tls_key_file=""
@@ -802,92 +990,326 @@ UNIT
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-CONFIG_DIR="${CONFIG_DIR:-/etc/shilka}"
-DATA_DIR="${DATA_DIR:-/var/lib/shilka}"
-BIN="${BIN:-/opt/shilka/bin/shilka}"
+APP_USER="${APP_USER:-__APP_USER__}"
+CONFIG_DIR="${CONFIG_DIR:-__CONFIG_DIR__}"
+DATA_DIR="${DATA_DIR:-__DATA_DIR__}"
+BIN="${BIN:-__BIN_PATH__}"
+SERVICE_NAME="${SERVICE_NAME:-shilka.service}"
 export SHILKA_CONFIG_PATH="${SHILKA_CONFIG_PATH:-${CONFIG_DIR}/prod.yaml}"
 
-if [[ "$#" -gt 0 ]]; then
-  exec "${BIN}" "$@"
+if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
+  red=$'\033[0;31m'
+  green=$'\033[0;32m'
+  blue=$'\033[0;34m'
+  yellow=$'\033[0;33m'
+  bold=$'\033[1m'
+  plain=$'\033[0m'
+else
+  red=''
+  green=''
+  blue=''
+  yellow=''
+  bold=''
+  plain=''
 fi
 
-start_services()   { systemctl start shilka.service; }
-stop_services()    { systemctl stop shilka.service; }
-restart_services() { systemctl restart shilka.service; }
+log_info() { printf '%b[INF]%b %s\n' "${green}" "${plain}" "$*"; }
+log_warn() { printf '%b[WRN]%b %s\n' "${yellow}" "${plain}" "$*" >&2; }
+log_error() { printf '%b[ERR]%b %s\n' "${red}" "${plain}" "$*" >&2; }
+
+script_path() {
+  if [[ "$0" == */* ]]; then
+    printf '%s\n' "$0"
+    return
+  fi
+  command -v "$0"
+}
+
+sudo_env() {
+  printf '%s\0' \
+    "APP_USER=${APP_USER}" \
+    "CONFIG_DIR=${CONFIG_DIR}" \
+    "DATA_DIR=${DATA_DIR}" \
+    "BIN=${BIN}" \
+    "SERVICE_NAME=${SERVICE_NAME}" \
+    "SHILKA_CONFIG_PATH=${SHILKA_CONFIG_PATH}"
+}
+
+run_root() {
+  if [[ "${EUID}" -eq 0 ]]; then
+    "$@"
+    return
+  fi
+  if ! command -v sudo >/dev/null 2>&1; then
+    log_error "This action needs root privileges and sudo is not installed."
+    return 1
+  fi
+  local env_args=()
+  while IFS= read -r -d '' item; do
+    env_args+=("${item}")
+  done < <(sudo_env)
+  sudo env "${env_args[@]}" "$@"
+}
+
+if [[ "$#" -gt 0 ]]; then
+  case "$1" in
+    -v | --version | version)
+      exec "${BIN}" "$@"
+      ;;
+    *)
+      if [[ "${EUID}" -eq 0 ]]; then
+        exec "${BIN}" "$@"
+      fi
+      if ! command -v sudo >/dev/null 2>&1; then
+        log_error "Command needs root privileges and sudo is not installed."
+        exit 1
+      fi
+      env_args=()
+      while IFS= read -r -d '' item; do
+        env_args+=("${item}")
+      done < <(sudo_env)
+      exec sudo env "${env_args[@]}" "$(script_path)" "$@"
+      ;;
+  esac
+fi
+
+service_active() { systemctl is-active "${SERVICE_NAME}" 2>/dev/null || true; }
+service_enabled() { systemctl is-enabled "${SERVICE_NAME}" 2>/dev/null || true; }
+
+pause() {
+  echo
+  read -rp "Press Enter to return to the main menu: " _ || true
+}
+
+confirm() {
+  local prompt="$1" default="${2:-n}" reply
+  while true; do
+    if [[ "${default,,}" == "y" || "${default,,}" == "yes" ]]; then
+      read -rp "${prompt} [Y/n]: " reply
+    else
+      read -rp "${prompt} [y/N]: " reply
+    fi
+    reply="${reply:-${default}}"
+    case "${reply,,}" in
+      y | yes) return 0 ;;
+      n | no) return 1 ;;
+      *) log_warn "Enter y or n." ;;
+    esac
+  done
+}
+
+prompt_required() {
+  local label="$1" default="${2:-}" value
+  while true; do
+    if [[ -n "${default}" ]]; then
+      read -rp "${label} [${default}]: " value
+      value="${value:-${default}}"
+    else
+      read -rp "${label}: " value
+    fi
+    if [[ -n "${value}" ]]; then
+      printf '%s\n' "${value}"
+      return
+    fi
+    log_warn "Value cannot be empty."
+  done
+}
+
+prompt_password() {
+  local first second
+  while true; do
+    read -rsp "New admin password: " first
+    echo
+    if [[ -z "${first}" ]]; then
+      log_warn "Password cannot be empty."
+      continue
+    fi
+    read -rsp "Confirm admin password: " second
+    echo
+    if [[ "${first}" == "${second}" ]]; then
+      printf '%s\n' "${first}"
+      return
+    fi
+    log_warn "Passwords do not match."
+  done
+}
+
+port_in_use() {
+  local port="$1"
+  if command -v ss >/dev/null 2>&1; then
+    ss -ltn 2>/dev/null | awk -v p=":${port}$" '$4 ~ p {found=1} END {exit found ? 0 : 1}'
+    return
+  fi
+  if command -v netstat >/dev/null 2>&1; then
+    netstat -lnt 2>/dev/null | awk -v p=":${port} " '$4 ~ p {found=1} END {exit found ? 0 : 1}'
+    return
+  fi
+  if command -v lsof >/dev/null 2>&1; then
+    lsof -nP -iTCP:"${port}" -sTCP:LISTEN >/dev/null 2>&1
+    return
+  fi
+  return 1
+}
+
+prompt_port() {
+  local port
+  while true; do
+    read -rp "New panel port [1-65535]: " port
+    if ! [[ "${port}" =~ ^[0-9]+$ ]] || (( 10#${port} < 1 || 10#${port} > 65535 )); then
+      log_warn "Enter a port from 1 to 65535."
+      continue
+    fi
+    if port_in_use "${port}"; then
+      log_warn "Port ${port} is already in use."
+      continue
+    fi
+    printf '%s\n' "${port}"
+    return
+  done
+}
+
+start_services() {
+  if [[ "$(service_active)" == "active" ]]; then
+    log_info "Panel is already running."
+    return
+  fi
+  run_root systemctl start "${SERVICE_NAME}"
+  sleep 1
+  [[ "$(service_active)" == "active" ]] && log_info "Panel started." || log_warn "Start requested. Check status or logs."
+}
+
+stop_services() {
+  if [[ "$(service_active)" != "active" ]]; then
+    log_info "Panel is already stopped."
+    return
+  fi
+  run_root systemctl stop "${SERVICE_NAME}"
+  sleep 1
+  [[ "$(service_active)" != "active" ]] && log_info "Panel stopped." || log_warn "Stop requested. Check status or logs."
+}
+
+restart_services() {
+  run_root systemctl restart "${SERVICE_NAME}"
+  sleep 1
+  [[ "$(service_active)" == "active" ]] && log_info "Panel restarted." || log_warn "Restart requested. Check status or logs."
+}
 
 reset_admin_password() {
   local password
-  read -rsp "New admin password: " password
-  echo
-  if [[ -z "${password}" ]]; then
-    echo "Password cannot be empty"
-    exit 1
-  fi
-  "${BIN}" admin reset-password -password "${password}"
-  echo "${password}" >"${CONFIG_DIR}/initial-admin-password"
-  chmod 0600 "${CONFIG_DIR}/initial-admin-password"
-  systemctl restart shilka.service
-  echo "Password reset. Log in with your admin username and the new password."
+  password="$(prompt_password)"
+  run_root "${BIN}" admin reset-password -password "${password}"
+  printf '%s\n' "${password}" | run_root tee "${CONFIG_DIR}/initial-admin-password" >/dev/null
+  run_root chmod 0600 "${CONFIG_DIR}/initial-admin-password"
+  run_root chown "${APP_USER}:${APP_USER}" "${CONFIG_DIR}/initial-admin-password" || true
+  restart_services
+  log_info "Password reset. Log in with your admin username and the new password."
 }
 
 change_panel_port() {
   local port
-  read -rp "New panel port: " port
-  if ! [[ "${port}" =~ ^[0-9]+$ ]] || (( port < 1 || port > 65535 )); then
-    echo "Invalid port"
-    return 1
-  fi
-  "${BIN}" setting -port "${port}"
-  systemctl restart shilka.service
+  port="$(prompt_port)"
+  run_root "${BIN}" setting -port "${port}"
+  restart_services
+  log_info "Panel port set to ${port}."
 }
 
 set_domain() {
-  local domain
-  read -rp "Panel domain: " domain
-  if [[ -z "${domain}" ]]; then
-    echo "Domain cannot be empty"
-    return 1
-  fi
-  "${BIN}" setting -domain "${domain}" -public-url "https://${domain}"
-  systemctl restart shilka.service
+  local domain public_url
+  domain="$(prompt_required "Panel domain")"
+  public_url="$(prompt_required "Public URL" "https://${domain}")"
+  run_root "${BIN}" setting -domain "${domain}" -public-url "${public_url}"
+  restart_services
+  log_info "Domain and public URL updated."
 }
 
 create_api_token() {
   local name
-  read -rp "Token name [node]: " name
-  name="${name:-node}"
-  "${BIN}" api-token create -name "${name}" -scopes node
+  name="$(prompt_required "Token name" "node")"
+  run_root "${BIN}" api-token create -name "${name}" -scopes node
 }
 
 set_custom_cert() {
   local cert key
-  read -rp "Certificate path: " cert
-  read -rp "Key path: " key
-  "${BIN}" cert set-files -cert "${cert}" -key "${key}"
-  systemctl restart shilka.service
+  cert="$(prompt_required "Certificate path")"
+  key="$(prompt_required "Key path")"
+  run_root test -f "${cert}" || { log_error "Certificate file not found: ${cert}"; return 1; }
+  run_root test -f "${key}" || { log_error "Key file not found: ${key}"; return 1; }
+  run_root "${BIN}" cert set-files -cert "${cert}" -key "${key}"
+  restart_services
+  log_info "Custom TLS certificate configured."
 }
 
 disable_panel_tls() {
-  "${BIN}" cert reset
-  systemctl restart shilka.service
+  confirm "Disable panel TLS? Use only behind a trusted reverse proxy or tunnel." "n" || return
+  run_root "${BIN}" cert reset
+  restart_services
+  log_info "Panel TLS disabled."
 }
 
 backup_db() {
   local out="${DATA_DIR}/panel-$(date +%Y%m%d-%H%M%S).db"
-  cp -a "${DATA_DIR}/panel.db" "${out}"
-  echo "Backup: ${out}"
+  run_root test -f "${DATA_DIR}/panel.db" || { log_error "Database not found: ${DATA_DIR}/panel.db"; return 1; }
+  run_root cp -a "${DATA_DIR}/panel.db" "${out}"
+  log_info "Backup: ${out}"
 }
 
 core_reload() {
-  "${BIN}" core reload
+  run_root "${BIN}" core reload
+}
+
+core_config_check() {
+  run_root "${BIN}" core config-check
+}
+
+show_service_status() {
+  systemctl status "${SERVICE_NAME}" --no-pager || true
+}
+
+show_logs() {
+  run_root journalctl -u "${SERVICE_NAME}" -n 120 --no-pager || true
+}
+
+show_settings() {
+  run_root "${BIN}" setting -show || true
+}
+
+show_header() {
+  local active enabled version
+  active="$(service_active)"
+  enabled="$(service_enabled)"
+  version="$("${BIN}" version 2>/dev/null || true)"
+  [[ -z "${version}" ]] && version="shilka"
+
+  printf '\n%bShilka Panel%b\n' "${bold}" "${plain}"
+  printf '%s\n' "============================================"
+  case "${active}" in
+    active) printf 'Status: %bRunning%b' "${green}" "${plain}" ;;
+    inactive | failed) printf 'Status: %bStopped%b' "${yellow}" "${plain}" ;;
+    *) printf 'Status: %bUnknown%b' "${red}" "${plain}" ;;
+  esac
+  case "${enabled}" in
+    enabled) printf '  Autostart: %bYes%b' "${green}" "${plain}" ;;
+    disabled) printf '  Autostart: %bNo%b' "${yellow}" "${plain}" ;;
+    *) printf '  Autostart: %bUnknown%b' "${red}" "${plain}" ;;
+  esac
+  printf '  Version: %s\n' "${version#shilka }"
+  printf 'Config: %s\n' "${SHILKA_CONFIG_PATH}"
 }
 
 show_menu() {
+  show_header
   cat <<'MENU'
-1. Start   2. Stop   3. Restart   4. Reset admin password
-5. Change port   6. Status   7. Logs   8. Create API token
-9. Set domain/public URL   10. Set custom TLS cert   11. Disable TLS
-12. Core reload   13. Backup DB   0. Exit
+
+  1) Start panel              2) Stop panel
+  3) Restart panel            4) Service status
+  5) Show logs                6) Show settings
+
+  7) Reset admin password     8) Change panel port
+  9) Set domain/public URL   10) Create API token
+ 11) Set custom TLS cert     12) Disable panel TLS
+
+ 13) Core reload             14) Core config check
+ 15) Backup database          0) Exit
 MENU
 }
 
@@ -899,23 +1321,38 @@ main() {
       1) start_services ;;
       2) stop_services ;;
       3) restart_services ;;
-      4) reset_admin_password ;;
-      5) change_panel_port ;;
-      6) systemctl status shilka.service --no-pager ;;
-      7) journalctl -u shilka.service -n 120 --no-pager ;;
-      8) create_api_token ;;
+      4) show_service_status ;;
+      5) show_logs ;;
+      6) show_settings ;;
+      7) reset_admin_password ;;
+      8) change_panel_port ;;
       9) set_domain ;;
-      10) set_custom_cert ;;
-      11) disable_panel_tls ;;
-      12) core_reload ;;
-      13) backup_db ;;
+      10) create_api_token ;;
+      11) set_custom_cert ;;
+      12) disable_panel_tls ;;
+      13) core_reload ;;
+      14) core_config_check ;;
+      15) backup_db ;;
       0) exit 0 ;;
-      *) echo "Unknown option" ;;
+      *) log_warn "Unknown option." ;;
     esac
+    pause
   done
 }
 main "$@"
 SCRIPT
+
+  local app_user_escaped config_dir_escaped data_dir_escaped bin_path_escaped
+  app_user_escaped="$(printf '%s' "${APP_USER}" | sed 's/[\/&|]/\\&/g')"
+  config_dir_escaped="$(printf '%s' "${CONFIG_DIR}" | sed 's/[\/&|]/\\&/g')"
+  data_dir_escaped="$(printf '%s' "${DATA_DIR}" | sed 's/[\/&|]/\\&/g')"
+  bin_path_escaped="$(printf '%s' "${APP_HOME}/bin/shilka" | sed 's/[\/&|]/\\&/g')"
+  sed -i \
+    -e "s|__APP_USER__|${app_user_escaped}|g" \
+    -e "s|__CONFIG_DIR__|${config_dir_escaped}|g" \
+    -e "s|__DATA_DIR__|${data_dir_escaped}|g" \
+    -e "s|__BIN_PATH__|${bin_path_escaped}|g" \
+    /usr/local/bin/shilka
 
   chmod 0755 /usr/local/bin/shilka
   systemctl daemon-reload
@@ -942,16 +1379,13 @@ main() {
   write_prod_config
   install_systemd
 
-  echo ""
-  echo "===== Shilka installed ====="
-  echo "URL:      ${PANEL_PUBLIC_URL}"
-  echo "Username: ${ADMIN_USER}"
-  echo "Password: ${ADMIN_PASSWORD}"
-  echo ""
-  echo "Manage: shilka"
-  echo "Logs:   journalctl -u shilka.service -f"
-  echo "Config: ${CONFIG_DIR}/prod.yaml"
-  echo "==============================="
+  section "Shilka installed"
+  printf '  %-10s %s\n' "URL:" "${PANEL_PUBLIC_URL}"
+  printf '  %-10s %s\n' "Username:" "${ADMIN_USER}"
+  printf '  %-10s %s\n' "Password:" "${ADMIN_PASSWORD}"
+  printf '  %-10s %s\n' "Manage:" "shilka"
+  printf '  %-10s %s\n' "Logs:" "journalctl -u shilka.service -f"
+  printf '  %-10s %s\n' "Config:" "${CONFIG_DIR}/prod.yaml"
 }
 
 main "$@"
