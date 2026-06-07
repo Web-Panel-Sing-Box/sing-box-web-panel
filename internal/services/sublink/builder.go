@@ -85,6 +85,10 @@ func buildHysteria2(ib *domain.Inbound, c *domain.Client, host, port string) str
 	if ib.SNI != "" {
 		q.Set("sni", ib.SNI)
 	}
+	if ib.Settings.Hy2ObfsPassword != "" {
+		q.Set("obfs", "salamander")
+		q.Set("obfs-password", ib.Settings.Hy2ObfsPassword)
+	}
 	if ib.EffectiveAllowInsecure() {
 		q.Set("insecure", "1")
 	} else {

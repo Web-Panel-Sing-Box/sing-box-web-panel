@@ -92,12 +92,25 @@ type vlessOutbound struct {
 }
 
 type hysteria2Outbound struct {
-	Type       string        `json:"type"`
-	Tag        string        `json:"tag"`
-	Server     string        `json:"server"`
-	ServerPort int           `json:"server_port"`
-	Password   string        `json:"password"`
-	TLS        *clientOutTLS `json:"tls,omitempty"`
+	Type        string               `json:"type"`
+	Tag         string               `json:"tag"`
+	Server      string               `json:"server"`
+	ServerPort  int                  `json:"server_port"`
+	Password    string               `json:"password"`
+	UpMbps      int                  `json:"up_mbps,omitempty"`
+	DownMbps    int                  `json:"down_mbps,omitempty"`
+	Network     string               `json:"network,omitempty"`
+	Obfs        *clientHysteria2Obfs `json:"obfs,omitempty"`
+	BBRProfile  string               `json:"bbr_profile,omitempty"`
+	BrutalDebug bool                 `json:"brutal_debug,omitempty"`
+	TLS         *clientOutTLS        `json:"tls,omitempty"`
+}
+
+type clientHysteria2Obfs struct {
+	Type          string `json:"type"`
+	Password      string `json:"password"`
+	MinPacketSize int    `json:"min_packet_size,omitempty"`
+	MaxPacketSize int    `json:"max_packet_size,omitempty"`
 }
 
 type naiveOutbound struct {
@@ -139,10 +152,22 @@ func buildProxyOutbound(ib *domain.Inbound, c *domain.Client, host string) (any,
 		}
 		return out, nil
 	case domain.ProtocolHysteria2:
-		return hysteria2Outbound{
+		out := hysteria2Outbound{
 			Type: "hysteria2", Tag: "proxy", Server: host, ServerPort: ib.Port,
 			Password: c.Password, TLS: clientTLS(ib),
-		}, nil
+			UpMbps: ib.Settings.Hy2UpMbps, DownMbps: ib.Settings.Hy2DownMbps,
+			Network: ib.Settings.Hy2Network, BBRProfile: ib.Settings.Hy2BbrProfile,
+			BrutalDebug: ib.Settings.Hy2BrutalDebug,
+		}
+		if ib.Settings.Hy2ObfsPassword != "" {
+			out.Obfs = &clientHysteria2Obfs{
+				Type:          "salamander",
+				Password:      ib.Settings.Hy2ObfsPassword,
+				MinPacketSize: ib.Settings.Hy2ObfsMinPacketSize,
+				MaxPacketSize: ib.Settings.Hy2ObfsMaxPacketSize,
+			}
+		}
+		return out, nil
 	case domain.ProtocolNaive:
 		if ib.EffectiveAllowInsecure() {
 			return nil, ErrNaiveJSONRequiresTrustedTLS
