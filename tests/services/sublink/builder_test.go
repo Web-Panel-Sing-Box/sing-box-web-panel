@@ -2,6 +2,7 @@ package sublink_test
 
 import (
 	"encoding/json"
+	"errors"
 	"net/url"
 	"strings"
 	"testing"
@@ -158,6 +159,42 @@ func TestBuildClientConfigTrustedTLSOmitsInsecure(t *testing.T) {
 	tls := firstOutboundTLS(t, body)
 	if _, ok := tls["insecure"]; ok {
 		t.Fatalf("tls.insecure should be omitted for trusted TLS\nconfig: %s", body)
+	}
+}
+
+func TestBuildClientConfigNaiveSelfSignedReturnsClearError(t *testing.T) {
+	ib := &domain.Inbound{
+		ID: 3, Protocol: domain.ProtocolNaive, Port: 38119,
+		TLS: domain.TLSModeTLS, SNI: "panel.example",
+	}
+	c := &domain.Client{Name: "carol", Password: "pw"}
+
+	_, err := sublink.BuildClientConfig(ib, c, "panel.example")
+	if !errors.Is(err, sublink.ErrNaiveJSONRequiresTrustedTLS) {
+		t.Fatalf("error = %v, want ErrNaiveJSONRequiresTrustedTLS", err)
+	}
+}
+
+func TestBuildClientConfigNaiveTrustedTLSOmitsInsecure(t *testing.T) {
+	ib := &domain.Inbound{
+		ID: 3, Protocol: domain.ProtocolNaive, Port: 38119,
+		TLS: domain.TLSModeTLS, SNI: "panel.example",
+		Settings: domain.InboundSettings{
+			ACMEDomain: "panel.example",
+		},
+	}
+	c := &domain.Client{Name: "carol", Password: "pw"}
+
+	body, err := sublink.BuildClientConfig(ib, c, "panel.example")
+	if err != nil {
+		t.Fatal(err)
+	}
+	tls := firstOutboundTLS(t, body)
+	if _, ok := tls["insecure"]; ok {
+		t.Fatalf("naive tls.insecure should be omitted\nconfig: %s", body)
+	}
+	if tls["server_name"] != "panel.example" {
+		t.Fatalf("server_name = %#v, want panel.example\nconfig: %s", tls["server_name"], body)
 	}
 }
 

@@ -1,2152 +1,2167 @@
 {
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/launch.json": {
-    "mtime": 1780802100.4471924,
+  ".claude/launch.json": {
+    "mtime": 1780477668.7613509,
     "ast_hash": "fb4b911937c80fd38c430a1c56a18f39",
-    "semantic_hash": "fb4b911937c80fd38c430a1c56a18f39"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/settings.json": {
-    "mtime": 1780802100.4474797,
+  ".claude/settings.json": {
+    "mtime": 1780477668.7617047,
     "ast_hash": "a499cae57bf464dc316053e6c537e468",
-    "semantic_hash": "a499cae57bf464dc316053e6c537e468"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/settings.local.json": {
-    "mtime": 1780802100.5549626,
+  ".claude/settings.local.json": {
+    "mtime": 1780477668.8612564,
     "ast_hash": "f0b72f6d6824036cd26c2b1ff09f3d3b",
-    "semantic_hash": "f0b72f6d6824036cd26c2b1ff09f3d3b"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/cleanup-deprecated.mjs": {
-    "mtime": 1780802100.457353,
+  ".claude/skills/impeccable/scripts/cleanup-deprecated.mjs": {
+    "mtime": 1780477668.7732773,
     "ast_hash": "fddcc885ed5305df37d966ba654e0eae",
-    "semantic_hash": "fddcc885ed5305df37d966ba654e0eae"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/command-metadata.json": {
-    "mtime": 1780802100.4575377,
+  ".claude/skills/impeccable/scripts/command-metadata.json": {
+    "mtime": 1780477668.7736042,
     "ast_hash": "883d1962f87b23b4a0f6229e1aadd484",
-    "semantic_hash": "883d1962f87b23b4a0f6229e1aadd484"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/context-signals.mjs": {
-    "mtime": 1780802100.457725,
+  ".claude/skills/impeccable/scripts/context-signals.mjs": {
+    "mtime": 1780477668.7739983,
     "ast_hash": "962c9d4a7608582b1839223eccde1889",
-    "semantic_hash": "962c9d4a7608582b1839223eccde1889"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/context.mjs": {
-    "mtime": 1780802100.4579732,
+  ".claude/skills/impeccable/scripts/context.mjs": {
+    "mtime": 1780477668.7743025,
     "ast_hash": "5db7930910705545dc776e946c320be9",
-    "semantic_hash": "5db7930910705545dc776e946c320be9"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/critique-storage.mjs": {
-    "mtime": 1780802100.458292,
+  ".claude/skills/impeccable/scripts/critique-storage.mjs": {
+    "mtime": 1780477668.774841,
     "ast_hash": "2609dfc633db44ef5990ec2376069ce5",
-    "semantic_hash": "2609dfc633db44ef5990ec2376069ce5"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/design-parser.mjs": {
-    "mtime": 1780802100.4586833,
+  ".claude/skills/impeccable/scripts/design-parser.mjs": {
+    "mtime": 1780477668.7754953,
     "ast_hash": "77bbd8593cdea6e08a0b3e7870e93fc8",
-    "semantic_hash": "77bbd8593cdea6e08a0b3e7870e93fc8"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/detect-csp.mjs": {
-    "mtime": 1780802100.4590425,
+  ".claude/skills/impeccable/scripts/detect-csp.mjs": {
+    "mtime": 1780477668.7758372,
     "ast_hash": "02c5a9a8ad69f87d23af72bf580fd3f4",
-    "semantic_hash": "02c5a9a8ad69f87d23af72bf580fd3f4"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/detect.mjs": {
-    "mtime": 1780802100.4592154,
+  ".claude/skills/impeccable/scripts/detect.mjs": {
+    "mtime": 1780477668.7759938,
     "ast_hash": "11dbeb9341477d06d1a24c3ad1f37ac9",
-    "semantic_hash": "11dbeb9341477d06d1a24c3ad1f37ac9"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/detector/browser/injected/index.mjs": {
-    "mtime": 1780802100.4599118,
+  ".claude/skills/impeccable/scripts/detector/browser/injected/index.mjs": {
+    "mtime": 1780477668.776805,
     "ast_hash": "9b3db8af5aadf21ecf3395b74b02200a",
-    "semantic_hash": "9b3db8af5aadf21ecf3395b74b02200a"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/detector/cli/main.mjs": {
-    "mtime": 1780802100.4602685,
+  ".claude/skills/impeccable/scripts/detector/cli/main.mjs": {
+    "mtime": 1780477668.777336,
     "ast_hash": "5208183c07f839d8ff178d4614b0a5e8",
-    "semantic_hash": "5208183c07f839d8ff178d4614b0a5e8"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/detector/detect-antipatterns-browser.js": {
-    "mtime": 1780802100.4610882,
+  ".claude/skills/impeccable/scripts/detector/detect-antipatterns-browser.js": {
+    "mtime": 1780477668.7782245,
     "ast_hash": "ebebf53309dd798f595c821d336ec53c",
-    "semantic_hash": "ebebf53309dd798f595c821d336ec53c"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/detector/detect-antipatterns.mjs": {
-    "mtime": 1780802100.461287,
+  ".claude/skills/impeccable/scripts/detector/detect-antipatterns.mjs": {
+    "mtime": 1780477668.7784595,
     "ast_hash": "1ee45163c27e086f43af1a3bb6b76504",
-    "semantic_hash": "1ee45163c27e086f43af1a3bb6b76504"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/detector/engines/browser/detect-url.mjs": {
-    "mtime": 1780802100.4616544,
+  ".claude/skills/impeccable/scripts/detector/engines/browser/detect-url.mjs": {
+    "mtime": 1780477668.778889,
     "ast_hash": "f9a37e92021f13b178b860eb52a33f98",
-    "semantic_hash": "f9a37e92021f13b178b860eb52a33f98"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/detector/engines/regex/detect-text.mjs": {
-    "mtime": 1780802100.4620585,
+  ".claude/skills/impeccable/scripts/detector/engines/regex/detect-text.mjs": {
+    "mtime": 1780477668.7794495,
     "ast_hash": "f99d96047b51dbe3dd24ca272d009a09",
-    "semantic_hash": "f99d96047b51dbe3dd24ca272d009a09"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/detector/engines/static-html/css-cascade.mjs": {
-    "mtime": 1780802100.462473,
+  ".claude/skills/impeccable/scripts/detector/engines/static-html/css-cascade.mjs": {
+    "mtime": 1780477668.7800107,
     "ast_hash": "248b84788b792dc75c8a18058a9a6a46",
-    "semantic_hash": "248b84788b792dc75c8a18058a9a6a46"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/detector/engines/static-html/detect-html.mjs": {
-    "mtime": 1780802100.4628992,
+  ".claude/skills/impeccable/scripts/detector/engines/static-html/detect-html.mjs": {
+    "mtime": 1780477668.7804236,
     "ast_hash": "48549abcbb3e1fee4f93f07661d77ac0",
-    "semantic_hash": "48549abcbb3e1fee4f93f07661d77ac0"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/detector/engines/visual/screenshot-contrast.mjs": {
-    "mtime": 1780802100.4632401,
+  ".claude/skills/impeccable/scripts/detector/engines/visual/screenshot-contrast.mjs": {
+    "mtime": 1780477668.780693,
     "ast_hash": "6312c6dbc048c4445f50e69f167a297d",
-    "semantic_hash": "6312c6dbc048c4445f50e69f167a297d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/detector/findings.mjs": {
-    "mtime": 1780802100.4634109,
+  ".claude/skills/impeccable/scripts/detector/findings.mjs": {
+    "mtime": 1780477668.7808554,
     "ast_hash": "f7f3de6f00121150c4762809df00df9f",
-    "semantic_hash": "f7f3de6f00121150c4762809df00df9f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/detector/node/file-system.mjs": {
-    "mtime": 1780802100.4636586,
+  ".claude/skills/impeccable/scripts/detector/node/file-system.mjs": {
+    "mtime": 1780477668.781121,
     "ast_hash": "310714c7a308e35e386034999479ff84",
-    "semantic_hash": "310714c7a308e35e386034999479ff84"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/detector/profile/profiler.mjs": {
-    "mtime": 1780802100.463994,
+  ".claude/skills/impeccable/scripts/detector/profile/profiler.mjs": {
+    "mtime": 1780477668.7815413,
     "ast_hash": "88c5d2027852842be578edf349a0f9c8",
-    "semantic_hash": "88c5d2027852842be578edf349a0f9c8"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/detector/registry/antipatterns.mjs": {
-    "mtime": 1780802100.464321,
+  ".claude/skills/impeccable/scripts/detector/registry/antipatterns.mjs": {
+    "mtime": 1780477668.7819743,
     "ast_hash": "30ed4f1a91098bf96a2dd2e0582a8162",
-    "semantic_hash": "30ed4f1a91098bf96a2dd2e0582a8162"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/detector/rules/checks.mjs": {
-    "mtime": 1780802100.4648452,
+  ".claude/skills/impeccable/scripts/detector/rules/checks.mjs": {
+    "mtime": 1780477668.7827308,
     "ast_hash": "4f8889a5fb5a8137b8c991a22b7cc556",
-    "semantic_hash": "4f8889a5fb5a8137b8c991a22b7cc556"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/detector/shared/color.mjs": {
-    "mtime": 1780802100.465235,
+  ".claude/skills/impeccable/scripts/detector/shared/color.mjs": {
+    "mtime": 1780477668.7832518,
     "ast_hash": "2363d500ccf490f9ff285119b613276d",
-    "semantic_hash": "2363d500ccf490f9ff285119b613276d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/detector/shared/constants.mjs": {
-    "mtime": 1780802100.4656045,
+  ".claude/skills/impeccable/scripts/detector/shared/constants.mjs": {
+    "mtime": 1780477668.7837903,
     "ast_hash": "5700477c8a86d876b90de9d6eb63f191",
-    "semantic_hash": "5700477c8a86d876b90de9d6eb63f191"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/detector/shared/page.mjs": {
-    "mtime": 1780802100.4660943,
+  ".claude/skills/impeccable/scripts/detector/shared/page.mjs": {
+    "mtime": 1780477668.784065,
     "ast_hash": "ab3a243b690b4f70c4ef639cdf970d82",
-    "semantic_hash": "ab3a243b690b4f70c4ef639cdf970d82"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/impeccable-paths.mjs": {
-    "mtime": 1780802100.4665003,
+  ".claude/skills/impeccable/scripts/impeccable-paths.mjs": {
+    "mtime": 1780477668.7845285,
     "ast_hash": "2dd4310d900b4e7678f8b3620e634687",
-    "semantic_hash": "2dd4310d900b4e7678f8b3620e634687"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/is-generated.mjs": {
-    "mtime": 1780802100.466666,
+  ".claude/skills/impeccable/scripts/is-generated.mjs": {
+    "mtime": 1780477668.7847083,
     "ast_hash": "edd718b1a4737edbf9631ff7f6f512ef",
-    "semantic_hash": "edd718b1a4737edbf9631ff7f6f512ef"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-accept.mjs": {
-    "mtime": 1780802100.466983,
+  ".claude/skills/impeccable/scripts/live-accept.mjs": {
+    "mtime": 1780477668.7851098,
     "ast_hash": "c17aa7eb3d9aa7d7903e1dbd8cb49f68",
-    "semantic_hash": "c17aa7eb3d9aa7d7903e1dbd8cb49f68"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-browser-session.js": {
-    "mtime": 1780802100.4672415,
+  ".claude/skills/impeccable/scripts/live-browser-session.js": {
+    "mtime": 1780477668.7855456,
     "ast_hash": "5dec3dae6158050d69762fb79facaf48",
-    "semantic_hash": "5dec3dae6158050d69762fb79facaf48"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-browser.js": {
-    "mtime": 1780802100.4685512,
+  ".claude/skills/impeccable/scripts/live-browser.js": {
+    "mtime": 1780477668.7868507,
     "ast_hash": "737b302c8b43d03fceff467b84582d9d",
-    "semantic_hash": "737b302c8b43d03fceff467b84582d9d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-commit-manual-edits.mjs": {
-    "mtime": 1780802100.4688973,
+  ".claude/skills/impeccable/scripts/live-commit-manual-edits.mjs": {
+    "mtime": 1780477668.7873306,
     "ast_hash": "fc32b152d40668abfedeb77c6deb2515",
-    "semantic_hash": "fc32b152d40668abfedeb77c6deb2515"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-complete.mjs": {
-    "mtime": 1780802100.4691176,
+  ".claude/skills/impeccable/scripts/live-complete.mjs": {
+    "mtime": 1780477668.7876797,
     "ast_hash": "ac0ba59701ad5fa70d0dea5b05dc1ac7",
-    "semantic_hash": "ac0ba59701ad5fa70d0dea5b05dc1ac7"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-completion.mjs": {
-    "mtime": 1780802100.4693434,
+  ".claude/skills/impeccable/scripts/live-completion.mjs": {
+    "mtime": 1780477668.7880232,
     "ast_hash": "77185bc6cced6322e6892af8e05839f0",
-    "semantic_hash": "77185bc6cced6322e6892af8e05839f0"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-copy-edit-agent.mjs": {
-    "mtime": 1780802100.469816,
+  ".claude/skills/impeccable/scripts/live-copy-edit-agent.mjs": {
+    "mtime": 1780477668.7883737,
     "ast_hash": "1c4926b56d5442775dab0138bf71a790",
-    "semantic_hash": "1c4926b56d5442775dab0138bf71a790"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-discard-manual-edits.mjs": {
-    "mtime": 1780802100.4701138,
+  ".claude/skills/impeccable/scripts/live-discard-manual-edits.mjs": {
+    "mtime": 1780477668.788726,
     "ast_hash": "0efb77b3a97cf2140bff04db767c2b2e",
-    "semantic_hash": "0efb77b3a97cf2140bff04db767c2b2e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-event-validation.mjs": {
-    "mtime": 1780802100.470291,
+  ".claude/skills/impeccable/scripts/live-event-validation.mjs": {
+    "mtime": 1780477668.7890189,
     "ast_hash": "d6942cccc03c889bac3248aa09a7a22f",
-    "semantic_hash": "d6942cccc03c889bac3248aa09a7a22f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-inject.mjs": {
-    "mtime": 1780802100.4706223,
+  ".claude/skills/impeccable/scripts/live-inject.mjs": {
+    "mtime": 1780477668.7894154,
     "ast_hash": "3e835768ddaa32b5f64ea7cf0eb56551",
-    "semantic_hash": "3e835768ddaa32b5f64ea7cf0eb56551"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-insert-ui.mjs": {
-    "mtime": 1780802100.47101,
+  ".claude/skills/impeccable/scripts/live-insert-ui.mjs": {
+    "mtime": 1780477668.7898161,
     "ast_hash": "b6c5c82e14218c0c1b1e66f0851bff3f",
-    "semantic_hash": "b6c5c82e14218c0c1b1e66f0851bff3f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-insert.mjs": {
-    "mtime": 1780802100.4712837,
+  ".claude/skills/impeccable/scripts/live-insert.mjs": {
+    "mtime": 1780477668.7900362,
     "ast_hash": "606ec6eae7e2fd645a069457979bee2a",
-    "semantic_hash": "606ec6eae7e2fd645a069457979bee2a"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-manual-edit-evidence.mjs": {
-    "mtime": 1780802100.4715743,
+  ".claude/skills/impeccable/scripts/live-manual-edit-evidence.mjs": {
+    "mtime": 1780477668.7904239,
     "ast_hash": "0a5b4c8cadb7f1d9d86a9d481d4a8223",
-    "semantic_hash": "0a5b4c8cadb7f1d9d86a9d481d4a8223"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-manual-edits-buffer.mjs": {
-    "mtime": 1780802100.471798,
+  ".claude/skills/impeccable/scripts/live-manual-edits-buffer.mjs": {
+    "mtime": 1780477668.7908669,
     "ast_hash": "97db5c92eed8b17e5431a1b0ccd87f01",
-    "semantic_hash": "97db5c92eed8b17e5431a1b0ccd87f01"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-poll.mjs": {
-    "mtime": 1780802100.4720557,
+  ".claude/skills/impeccable/scripts/live-poll.mjs": {
+    "mtime": 1780477668.7912989,
     "ast_hash": "38ecad4a14df6651ccc8e4c7a9d61de1",
-    "semantic_hash": "38ecad4a14df6651ccc8e4c7a9d61de1"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-resume.mjs": {
-    "mtime": 1780802100.4724107,
+  ".claude/skills/impeccable/scripts/live-resume.mjs": {
+    "mtime": 1780477668.7917466,
     "ast_hash": "42d7b6774ee440e057bfc6e0b93a3d7e",
-    "semantic_hash": "42d7b6774ee440e057bfc6e0b93a3d7e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-server.mjs": {
-    "mtime": 1780802100.4731321,
+  ".claude/skills/impeccable/scripts/live-server.mjs": {
+    "mtime": 1780477668.7921863,
     "ast_hash": "db39ea4c8b207dbccf2c26bb5dce583c",
-    "semantic_hash": "db39ea4c8b207dbccf2c26bb5dce583c"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-session-store.mjs": {
-    "mtime": 1780802100.4735668,
+  ".claude/skills/impeccable/scripts/live-session-store.mjs": {
+    "mtime": 1780477668.79261,
     "ast_hash": "18373d8bcbbbdc462efc0281f5cbd548",
-    "semantic_hash": "18373d8bcbbbdc462efc0281f5cbd548"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-status.mjs": {
-    "mtime": 1780802100.4738383,
+  ".claude/skills/impeccable/scripts/live-status.mjs": {
+    "mtime": 1780477668.7928874,
     "ast_hash": "ef654aa3bfb5c204fd0b9ae8613179d3",
-    "semantic_hash": "ef654aa3bfb5c204fd0b9ae8613179d3"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-svelte-component.mjs": {
-    "mtime": 1780802100.4741867,
+  ".claude/skills/impeccable/scripts/live-svelte-component.mjs": {
+    "mtime": 1780477668.7931619,
     "ast_hash": "b23495379a1527dbb9c7c3171041819e",
-    "semantic_hash": "b23495379a1527dbb9c7c3171041819e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-sveltekit-adapter.mjs": {
-    "mtime": 1780802100.474512,
+  ".claude/skills/impeccable/scripts/live-sveltekit-adapter.mjs": {
+    "mtime": 1780477668.7934523,
     "ast_hash": "66e07d2c07827af6099ce81a442bd66e",
-    "semantic_hash": "66e07d2c07827af6099ce81a442bd66e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-ui-core.mjs": {
-    "mtime": 1780802100.474702,
+  ".claude/skills/impeccable/scripts/live-ui-core.mjs": {
+    "mtime": 1780477668.7936604,
     "ast_hash": "b3d7c78852285bb1b6a26aef4872482d",
-    "semantic_hash": "b3d7c78852285bb1b6a26aef4872482d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live-wrap.mjs": {
-    "mtime": 1780802100.4750447,
+  ".claude/skills/impeccable/scripts/live-wrap.mjs": {
+    "mtime": 1780477668.7939823,
     "ast_hash": "623ab8ca3a284bb9e573ec6d01b74641",
-    "semantic_hash": "623ab8ca3a284bb9e573ec6d01b74641"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/live.mjs": {
-    "mtime": 1780802100.4753106,
+  ".claude/skills/impeccable/scripts/live.mjs": {
+    "mtime": 1780477668.7942998,
     "ast_hash": "292ae3ec6df11d04939ed36755ce8350",
-    "semantic_hash": "292ae3ec6df11d04939ed36755ce8350"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/modern-screenshot.umd.js": {
-    "mtime": 1780802100.475681,
+  ".claude/skills/impeccable/scripts/modern-screenshot.umd.js": {
+    "mtime": 1780477668.7946756,
     "ast_hash": "4fe5f9e490ab4f107afc707d7eafc819",
-    "semantic_hash": "4fe5f9e490ab4f107afc707d7eafc819"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/palette.mjs": {
-    "mtime": 1780802100.4759932,
+  ".claude/skills/impeccable/scripts/palette.mjs": {
+    "mtime": 1780477668.7951822,
     "ast_hash": "adbc82e1e9021b4948901b21563277a2",
-    "semantic_hash": "adbc82e1e9021b4948901b21563277a2"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/scripts/pin.mjs": {
-    "mtime": 1780802100.4764113,
+  ".claude/skills/impeccable/scripts/pin.mjs": {
+    "mtime": 1780477668.7956662,
     "ast_hash": "867ca7fdded9987e84a128a3b4fb6bab",
-    "semantic_hash": "867ca7fdded9987e84a128a3b4fb6bab"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/cleanup-deprecated.mjs": {
-    "mtime": 1780802100.528279,
+  ".github/skills/impeccable/scripts/cleanup-deprecated.mjs": {
+    "mtime": 1780477668.850734,
     "ast_hash": "fddcc885ed5305df37d966ba654e0eae",
-    "semantic_hash": "fddcc885ed5305df37d966ba654e0eae"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/command-metadata.json": {
-    "mtime": 1780802100.5284567,
+  ".github/skills/impeccable/scripts/command-metadata.json": {
+    "mtime": 1780477668.8509948,
     "ast_hash": "883d1962f87b23b4a0f6229e1aadd484",
-    "semantic_hash": "883d1962f87b23b4a0f6229e1aadd484"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/context-signals.mjs": {
-    "mtime": 1780802100.5286152,
+  ".github/skills/impeccable/scripts/context-signals.mjs": {
+    "mtime": 1780477668.8512375,
     "ast_hash": "962c9d4a7608582b1839223eccde1889",
-    "semantic_hash": "962c9d4a7608582b1839223eccde1889"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/context.mjs": {
-    "mtime": 1780802100.5288281,
+  ".github/skills/impeccable/scripts/context.mjs": {
+    "mtime": 1780477668.851482,
     "ast_hash": "5db7930910705545dc776e946c320be9",
-    "semantic_hash": "5db7930910705545dc776e946c320be9"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/critique-storage.mjs": {
-    "mtime": 1780802100.5290694,
+  ".github/skills/impeccable/scripts/critique-storage.mjs": {
+    "mtime": 1780477668.8517344,
     "ast_hash": "2609dfc633db44ef5990ec2376069ce5",
-    "semantic_hash": "2609dfc633db44ef5990ec2376069ce5"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/design-parser.mjs": {
-    "mtime": 1780802100.5292497,
+  ".github/skills/impeccable/scripts/design-parser.mjs": {
+    "mtime": 1780477668.8519874,
     "ast_hash": "77bbd8593cdea6e08a0b3e7870e93fc8",
-    "semantic_hash": "77bbd8593cdea6e08a0b3e7870e93fc8"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/detect-csp.mjs": {
-    "mtime": 1780802100.529453,
+  ".github/skills/impeccable/scripts/detect-csp.mjs": {
+    "mtime": 1780477668.8522964,
     "ast_hash": "02c5a9a8ad69f87d23af72bf580fd3f4",
-    "semantic_hash": "02c5a9a8ad69f87d23af72bf580fd3f4"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/detect.mjs": {
-    "mtime": 1780802100.5295846,
+  ".github/skills/impeccable/scripts/detect.mjs": {
+    "mtime": 1780477668.8525176,
     "ast_hash": "11dbeb9341477d06d1a24c3ad1f37ac9",
-    "semantic_hash": "11dbeb9341477d06d1a24c3ad1f37ac9"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/detector/browser/injected/index.mjs": {
-    "mtime": 1780802100.530042,
+  ".github/skills/impeccable/scripts/detector/browser/injected/index.mjs": {
+    "mtime": 1780477668.8530335,
     "ast_hash": "9b3db8af5aadf21ecf3395b74b02200a",
-    "semantic_hash": "9b3db8af5aadf21ecf3395b74b02200a"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/detector/cli/main.mjs": {
-    "mtime": 1780802100.5304105,
+  ".github/skills/impeccable/scripts/detector/cli/main.mjs": {
+    "mtime": 1780477668.8533945,
     "ast_hash": "5208183c07f839d8ff178d4614b0a5e8",
-    "semantic_hash": "5208183c07f839d8ff178d4614b0a5e8"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/detector/detect-antipatterns-browser.js": {
-    "mtime": 1780802100.5309324,
+  ".github/skills/impeccable/scripts/detector/detect-antipatterns-browser.js": {
+    "mtime": 1780477668.853917,
     "ast_hash": "ebebf53309dd798f595c821d336ec53c",
-    "semantic_hash": "ebebf53309dd798f595c821d336ec53c"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/detector/detect-antipatterns.mjs": {
-    "mtime": 1780802100.531168,
+  ".github/skills/impeccable/scripts/detector/detect-antipatterns.mjs": {
+    "mtime": 1780477668.854097,
     "ast_hash": "1ee45163c27e086f43af1a3bb6b76504",
-    "semantic_hash": "1ee45163c27e086f43af1a3bb6b76504"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/detector/engines/browser/detect-url.mjs": {
-    "mtime": 1780802100.5315254,
+  ".github/skills/impeccable/scripts/detector/engines/browser/detect-url.mjs": {
+    "mtime": 1780477668.8544273,
     "ast_hash": "f9a37e92021f13b178b860eb52a33f98",
-    "semantic_hash": "f9a37e92021f13b178b860eb52a33f98"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/detector/engines/regex/detect-text.mjs": {
-    "mtime": 1780802100.5317726,
+  ".github/skills/impeccable/scripts/detector/engines/regex/detect-text.mjs": {
+    "mtime": 1780477668.8546724,
     "ast_hash": "f99d96047b51dbe3dd24ca272d009a09",
-    "semantic_hash": "f99d96047b51dbe3dd24ca272d009a09"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/detector/engines/static-html/css-cascade.mjs": {
-    "mtime": 1780802100.5320578,
+  ".github/skills/impeccable/scripts/detector/engines/static-html/css-cascade.mjs": {
+    "mtime": 1780477668.854937,
     "ast_hash": "248b84788b792dc75c8a18058a9a6a46",
-    "semantic_hash": "248b84788b792dc75c8a18058a9a6a46"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/detector/engines/static-html/detect-html.mjs": {
-    "mtime": 1780802100.532304,
+  ".github/skills/impeccable/scripts/detector/engines/static-html/detect-html.mjs": {
+    "mtime": 1780477668.855154,
     "ast_hash": "48549abcbb3e1fee4f93f07661d77ac0",
-    "semantic_hash": "48549abcbb3e1fee4f93f07661d77ac0"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/detector/engines/visual/screenshot-contrast.mjs": {
-    "mtime": 1780802100.5325384,
+  ".github/skills/impeccable/scripts/detector/engines/visual/screenshot-contrast.mjs": {
+    "mtime": 1780477668.8554199,
     "ast_hash": "6312c6dbc048c4445f50e69f167a297d",
-    "semantic_hash": "6312c6dbc048c4445f50e69f167a297d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/detector/findings.mjs": {
-    "mtime": 1780802100.53269,
+  ".github/skills/impeccable/scripts/detector/findings.mjs": {
+    "mtime": 1780477668.855569,
     "ast_hash": "f7f3de6f00121150c4762809df00df9f",
-    "semantic_hash": "f7f3de6f00121150c4762809df00df9f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/detector/node/file-system.mjs": {
-    "mtime": 1780802100.532965,
+  ".github/skills/impeccable/scripts/detector/node/file-system.mjs": {
+    "mtime": 1780477668.8558407,
     "ast_hash": "310714c7a308e35e386034999479ff84",
-    "semantic_hash": "310714c7a308e35e386034999479ff84"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/detector/profile/profiler.mjs": {
-    "mtime": 1780802100.5332615,
+  ".github/skills/impeccable/scripts/detector/profile/profiler.mjs": {
+    "mtime": 1780477668.856088,
     "ast_hash": "88c5d2027852842be578edf349a0f9c8",
-    "semantic_hash": "88c5d2027852842be578edf349a0f9c8"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/detector/registry/antipatterns.mjs": {
-    "mtime": 1780802100.533527,
+  ".github/skills/impeccable/scripts/detector/registry/antipatterns.mjs": {
+    "mtime": 1780477668.8563035,
     "ast_hash": "30ed4f1a91098bf96a2dd2e0582a8162",
-    "semantic_hash": "30ed4f1a91098bf96a2dd2e0582a8162"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/detector/rules/checks.mjs": {
-    "mtime": 1780802100.5339792,
+  ".github/skills/impeccable/scripts/detector/rules/checks.mjs": {
+    "mtime": 1780477668.8566763,
     "ast_hash": "4f8889a5fb5a8137b8c991a22b7cc556",
-    "semantic_hash": "4f8889a5fb5a8137b8c991a22b7cc556"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/detector/shared/color.mjs": {
-    "mtime": 1780802100.5342214,
+  ".github/skills/impeccable/scripts/detector/shared/color.mjs": {
+    "mtime": 1780477668.8569648,
     "ast_hash": "2363d500ccf490f9ff285119b613276d",
-    "semantic_hash": "2363d500ccf490f9ff285119b613276d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/detector/shared/constants.mjs": {
-    "mtime": 1780802100.5344234,
+  ".github/skills/impeccable/scripts/detector/shared/constants.mjs": {
+    "mtime": 1780477668.857181,
     "ast_hash": "5700477c8a86d876b90de9d6eb63f191",
-    "semantic_hash": "5700477c8a86d876b90de9d6eb63f191"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/detector/shared/page.mjs": {
-    "mtime": 1780802100.5346,
+  ".github/skills/impeccable/scripts/detector/shared/page.mjs": {
+    "mtime": 1780477668.8573658,
     "ast_hash": "ab3a243b690b4f70c4ef639cdf970d82",
-    "semantic_hash": "ab3a243b690b4f70c4ef639cdf970d82"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/impeccable-paths.mjs": {
-    "mtime": 1780802100.5347881,
+  ".github/skills/impeccable/scripts/impeccable-paths.mjs": {
+    "mtime": 1780477668.8575094,
     "ast_hash": "2dd4310d900b4e7678f8b3620e634687",
-    "semantic_hash": "2dd4310d900b4e7678f8b3620e634687"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/is-generated.mjs": {
-    "mtime": 1780802100.5349748,
+  ".github/skills/impeccable/scripts/is-generated.mjs": {
+    "mtime": 1780477668.857682,
     "ast_hash": "edd718b1a4737edbf9631ff7f6f512ef",
-    "semantic_hash": "edd718b1a4737edbf9631ff7f6f512ef"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-accept.mjs": {
-    "mtime": 1780802100.5352101,
+  ".github/skills/impeccable/scripts/live-accept.mjs": {
+    "mtime": 1780477668.857926,
     "ast_hash": "c17aa7eb3d9aa7d7903e1dbd8cb49f68",
-    "semantic_hash": "c17aa7eb3d9aa7d7903e1dbd8cb49f68"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-browser-session.js": {
-    "mtime": 1780802100.535412,
+  ".github/skills/impeccable/scripts/live-browser-session.js": {
+    "mtime": 1780477668.8581102,
     "ast_hash": "5dec3dae6158050d69762fb79facaf48",
-    "semantic_hash": "5dec3dae6158050d69762fb79facaf48"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-browser.js": {
-    "mtime": 1780802100.5363748,
+  ".github/skills/impeccable/scripts/live-browser.js": {
+    "mtime": 1780477668.8589127,
     "ast_hash": "737b302c8b43d03fceff467b84582d9d",
-    "semantic_hash": "737b302c8b43d03fceff467b84582d9d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-commit-manual-edits.mjs": {
-    "mtime": 1780802100.536659,
+  ".github/skills/impeccable/scripts/live-commit-manual-edits.mjs": {
+    "mtime": 1780477668.859161,
     "ast_hash": "fc32b152d40668abfedeb77c6deb2515",
-    "semantic_hash": "fc32b152d40668abfedeb77c6deb2515"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-complete.mjs": {
-    "mtime": 1780802100.5368648,
+  ".github/skills/impeccable/scripts/live-complete.mjs": {
+    "mtime": 1780477668.8593404,
     "ast_hash": "ac0ba59701ad5fa70d0dea5b05dc1ac7",
-    "semantic_hash": "ac0ba59701ad5fa70d0dea5b05dc1ac7"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-completion.mjs": {
-    "mtime": 1780802100.537036,
+  ".github/skills/impeccable/scripts/live-completion.mjs": {
+    "mtime": 1780477668.8595273,
     "ast_hash": "77185bc6cced6322e6892af8e05839f0",
-    "semantic_hash": "77185bc6cced6322e6892af8e05839f0"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-copy-edit-agent.mjs": {
-    "mtime": 1780802100.5372398,
+  ".github/skills/impeccable/scripts/live-copy-edit-agent.mjs": {
+    "mtime": 1780477668.8597388,
     "ast_hash": "1c4926b56d5442775dab0138bf71a790",
-    "semantic_hash": "1c4926b56d5442775dab0138bf71a790"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-discard-manual-edits.mjs": {
-    "mtime": 1780802100.5374062,
+  ".github/skills/impeccable/scripts/live-discard-manual-edits.mjs": {
+    "mtime": 1780477668.859922,
     "ast_hash": "0efb77b3a97cf2140bff04db767c2b2e",
-    "semantic_hash": "0efb77b3a97cf2140bff04db767c2b2e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-event-validation.mjs": {
-    "mtime": 1780802100.5375845,
+  ".github/skills/impeccable/scripts/live-event-validation.mjs": {
+    "mtime": 1780477668.8601205,
     "ast_hash": "d6942cccc03c889bac3248aa09a7a22f",
-    "semantic_hash": "d6942cccc03c889bac3248aa09a7a22f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-inject.mjs": {
-    "mtime": 1780802100.5377707,
+  ".github/skills/impeccable/scripts/live-inject.mjs": {
+    "mtime": 1780477668.8603475,
     "ast_hash": "3e835768ddaa32b5f64ea7cf0eb56551",
-    "semantic_hash": "3e835768ddaa32b5f64ea7cf0eb56551"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-insert-ui.mjs": {
-    "mtime": 1780802100.5379865,
+  ".github/skills/impeccable/scripts/live-insert-ui.mjs": {
+    "mtime": 1780477668.8605719,
     "ast_hash": "b6c5c82e14218c0c1b1e66f0851bff3f",
-    "semantic_hash": "b6c5c82e14218c0c1b1e66f0851bff3f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-insert.mjs": {
-    "mtime": 1780802100.53823,
+  ".github/skills/impeccable/scripts/live-insert.mjs": {
+    "mtime": 1780477668.8607745,
     "ast_hash": "606ec6eae7e2fd645a069457979bee2a",
-    "semantic_hash": "606ec6eae7e2fd645a069457979bee2a"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-manual-edit-evidence.mjs": {
-    "mtime": 1780802100.5384672,
+  ".github/skills/impeccable/scripts/live-manual-edit-evidence.mjs": {
+    "mtime": 1780477668.8609924,
     "ast_hash": "0a5b4c8cadb7f1d9d86a9d481d4a8223",
-    "semantic_hash": "0a5b4c8cadb7f1d9d86a9d481d4a8223"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-manual-edits-buffer.mjs": {
-    "mtime": 1780802100.5386462,
+  ".github/skills/impeccable/scripts/live-manual-edits-buffer.mjs": {
+    "mtime": 1780477668.8612492,
     "ast_hash": "97db5c92eed8b17e5431a1b0ccd87f01",
-    "semantic_hash": "97db5c92eed8b17e5431a1b0ccd87f01"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-poll.mjs": {
-    "mtime": 1780802100.5388749,
+  ".github/skills/impeccable/scripts/live-poll.mjs": {
+    "mtime": 1780477668.8614762,
     "ast_hash": "38ecad4a14df6651ccc8e4c7a9d61de1",
-    "semantic_hash": "38ecad4a14df6651ccc8e4c7a9d61de1"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-resume.mjs": {
-    "mtime": 1780802100.5390608,
+  ".github/skills/impeccable/scripts/live-resume.mjs": {
+    "mtime": 1780477668.861705,
     "ast_hash": "42d7b6774ee440e057bfc6e0b93a3d7e",
-    "semantic_hash": "42d7b6774ee440e057bfc6e0b93a3d7e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-server.mjs": {
-    "mtime": 1780802100.5393527,
+  ".github/skills/impeccable/scripts/live-server.mjs": {
+    "mtime": 1780477668.8619814,
     "ast_hash": "db39ea4c8b207dbccf2c26bb5dce583c",
-    "semantic_hash": "db39ea4c8b207dbccf2c26bb5dce583c"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-session-store.mjs": {
-    "mtime": 1780802100.5396004,
+  ".github/skills/impeccable/scripts/live-session-store.mjs": {
+    "mtime": 1780477668.862168,
     "ast_hash": "18373d8bcbbbdc462efc0281f5cbd548",
-    "semantic_hash": "18373d8bcbbbdc462efc0281f5cbd548"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-status.mjs": {
-    "mtime": 1780802100.5397422,
+  ".github/skills/impeccable/scripts/live-status.mjs": {
+    "mtime": 1780477668.8622768,
     "ast_hash": "ef654aa3bfb5c204fd0b9ae8613179d3",
-    "semantic_hash": "ef654aa3bfb5c204fd0b9ae8613179d3"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-svelte-component.mjs": {
-    "mtime": 1780802100.5399413,
+  ".github/skills/impeccable/scripts/live-svelte-component.mjs": {
+    "mtime": 1780477668.8624697,
     "ast_hash": "b23495379a1527dbb9c7c3171041819e",
-    "semantic_hash": "b23495379a1527dbb9c7c3171041819e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-sveltekit-adapter.mjs": {
-    "mtime": 1780802100.5401976,
+  ".github/skills/impeccable/scripts/live-sveltekit-adapter.mjs": {
+    "mtime": 1780477668.862666,
     "ast_hash": "66e07d2c07827af6099ce81a442bd66e",
-    "semantic_hash": "66e07d2c07827af6099ce81a442bd66e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-ui-core.mjs": {
-    "mtime": 1780802100.5403712,
+  ".github/skills/impeccable/scripts/live-ui-core.mjs": {
+    "mtime": 1780477668.862825,
     "ast_hash": "b3d7c78852285bb1b6a26aef4872482d",
-    "semantic_hash": "b3d7c78852285bb1b6a26aef4872482d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live-wrap.mjs": {
-    "mtime": 1780802100.5406039,
+  ".github/skills/impeccable/scripts/live-wrap.mjs": {
+    "mtime": 1780477668.8629887,
     "ast_hash": "623ab8ca3a284bb9e573ec6d01b74641",
-    "semantic_hash": "623ab8ca3a284bb9e573ec6d01b74641"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/live.mjs": {
-    "mtime": 1780802100.5409007,
+  ".github/skills/impeccable/scripts/live.mjs": {
+    "mtime": 1780477668.8632238,
     "ast_hash": "292ae3ec6df11d04939ed36755ce8350",
-    "semantic_hash": "292ae3ec6df11d04939ed36755ce8350"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/modern-screenshot.umd.js": {
-    "mtime": 1780802100.5411654,
+  ".github/skills/impeccable/scripts/modern-screenshot.umd.js": {
+    "mtime": 1780477668.8633986,
     "ast_hash": "4fe5f9e490ab4f107afc707d7eafc819",
-    "semantic_hash": "4fe5f9e490ab4f107afc707d7eafc819"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/palette.mjs": {
-    "mtime": 1780802100.541431,
+  ".github/skills/impeccable/scripts/palette.mjs": {
+    "mtime": 1780477668.8636203,
     "ast_hash": "adbc82e1e9021b4948901b21563277a2",
-    "semantic_hash": "adbc82e1e9021b4948901b21563277a2"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/scripts/pin.mjs": {
-    "mtime": 1780802100.5416703,
+  ".github/skills/impeccable/scripts/pin.mjs": {
+    "mtime": 1780477668.8640845,
     "ast_hash": "867ca7fdded9987e84a128a3b4fb6bab",
-    "semantic_hash": "867ca7fdded9987e84a128a3b4fb6bab"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/cmd/cli.go": {
-    "mtime": 1780802100.5452702,
+  "cmd/cli.go": {
+    "mtime": 1780818839.9343755,
     "ast_hash": "6ca2e725532a98ad10bc3c0831ebbeaf",
-    "semantic_hash": "6ca2e725532a98ad10bc3c0831ebbeaf"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/cmd/embed.go": {
-    "mtime": 1780802100.5455642,
+  "cmd/embed.go": {
+    "mtime": 1780477668.868502,
     "ast_hash": "5540df190367eeb67fe8f6ad81b64ab4",
-    "semantic_hash": "5540df190367eeb67fe8f6ad81b64ab4"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/cmd/main.go": {
-    "mtime": 1780802100.546354,
+  "cmd/main.go": {
+    "mtime": 1780818839.9345865,
     "ast_hash": "fe4a0a153f404ab247b56ed382045a31",
-    "semantic_hash": "fe4a0a153f404ab247b56ed382045a31"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/docs/docs.go": {
-    "mtime": 1780802100.547784,
+  "docs/docs.go": {
+    "mtime": 1780818839.9354641,
     "ast_hash": "89dd5d9a9d06e045e1a5533dfa3b57ad",
-    "semantic_hash": "89dd5d9a9d06e045e1a5533dfa3b57ad"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/docs/swagger.json": {
-    "mtime": 1780802100.5481925,
+  "docs/swagger.json": {
+    "mtime": 1780818839.9358902,
     "ast_hash": "0f53a23d19f97f177d4db1676e2113e2",
-    "semantic_hash": "0f53a23d19f97f177d4db1676e2113e2"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/e2e/panel.smoke.spec.ts": {
-    "mtime": 1780802100.5488963,
+  "frontend/e2e/panel.smoke.spec.ts": {
+    "mtime": 1780477668.8717282,
     "ast_hash": "8defdb5925735382a831a65f55fa8480",
-    "semantic_hash": "8defdb5925735382a831a65f55fa8480"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/package.json": {
-    "mtime": 1780802100.5501544,
+  "frontend/package.json": {
+    "mtime": 1780477668.8731303,
     "ast_hash": "ba79681b2f9379a9f7f332ca921102e5",
-    "semantic_hash": "ba79681b2f9379a9f7f332ca921102e5"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/playwright.config.ts": {
-    "mtime": 1780802100.5504656,
+  "frontend/playwright.config.ts": {
+    "mtime": 1780477668.8736067,
     "ast_hash": "77c8746c65305bcf87e2af370c131b4c",
-    "semantic_hash": "77c8746c65305bcf87e2af370c131b4c"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/App.tsx": {
-    "mtime": 1780802100.5522366,
+  "frontend/src/App.tsx": {
+    "mtime": 1780818839.9364057,
     "ast_hash": "3b8d1610c592031b7fbd68df0085880d",
-    "semantic_hash": "3b8d1610c592031b7fbd68df0085880d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/api/apiTokens.ts": {
-    "mtime": 1780802100.5526984,
+  "frontend/src/api/apiTokens.ts": {
+    "mtime": 1780477668.8763804,
     "ast_hash": "94195bfe4cca8cb983cfde52d6ccd848",
-    "semantic_hash": "94195bfe4cca8cb983cfde52d6ccd848"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/api/auth.ts": {
-    "mtime": 1780802100.5531976,
+  "frontend/src/api/auth.ts": {
+    "mtime": 1780477668.8766353,
     "ast_hash": "2781f86a157e1adbccfc05df527e64e6",
-    "semantic_hash": "2781f86a157e1adbccfc05df527e64e6"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/api/client.ts": {
-    "mtime": 1780802100.55352,
+  "frontend/src/api/client.ts": {
+    "mtime": 1780477668.8770432,
     "ast_hash": "4013d20eb1b4540dc48f1598b95c110c",
-    "semantic_hash": "4013d20eb1b4540dc48f1598b95c110c"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/api/clients.ts": {
-    "mtime": 1780802100.5538661,
+  "frontend/src/api/clients.ts": {
+    "mtime": 1780818839.9365773,
     "ast_hash": "d9eba4a230fd66063bc25583142d2884",
-    "semantic_hash": "d9eba4a230fd66063bc25583142d2884"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/api/core.ts": {
-    "mtime": 1780802100.554037,
+  "frontend/src/api/core.ts": {
+    "mtime": 1780477668.8775444,
     "ast_hash": "c5e7f3bbd1993fc5b4e9cdd46d752c7f",
-    "semantic_hash": "c5e7f3bbd1993fc5b4e9cdd46d752c7f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/api/dashboard.ts": {
-    "mtime": 1780802100.55419,
+  "frontend/src/api/dashboard.ts": {
+    "mtime": 1780477668.8776343,
     "ast_hash": "9a8bcbbdf096a05e9cdf79ee7f78d90d",
-    "semantic_hash": "9a8bcbbdf096a05e9cdf79ee7f78d90d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/api/health.ts": {
-    "mtime": 1780802100.5543075,
+  "frontend/src/api/health.ts": {
+    "mtime": 1780477668.8777232,
     "ast_hash": "8d7adc8a6c2bcf7c5586b8efda87c5f3",
-    "semantic_hash": "8d7adc8a6c2bcf7c5586b8efda87c5f3"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/api/inbounds.ts": {
-    "mtime": 1780802100.55465,
+  "frontend/src/api/inbounds.ts": {
+    "mtime": 1780818839.9367452,
     "ast_hash": "9452161c3e54c769f4cecd6ff3baced3",
-    "semantic_hash": "9452161c3e54c769f4cecd6ff3baced3"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/api/index.ts": {
-    "mtime": 1780802100.5551314,
+  "frontend/src/api/index.ts": {
+    "mtime": 1780818839.936908,
     "ast_hash": "e24eb4386a65da48f66f5da31eaf4d41",
-    "semantic_hash": "e24eb4386a65da48f66f5da31eaf4d41"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/api/logs.ts": {
-    "mtime": 1780802100.5555866,
+  "frontend/src/api/logs.ts": {
+    "mtime": 1780818839.9370937,
     "ast_hash": "668403f149d657ac3af23f8df9c32d4f",
-    "semantic_hash": "668403f149d657ac3af23f8df9c32d4f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/api/nodes.ts": {
-    "mtime": 1780802100.556011,
+  "frontend/src/api/nodes.ts": {
+    "mtime": 1780477668.8788223,
     "ast_hash": "517b265b6a4175b4313c8b3e9d543622",
-    "semantic_hash": "517b265b6a4175b4313c8b3e9d543622"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/api/panel.ts": {
-    "mtime": 1780802100.5563931,
+  "frontend/src/api/panel.ts": {
+    "mtime": 1780818839.937272,
     "ast_hash": "4f672276f5399a8ff180e6c1eadab150",
-    "semantic_hash": "4f672276f5399a8ff180e6c1eadab150"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/api/scheduled-tasks.ts": {
-    "mtime": 1780802100.5568142,
+  "frontend/src/api/scheduled-tasks.ts": {
+    "mtime": 1780477668.8791745,
     "ast_hash": "ec0c233c5f46481e91d23ccd89f43657",
-    "semantic_hash": "ec0c233c5f46481e91d23ccd89f43657"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/api/settings.ts": {
-    "mtime": 1780802100.55727,
+  "frontend/src/api/settings.ts": {
+    "mtime": 1780477668.8795838,
     "ast_hash": "4de0c3cbc875ae5bb3455fcaa4385180",
-    "semantic_hash": "4de0c3cbc875ae5bb3455fcaa4385180"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/api/types.test.ts": {
-    "mtime": 1780802100.5576105,
+  "frontend/src/api/types.test.ts": {
+    "mtime": 1780477668.8798676,
     "ast_hash": "fc371f6ea79a8fdd5672fd1e07cdd6ea",
-    "semantic_hash": "fc371f6ea79a8fdd5672fd1e07cdd6ea"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/api/types.ts": {
-    "mtime": 1780802100.5579896,
+  "frontend/src/api/types.ts": {
+    "mtime": 1780818839.9374778,
     "ast_hash": "abce43d462658f6ff9ff327380676115",
-    "semantic_hash": "abce43d462658f6ff9ff327380676115"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/auth/require-auth.tsx": {
-    "mtime": 1780802100.5585063,
+  "frontend/src/components/auth/require-auth.tsx": {
+    "mtime": 1780477668.8808098,
     "ast_hash": "2b924ec0b7ebc0f20e69fade90e9ddd5",
-    "semantic_hash": "2b924ec0b7ebc0f20e69fade90e9ddd5"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/auth/two-factor-disable-modal.tsx": {
-    "mtime": 1780802100.558888,
+  "frontend/src/components/auth/two-factor-disable-modal.tsx": {
+    "mtime": 1780477668.881125,
     "ast_hash": "3adf86a3e1c7938e70e6337adddc85ee",
-    "semantic_hash": "3adf86a3e1c7938e70e6337adddc85ee"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/auth/two-factor-setup-modal.tsx": {
-    "mtime": 1780802100.5593622,
+  "frontend/src/components/auth/two-factor-setup-modal.tsx": {
+    "mtime": 1780477668.8814945,
     "ast_hash": "36141e88f68f675132480fe08d23923a",
-    "semantic_hash": "36141e88f68f675132480fe08d23923a"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/clients/add-client-modal.test.tsx": {
-    "mtime": 1780802100.559755,
+  "frontend/src/components/clients/add-client-modal.test.tsx": {
+    "mtime": 1780818839.9376304,
     "ast_hash": "147e90209eedbd0a4686650f7d690596",
-    "semantic_hash": "147e90209eedbd0a4686650f7d690596"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/clients/add-client-modal.tsx": {
-    "mtime": 1780802100.5600774,
+  "frontend/src/components/clients/add-client-modal.tsx": {
+    "mtime": 1780818839.93784,
     "ast_hash": "14e9c3d0dc0b7c4e6f92f46bdbb422b6",
-    "semantic_hash": "14e9c3d0dc0b7c4e6f92f46bdbb422b6"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/clients/client-detail-modal.tsx": {
-    "mtime": 1780802100.5604188,
+  "frontend/src/components/clients/client-detail-modal.tsx": {
+    "mtime": 1780818839.9380434,
     "ast_hash": "0eb8e51590a4c32e5d320cc8f9d53f23",
-    "semantic_hash": "0eb8e51590a4c32e5d320cc8f9d53f23"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/clients/client-filter-bar.tsx": {
-    "mtime": 1780802100.5608404,
+  "frontend/src/components/clients/client-filter-bar.tsx": {
+    "mtime": 1780818839.938258,
     "ast_hash": "fb21759967211ddaf50061961a3a305b",
-    "semantic_hash": "fb21759967211ddaf50061961a3a305b"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/clients/clients-table.tsx": {
-    "mtime": 1780802100.5613067,
+  "frontend/src/components/clients/clients-table.tsx": {
+    "mtime": 1780818839.938512,
     "ast_hash": "131f464a08c594f94d626ad0ebb48a5a",
-    "semantic_hash": "131f464a08c594f94d626ad0ebb48a5a"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/clients/qr-modal.tsx": {
-    "mtime": 1780802100.561797,
+  "frontend/src/components/clients/qr-modal.tsx": {
+    "mtime": 1780477668.8831253,
     "ast_hash": "d404bf97295afbaca0b4d059e370fc4a",
-    "semantic_hash": "d404bf97295afbaca0b4d059e370fc4a"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/dashboard/connections-panel.tsx": {
-    "mtime": 1780802100.562312,
+  "frontend/src/components/dashboard/connections-panel.tsx": {
+    "mtime": 1780477668.8833246,
     "ast_hash": "07c4cb71088d8811b34b776f4e3da5f2",
-    "semantic_hash": "07c4cb71088d8811b34b776f4e3da5f2"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/dashboard/glass-strip.test.tsx": {
-    "mtime": 1780802100.5625808,
+  "frontend/src/components/dashboard/glass-strip.test.tsx": {
+    "mtime": 1780477668.8837001,
     "ast_hash": "f5f58a357e6dd4616d17763a2013933a",
-    "semantic_hash": "f5f58a357e6dd4616d17763a2013933a"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/dashboard/glass-strip.tsx": {
-    "mtime": 1780802100.5629387,
+  "frontend/src/components/dashboard/glass-strip.tsx": {
+    "mtime": 1780477668.8840628,
     "ast_hash": "a07ed0db0d4820937d279f51d47e2537",
-    "semantic_hash": "a07ed0db0d4820937d279f51d47e2537"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/dashboard/metric-card.tsx": {
-    "mtime": 1780802100.5632458,
+  "frontend/src/components/dashboard/metric-card.tsx": {
+    "mtime": 1780477668.884408,
     "ast_hash": "1d107475e1b8c56d2ed44842606862e4",
-    "semantic_hash": "1d107475e1b8c56d2ed44842606862e4"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/dashboard/panel-version-card.test.tsx": {
-    "mtime": 1780802100.5637028,
+  "frontend/src/components/dashboard/panel-version-card.test.tsx": {
+    "mtime": 1780818839.9386635,
     "ast_hash": "ec0b26da02f200830e69179b6d96ef6e",
-    "semantic_hash": "ec0b26da02f200830e69179b6d96ef6e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/dashboard/panel-version-card.tsx": {
-    "mtime": 1780802100.5640364,
+  "frontend/src/components/dashboard/panel-version-card.tsx": {
+    "mtime": 1780818839.93882,
     "ast_hash": "6edf610d3d4f0e3e69e20ee987c6054e",
-    "semantic_hash": "6edf610d3d4f0e3e69e20ee987c6054e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/dashboard/quick-links.tsx": {
-    "mtime": 1780802100.56448,
+  "frontend/src/components/dashboard/quick-links.tsx": {
+    "mtime": 1780477668.8848205,
     "ast_hash": "b3dc15f904ebccfa5de07914794f386d",
-    "semantic_hash": "b3dc15f904ebccfa5de07914794f386d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/dashboard/traffic-chart.tsx": {
-    "mtime": 1780802100.5647516,
+  "frontend/src/components/dashboard/traffic-chart.tsx": {
+    "mtime": 1780477668.884984,
     "ast_hash": "59e9614359881ce12fb3a7cad2a26e37",
-    "semantic_hash": "59e9614359881ce12fb3a7cad2a26e37"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/inbounds/inbound-form-modal.test.tsx": {
-    "mtime": 1780802100.5650527,
+  "frontend/src/components/inbounds/inbound-form-modal.test.tsx": {
+    "mtime": 1780818839.9389493,
     "ast_hash": "f37c43db148ee36e039ece1954be8158",
-    "semantic_hash": "f37c43db148ee36e039ece1954be8158"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/inbounds/inbound-form-modal.tsx": {
-    "mtime": 1780802100.5653675,
+  "frontend/src/components/inbounds/inbound-form-modal.tsx": {
+    "mtime": 1780818839.9392912,
     "ast_hash": "5016bcfff970641cbe8fcb7a43432364",
-    "semantic_hash": "5016bcfff970641cbe8fcb7a43432364"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/inbounds/inbound-row.tsx": {
-    "mtime": 1780802100.5656981,
+  "frontend/src/components/inbounds/inbound-row.tsx": {
+    "mtime": 1780818839.9395516,
     "ast_hash": "494d8a82bddef189d1f4f326b0b51eb6",
-    "semantic_hash": "494d8a82bddef189d1f4f326b0b51eb6"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/inbounds/inbounds-list.tsx": {
-    "mtime": 1780802100.565959,
+  "frontend/src/components/inbounds/inbounds-list.tsx": {
+    "mtime": 1780818839.939723,
     "ast_hash": "b5c247f9a7e0f51da751c8624a406439",
-    "semantic_hash": "b5c247f9a7e0f51da751c8624a406439"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/logs/frontend-error-reporter.tsx": {
-    "mtime": 1780802100.5662937,
+  "frontend/src/components/logs/frontend-error-reporter.tsx": {
+    "mtime": 1780818839.9398458,
     "ast_hash": "a60111ecd1bf20ef45616258915c7df1",
-    "semantic_hash": "a60111ecd1bf20ef45616258915c7df1"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/logs/log-filter-bar.tsx": {
-    "mtime": 1780802100.5665557,
+  "frontend/src/components/logs/log-filter-bar.tsx": {
+    "mtime": 1780818839.9399965,
     "ast_hash": "47f9092dd2318b3face5ff093fa27d43",
-    "semantic_hash": "47f9092dd2318b3face5ff093fa27d43"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/logs/log-viewer.tsx": {
-    "mtime": 1780802100.5668972,
+  "frontend/src/components/logs/log-viewer.tsx": {
+    "mtime": 1780818839.9401805,
     "ast_hash": "cd0fb7b49e55636a2663af82d237d0ad",
-    "semantic_hash": "cd0fb7b49e55636a2663af82d237d0ad"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/settings/scheduled-task-list.tsx": {
-    "mtime": 1780802100.5672839,
+  "frontend/src/components/settings/scheduled-task-list.tsx": {
+    "mtime": 1780477668.886984,
     "ast_hash": "fe6fb27c49654ffc4cf192cdfa833206",
-    "semantic_hash": "fe6fb27c49654ffc4cf192cdfa833206"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/shell/page-transition.tsx": {
-    "mtime": 1780802100.567594,
+  "frontend/src/components/shell/page-transition.tsx": {
+    "mtime": 1780477668.8873792,
     "ast_hash": "98c264e481e827fa32fb589f78e028ed",
-    "semantic_hash": "98c264e481e827fa32fb589f78e028ed"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/shell/sidebar.tsx": {
-    "mtime": 1780802100.567887,
+  "frontend/src/components/shell/sidebar.tsx": {
+    "mtime": 1780477668.8877852,
     "ast_hash": "6bc5e3ce86b770e2bb3c320130ccae95",
-    "semantic_hash": "6bc5e3ce86b770e2bb3c320130ccae95"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/ui/accordion.tsx": {
-    "mtime": 1780802100.568243,
+  "frontend/src/components/ui/accordion.tsx": {
+    "mtime": 1780477668.8883235,
     "ast_hash": "c41c7dece6eb3478db4d8222a1cb6d08",
-    "semantic_hash": "c41c7dece6eb3478db4d8222a1cb6d08"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/ui/animated-number.tsx": {
-    "mtime": 1780802100.5685537,
+  "frontend/src/components/ui/animated-number.tsx": {
+    "mtime": 1780477668.8886936,
     "ast_hash": "38d882d1bb5d6cb288e6625364048094",
-    "semantic_hash": "38d882d1bb5d6cb288e6625364048094"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/ui/button.tsx": {
-    "mtime": 1780802100.5688543,
+  "frontend/src/components/ui/button.tsx": {
+    "mtime": 1780477668.8890455,
     "ast_hash": "cdc2f26e3b25318239a9442d2258d994",
-    "semantic_hash": "cdc2f26e3b25318239a9442d2258d994"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/ui/card.tsx": {
-    "mtime": 1780802100.569116,
+  "frontend/src/components/ui/card.tsx": {
+    "mtime": 1780477668.8893223,
     "ast_hash": "97261722cfcfc8c1b94d2239546e7d33",
-    "semantic_hash": "97261722cfcfc8c1b94d2239546e7d33"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/ui/fake-qr.tsx": {
-    "mtime": 1780802100.569414,
+  "frontend/src/components/ui/fake-qr.tsx": {
+    "mtime": 1780477668.8896053,
     "ast_hash": "d71f6ab8d37a122c11f30296fcfdb632",
-    "semantic_hash": "d71f6ab8d37a122c11f30296fcfdb632"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/ui/input.tsx": {
-    "mtime": 1780802100.5696952,
+  "frontend/src/components/ui/input.tsx": {
+    "mtime": 1780477668.890049,
     "ast_hash": "1564062e87388065082e810c940b5954",
-    "semantic_hash": "1564062e87388065082e810c940b5954"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/ui/modal.tsx": {
-    "mtime": 1780802100.569886,
+  "frontend/src/components/ui/modal.tsx": {
+    "mtime": 1780818839.9404209,
     "ast_hash": "883e1ff56a06e0569d3ab31f4159fed4",
-    "semantic_hash": "883e1ff56a06e0569d3ab31f4159fed4"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/ui/progress.tsx": {
-    "mtime": 1780802100.5701516,
+  "frontend/src/components/ui/progress.tsx": {
+    "mtime": 1780477668.890702,
     "ast_hash": "1b970bcb521b262edd62f31fe4631bc9",
-    "semantic_hash": "1b970bcb521b262edd62f31fe4631bc9"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/ui/qr-code.tsx": {
-    "mtime": 1780802100.5704055,
+  "frontend/src/components/ui/qr-code.tsx": {
+    "mtime": 1780477668.891027,
     "ast_hash": "f2c97ab5c5f9c8d7c54a5050a02b222d",
-    "semantic_hash": "f2c97ab5c5f9c8d7c54a5050a02b222d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/ui/select.test.tsx": {
-    "mtime": 1780802100.570713,
+  "frontend/src/components/ui/select.test.tsx": {
+    "mtime": 1780477668.8913145,
     "ast_hash": "b8b809df4def21c9b68d43c6828e627f",
-    "semantic_hash": "b8b809df4def21c9b68d43c6828e627f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/ui/select.tsx": {
-    "mtime": 1780802100.5710545,
+  "frontend/src/components/ui/select.tsx": {
+    "mtime": 1780477668.8916743,
     "ast_hash": "7faa39e600b54bc36c0056578ceb7754",
-    "semantic_hash": "7faa39e600b54bc36c0056578ceb7754"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/ui/status-dot.tsx": {
-    "mtime": 1780802100.5713227,
+  "frontend/src/components/ui/status-dot.tsx": {
+    "mtime": 1780477668.8919506,
     "ast_hash": "74e27ace9e14d8898e6bdebadaa9c10f",
-    "semantic_hash": "74e27ace9e14d8898e6bdebadaa9c10f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/ui/tabs.tsx": {
-    "mtime": 1780802100.57162,
+  "frontend/src/components/ui/tabs.tsx": {
+    "mtime": 1780477668.892238,
     "ast_hash": "22b9aa0fe918f878d74ad315e46401bc",
-    "semantic_hash": "22b9aa0fe918f878d74ad315e46401bc"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/ui/toast.tsx": {
-    "mtime": 1780802100.5718803,
+  "frontend/src/components/ui/toast.tsx": {
+    "mtime": 1780477668.8925126,
     "ast_hash": "814917cfb61f9b6f7719fdcc985361e2",
-    "semantic_hash": "814917cfb61f9b6f7719fdcc985361e2"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/ui/toaster.test.tsx": {
-    "mtime": 1780802100.5721383,
+  "frontend/src/components/ui/toaster.test.tsx": {
+    "mtime": 1780477668.8927956,
     "ast_hash": "42d5b7a12fb85c4e624353d1a14cfdd6",
-    "semantic_hash": "42d5b7a12fb85c4e624353d1a14cfdd6"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/ui/toaster.tsx": {
-    "mtime": 1780802100.5723815,
+  "frontend/src/components/ui/toaster.tsx": {
+    "mtime": 1780477668.8931942,
     "ast_hash": "b2fbf3648c030ad5e9c2013fd2c9d5b0",
-    "semantic_hash": "b2fbf3648c030ad5e9c2013fd2c9d5b0"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/components/ui/toggle.tsx": {
-    "mtime": 1780802100.5726378,
+  "frontend/src/components/ui/toggle.tsx": {
+    "mtime": 1780477668.8934796,
     "ast_hash": "1e6c6f7447f60f1037fb97ee5be0a28d",
-    "semantic_hash": "1e6c6f7447f60f1037fb97ee5be0a28d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/hooks/useClientFilter.ts": {
-    "mtime": 1780802100.5729523,
+  "frontend/src/hooks/useClientFilter.ts": {
+    "mtime": 1780477668.893939,
     "ast_hash": "b4ba58f2be9e5986437880585a739313",
-    "semantic_hash": "b4ba58f2be9e5986437880585a739313"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/hooks/useCopyToClipboard.ts": {
-    "mtime": 1780802100.5733025,
+  "frontend/src/hooks/useCopyToClipboard.ts": {
+    "mtime": 1780477668.894328,
     "ast_hash": "9df3efefa3994c7ceeded79d97f367be",
-    "semantic_hash": "9df3efefa3994c7ceeded79d97f367be"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/hooks/useDisclosure.ts": {
-    "mtime": 1780802100.5735822,
+  "frontend/src/hooks/useDisclosure.ts": {
+    "mtime": 1780477668.8946364,
     "ast_hash": "fdbc1aedebba9a0000751f5b8fad454e",
-    "semantic_hash": "fdbc1aedebba9a0000751f5b8fad454e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/hooks/useInboundForm.ts": {
-    "mtime": 1780802100.57393,
+  "frontend/src/hooks/useInboundForm.ts": {
+    "mtime": 1780818839.9407392,
     "ast_hash": "d406b82aaadc7177ff10864b11c3ff24",
-    "semantic_hash": "d406b82aaadc7177ff10864b11c3ff24"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/hooks/useLogFilter.test.ts": {
-    "mtime": 1780802100.57421,
+  "frontend/src/hooks/useLogFilter.test.ts": {
+    "mtime": 1780818839.940922,
     "ast_hash": "b8bde83fdec530d62567a46bd78171f7",
-    "semantic_hash": "b8bde83fdec530d62567a46bd78171f7"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/hooks/useLogFilter.ts": {
-    "mtime": 1780802100.5744631,
+  "frontend/src/hooks/useLogFilter.ts": {
+    "mtime": 1780818839.9411075,
     "ast_hash": "cd5d147f07ccf02ce30c24847e049943",
-    "semantic_hash": "cd5d147f07ccf02ce30c24847e049943"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/lib/auth.tsx": {
-    "mtime": 1780802100.5752347,
+  "frontend/src/lib/auth.tsx": {
+    "mtime": 1780477668.8959358,
     "ast_hash": "2fdf1495bb7bdd7109386cd3645b2933",
-    "semantic_hash": "2fdf1495bb7bdd7109386cd3645b2933"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/lib/format.ts": {
-    "mtime": 1780802100.5755677,
+  "frontend/src/lib/format.ts": {
+    "mtime": 1780477668.8963053,
     "ast_hash": "9156a84a507ff1e01eefba0aaaf9a01f",
-    "semantic_hash": "9156a84a507ff1e01eefba0aaaf9a01f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/lib/i18n.test.tsx": {
-    "mtime": 1780802100.575956,
+  "frontend/src/lib/i18n.test.tsx": {
+    "mtime": 1780477668.8965611,
     "ast_hash": "6c6771b18b5e6546b91de42118341d1b",
-    "semantic_hash": "6c6771b18b5e6546b91de42118341d1b"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/lib/i18n.tsx": {
-    "mtime": 1780802100.5763404,
+  "frontend/src/lib/i18n.tsx": {
+    "mtime": 1780818839.941468,
     "ast_hash": "a81da745d8348e41a7068290820c21f8",
-    "semantic_hash": "a81da745d8348e41a7068290820c21f8"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/lib/motion.ts": {
-    "mtime": 1780802100.5766697,
+  "frontend/src/lib/motion.ts": {
+    "mtime": 1780818839.9416735,
     "ast_hash": "d0ad48b619321c8697d3036e1f9d304e",
-    "semantic_hash": "d0ad48b619321c8697d3036e1f9d304e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/lib/random.ts": {
-    "mtime": 1780802100.577141,
+  "frontend/src/lib/random.ts": {
+    "mtime": 1780477668.8975158,
     "ast_hash": "a9e2bb34f76da7291415716d7a82dcdb",
-    "semantic_hash": "a9e2bb34f76da7291415716d7a82dcdb"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/lib/store.tsx": {
-    "mtime": 1780802100.5774703,
+  "frontend/src/lib/store.tsx": {
+    "mtime": 1780818839.9419014,
     "ast_hash": "880e052011e880eee96c10698c09ffbe",
-    "semantic_hash": "880e052011e880eee96c10698c09ffbe"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/lib/utils.ts": {
-    "mtime": 1780802100.577742,
+  "frontend/src/lib/utils.ts": {
+    "mtime": 1780818839.9421184,
     "ast_hash": "fb45092a28b9aa1736aa6ea48bc8f608",
-    "semantic_hash": "fb45092a28b9aa1736aa6ea48bc8f608"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/main.tsx": {
-    "mtime": 1780802100.5780575,
+  "frontend/src/main.tsx": {
+    "mtime": 1780477668.8986247,
     "ast_hash": "e6e376de975895c0370837f5651ff637",
-    "semantic_hash": "e6e376de975895c0370837f5651ff637"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/pages/ClientsPage.test.tsx": {
-    "mtime": 1780802100.5784652,
+  "frontend/src/pages/ClientsPage.test.tsx": {
+    "mtime": 1780818839.9423292,
     "ast_hash": "f61dcd11b35e364ccc576f8bdcc86259",
-    "semantic_hash": "f61dcd11b35e364ccc576f8bdcc86259"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/pages/ClientsPage.tsx": {
-    "mtime": 1780802100.578701,
+  "frontend/src/pages/ClientsPage.tsx": {
+    "mtime": 1780818839.9425058,
     "ast_hash": "9e230e697979e7ee387a4cf6c714e62d",
-    "semantic_hash": "9e230e697979e7ee387a4cf6c714e62d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/pages/DashboardPage.test.tsx": {
-    "mtime": 1780802100.5789533,
+  "frontend/src/pages/DashboardPage.test.tsx": {
+    "mtime": 1780477668.8992965,
     "ast_hash": "b522a75961790107cbd4e7ae9ac03404",
-    "semantic_hash": "b522a75961790107cbd4e7ae9ac03404"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/pages/DashboardPage.tsx": {
-    "mtime": 1780802100.5791311,
+  "frontend/src/pages/DashboardPage.tsx": {
+    "mtime": 1780818839.9426672,
     "ast_hash": "bd2b662af307c7fd506d573cef2699a9",
-    "semantic_hash": "bd2b662af307c7fd506d573cef2699a9"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/pages/InboundsPage.test.tsx": {
-    "mtime": 1780802100.579225,
+  "frontend/src/pages/InboundsPage.test.tsx": {
+    "mtime": 1780477668.8996453,
     "ast_hash": "dd664b279bf87e11100171795708bbc3",
-    "semantic_hash": "dd664b279bf87e11100171795708bbc3"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/pages/InboundsPage.tsx": {
-    "mtime": 1780802100.5793166,
+  "frontend/src/pages/InboundsPage.tsx": {
+    "mtime": 1780477668.8997366,
     "ast_hash": "515370b470b57c2fb8a55c29dd7cbeb1",
-    "semantic_hash": "515370b470b57c2fb8a55c29dd7cbeb1"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/pages/LoginPage.tsx": {
-    "mtime": 1780802100.5796273,
+  "frontend/src/pages/LoginPage.tsx": {
+    "mtime": 1780477668.9000435,
     "ast_hash": "b57ce0ea0e695cf92ec68a1ab350b82d",
-    "semantic_hash": "b57ce0ea0e695cf92ec68a1ab350b82d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/pages/LogsPage.tsx": {
-    "mtime": 1780802100.5798385,
+  "frontend/src/pages/LogsPage.tsx": {
+    "mtime": 1780818839.9428332,
     "ast_hash": "e0482ce008289f295e278cbec606eedc",
-    "semantic_hash": "e0482ce008289f295e278cbec606eedc"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/pages/NodesPage.tsx": {
-    "mtime": 1780802100.5801792,
+  "frontend/src/pages/NodesPage.tsx": {
+    "mtime": 1780477668.9008007,
     "ast_hash": "412bb8b0fe08908d96e705560fb8090a",
-    "semantic_hash": "412bb8b0fe08908d96e705560fb8090a"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/pages/PanelLayout.tsx": {
-    "mtime": 1780802100.5802894,
+  "frontend/src/pages/PanelLayout.tsx": {
+    "mtime": 1780477668.9008965,
     "ast_hash": "6dd0bd980dbbc9c919a7572de272fc92",
-    "semantic_hash": "6dd0bd980dbbc9c919a7572de272fc92"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/pages/SettingsPage.test.tsx": {
-    "mtime": 1780802100.5805452,
+  "frontend/src/pages/SettingsPage.test.tsx": {
+    "mtime": 1780477668.9011455,
     "ast_hash": "cff57463a9fbbb64e75cd2d66339732d",
-    "semantic_hash": "cff57463a9fbbb64e75cd2d66339732d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/pages/SettingsPage.tsx": {
-    "mtime": 1780802100.5808346,
+  "frontend/src/pages/SettingsPage.tsx": {
+    "mtime": 1780477668.9014375,
     "ast_hash": "1cebb720320b85902b9a678920b22059",
-    "semantic_hash": "1cebb720320b85902b9a678920b22059"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/test/setup.ts": {
-    "mtime": 1780802100.5809727,
+  "frontend/src/test/setup.ts": {
+    "mtime": 1780477668.901572,
     "ast_hash": "22fe5d8628562270ef5c905062f76605",
-    "semantic_hash": "22fe5d8628562270ef5c905062f76605"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/test/test-utils.tsx": {
-    "mtime": 1780802100.581204,
+  "frontend/src/test/test-utils.tsx": {
+    "mtime": 1780477668.9019232,
     "ast_hash": "76939751a1e01c6e1ae64691401c0651",
-    "semantic_hash": "76939751a1e01c6e1ae64691401c0651"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/src/vite-env.d.ts": {
-    "mtime": 1780802100.5814867,
+  "frontend/src/vite-env.d.ts": {
+    "mtime": 1780477668.9021578,
     "ast_hash": "0352474ba2918efe13895edbc3780d94",
-    "semantic_hash": "0352474ba2918efe13895edbc3780d94"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/tailwind.config.ts": {
-    "mtime": 1780802100.5818274,
+  "frontend/tailwind.config.ts": {
+    "mtime": 1780477668.9024487,
     "ast_hash": "6dc734acb772cc118072c96fc76025b8",
-    "semantic_hash": "6dc734acb772cc118072c96fc76025b8"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/tsconfig.json": {
-    "mtime": 1780802100.5821562,
+  "frontend/tsconfig.json": {
+    "mtime": 1780477668.9027913,
     "ast_hash": "38c641350d3a76d53f25a057555c97f8",
-    "semantic_hash": "38c641350d3a76d53f25a057555c97f8"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/tsconfig.node.json": {
-    "mtime": 1780802100.582401,
+  "frontend/tsconfig.node.json": {
+    "mtime": 1780477668.9029748,
     "ast_hash": "e5e9913281fba2856115a81545818362",
-    "semantic_hash": "e5e9913281fba2856115a81545818362"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/vite.config.ts": {
-    "mtime": 1780802100.5827417,
+  "frontend/vite.config.ts": {
+    "mtime": 1780477668.903271,
     "ast_hash": "32c9f980232c88db00511ebe5e7c9f0a",
-    "semantic_hash": "32c9f980232c88db00511ebe5e7c9f0a"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/config/config.go": {
-    "mtime": 1780802100.5840104,
+  "internal/config/config.go": {
+    "mtime": 1780818839.943409,
     "ast_hash": "f557d9cf30ede22d4e113a54e7686f82",
-    "semantic_hash": "f557d9cf30ede22d4e113a54e7686f82"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/domain/admin.go": {
-    "mtime": 1780802100.5845087,
+  "internal/domain/admin.go": {
+    "mtime": 1780477668.9049914,
     "ast_hash": "f5574e78e49d9d5be5d16e8952c18738",
-    "semantic_hash": "f5574e78e49d9d5be5d16e8952c18738"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/domain/client.go": {
-    "mtime": 1780802100.5851831,
+  "internal/domain/client.go": {
+    "mtime": 1780818839.9435804,
     "ast_hash": "93f6598b02abf477c72384402f4d00d6",
-    "semantic_hash": "93f6598b02abf477c72384402f4d00d6"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/domain/config_revision.go": {
-    "mtime": 1780802100.5855467,
+  "internal/domain/config_revision.go": {
+    "mtime": 1780477668.9062297,
     "ast_hash": "7c21871619e49ef3be6eb7b16ef4c54b",
-    "semantic_hash": "7c21871619e49ef3be6eb7b16ef4c54b"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/domain/inbound.go": {
-    "mtime": 1780802100.5858235,
+  "internal/domain/inbound.go": {
+    "mtime": 1780818839.9437952,
     "ast_hash": "7615899e46f2ba581e4a07f7cfd23512",
-    "semantic_hash": "7615899e46f2ba581e4a07f7cfd23512"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/domain/metrics.go": {
-    "mtime": 1780802100.5861905,
+  "internal/domain/metrics.go": {
+    "mtime": 1780477668.906908,
     "ast_hash": "f4d613a63143cc9dcc45a49254caef9b",
-    "semantic_hash": "f4d613a63143cc9dcc45a49254caef9b"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/domain/node.go": {
-    "mtime": 1780802100.5865438,
+  "internal/domain/node.go": {
+    "mtime": 1780477668.9075127,
     "ast_hash": "0a1dec42688415497e931a3a51e3f746",
-    "semantic_hash": "0a1dec42688415497e931a3a51e3f746"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/domain/scheduled_task.go": {
-    "mtime": 1780802100.5868146,
+  "internal/domain/scheduled_task.go": {
+    "mtime": 1780477668.907908,
     "ast_hash": "17608ab14b13118c28f8d334082a44b0",
-    "semantic_hash": "17608ab14b13118c28f8d334082a44b0"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/domain/setting.go": {
-    "mtime": 1780802100.587093,
+  "internal/domain/setting.go": {
+    "mtime": 1780477668.908273,
     "ast_hash": "d5216dbc766045c2001dd93e1e73cde5",
-    "semantic_hash": "d5216dbc766045c2001dd93e1e73cde5"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/lib/auth/argon2.go": {
-    "mtime": 1780802100.587622,
+  "internal/lib/auth/argon2.go": {
+    "mtime": 1780477668.9089272,
     "ast_hash": "4dde86ad7e0ab2d7e55648524754bcdc",
-    "semantic_hash": "4dde86ad7e0ab2d7e55648524754bcdc"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/lib/auth/jwt.go": {
-    "mtime": 1780802100.5877314,
+  "internal/lib/auth/jwt.go": {
+    "mtime": 1780477668.9090564,
     "ast_hash": "db13cb0739f7e4b983930f8e04d6daf3",
-    "semantic_hash": "db13cb0739f7e4b983930f8e04d6daf3"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/lib/auth/totp.go": {
-    "mtime": 1780802100.588035,
+  "internal/lib/auth/totp.go": {
+    "mtime": 1780477668.9093914,
     "ast_hash": "d86c8ed4ae4e4edb0c29d823df6116b8",
-    "semantic_hash": "d86c8ed4ae4e4edb0c29d823df6116b8"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/lib/keys/keys.go": {
-    "mtime": 1780802100.588405,
+  "internal/lib/keys/keys.go": {
+    "mtime": 1780477668.9097955,
     "ast_hash": "fa47888e7adcedf6dcb6537c85da03bc",
-    "semantic_hash": "fa47888e7adcedf6dcb6537c85da03bc"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/lib/sl/slog.go": {
-    "mtime": 1780802100.5887687,
+  "internal/lib/sl/slog.go": {
+    "mtime": 1780477668.9103239,
     "ast_hash": "d7d3c320f078757ff8fb628605947a43",
-    "semantic_hash": "d7d3c320f078757ff8fb628605947a43"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/migrator/migrations/000001_create_admins.sql": {
-    "mtime": 1780802100.5893219,
+  "internal/repo/migrator/migrations/000001_create_admins.sql": {
+    "mtime": 1780477668.9109771,
     "ast_hash": "c1c0deb7e27e661aef26491926b0b078",
-    "semantic_hash": "c1c0deb7e27e661aef26491926b0b078"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/migrator/migrations/000002_create_recovery_codes.sql": {
-    "mtime": 1780802100.589661,
+  "internal/repo/migrator/migrations/000002_create_recovery_codes.sql": {
+    "mtime": 1780477668.911349,
     "ast_hash": "15ea08d27ade5e4ce9752b26d8866b13",
-    "semantic_hash": "15ea08d27ade5e4ce9752b26d8866b13"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/migrator/migrations/000003_create_inbounds.sql": {
-    "mtime": 1780802100.5900137,
+  "internal/repo/migrator/migrations/000003_create_inbounds.sql": {
+    "mtime": 1780477668.9116502,
     "ast_hash": "44bb05c23b521944e405e02115960a6b",
-    "semantic_hash": "44bb05c23b521944e405e02115960a6b"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/migrator/migrations/000004_create_clients.sql": {
-    "mtime": 1780802100.590326,
+  "internal/repo/migrator/migrations/000004_create_clients.sql": {
+    "mtime": 1780477668.9120448,
     "ast_hash": "5758a49de5dfddc660cd9f8427554474",
-    "semantic_hash": "5758a49de5dfddc660cd9f8427554474"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/migrator/migrations/000005_create_settings.sql": {
-    "mtime": 1780802100.5906901,
+  "internal/repo/migrator/migrations/000005_create_settings.sql": {
+    "mtime": 1780477668.9123502,
     "ast_hash": "07377cf68fa11da0bd485ba6a113137a",
-    "semantic_hash": "07377cf68fa11da0bd485ba6a113137a"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/migrator/migrations/000006_create_config_revisions.sql": {
-    "mtime": 1780802100.590919,
+  "internal/repo/migrator/migrations/000006_create_config_revisions.sql": {
+    "mtime": 1780477668.912697,
     "ast_hash": "c6f6e8d7ac7d079b395e8ce0d46deb60",
-    "semantic_hash": "c6f6e8d7ac7d079b395e8ce0d46deb60"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/migrator/migrations/000007_create_traffic_rollup.sql": {
-    "mtime": 1780802100.5911503,
+  "internal/repo/migrator/migrations/000007_create_traffic_rollup.sql": {
+    "mtime": 1780477668.9130425,
     "ast_hash": "eb964f8fc3d760a625ba1c4c07b31327",
-    "semantic_hash": "eb964f8fc3d760a625ba1c4c07b31327"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/migrator/migrations/000008_create_superpanel.sql": {
-    "mtime": 1780802100.59149,
+  "internal/repo/migrator/migrations/000008_create_superpanel.sql": {
+    "mtime": 1780477668.9133961,
     "ast_hash": "82a6e6583db1a4754408448887608e37",
-    "semantic_hash": "82a6e6583db1a4754408448887608e37"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/migrator/migrations/000009_create_scheduled_tasks.sql": {
-    "mtime": 1780802100.5918148,
+  "internal/repo/migrator/migrations/000009_create_scheduled_tasks.sql": {
+    "mtime": 1780477668.9137127,
     "ast_hash": "23aaaeb0d5e1f569951bb646334c7ab3",
-    "semantic_hash": "23aaaeb0d5e1f569951bb646334c7ab3"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/migrator/migrations/000010_add_client_last_used_at.sql": {
-    "mtime": 1780802100.5921166,
+  "internal/repo/migrator/migrations/000010_add_client_last_used_at.sql": {
+    "mtime": 1780818839.9439135,
     "ast_hash": "7a5c431646c945bec5f66f403f6e3c50",
-    "semantic_hash": "7a5c431646c945bec5f66f403f6e3c50"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/migrator/migrations/000011_add_node_skip_tls_verify.sql": {
-    "mtime": 1780802100.5924158,
+  "internal/repo/migrator/migrations/000011_add_node_skip_tls_verify.sql": {
+    "mtime": 1780818839.9440322,
     "ast_hash": "4f9149d98ad6c63cba3156bc5b7c4765",
-    "semantic_hash": "4f9149d98ad6c63cba3156bc5b7c4765"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/migrator/migrator.go": {
-    "mtime": 1780802100.5927045,
+  "internal/repo/migrator/migrator.go": {
+    "mtime": 1780477668.9143133,
     "ast_hash": "b236cfd4cd5aaef05bff1f1ee65815ff",
-    "semantic_hash": "b236cfd4cd5aaef05bff1f1ee65815ff"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/migrator/migrator_test.go": {
-    "mtime": 1780802100.5930264,
+  "internal/repo/migrator/migrator_test.go": {
+    "mtime": 1780818839.944217,
     "ast_hash": "959b6ff5ea07ef74464d6b0f818fb458",
-    "semantic_hash": "959b6ff5ea07ef74464d6b0f818fb458"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/sqlite/admin_repo.go": {
-    "mtime": 1780802100.593515,
+  "internal/repo/sqlite/admin_repo.go": {
+    "mtime": 1780477668.914771,
     "ast_hash": "76e31a0b38838588e3b438a92842b9c0",
-    "semantic_hash": "76e31a0b38838588e3b438a92842b9c0"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/sqlite/client_repo.go": {
-    "mtime": 1780802100.59429,
+  "internal/repo/sqlite/client_repo.go": {
+    "mtime": 1780818839.9445305,
     "ast_hash": "0d0708ba1fb1dd6b176fb9693dc1c3d3",
-    "semantic_hash": "0d0708ba1fb1dd6b176fb9693dc1c3d3"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/sqlite/config_revision_repo.go": {
-    "mtime": 1780802100.594518,
+  "internal/repo/sqlite/config_revision_repo.go": {
+    "mtime": 1780477668.9158528,
     "ast_hash": "558f6f50177cafaaa5953da6581ef0fd",
-    "semantic_hash": "558f6f50177cafaaa5953da6581ef0fd"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/sqlite/helpers.go": {
-    "mtime": 1780802100.5949574,
+  "internal/repo/sqlite/helpers.go": {
+    "mtime": 1780477668.9162138,
     "ast_hash": "261ee27d6d47239ea6199d4340f9f373",
-    "semantic_hash": "261ee27d6d47239ea6199d4340f9f373"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/sqlite/inbound_repo.go": {
-    "mtime": 1780802100.5952725,
+  "internal/repo/sqlite/inbound_repo.go": {
+    "mtime": 1780818839.9447448,
     "ast_hash": "0170c703686e45366e9cbeae1478ed60",
-    "semantic_hash": "0170c703686e45366e9cbeae1478ed60"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/sqlite/node_repo.go": {
-    "mtime": 1780802100.5956044,
+  "internal/repo/sqlite/node_repo.go": {
+    "mtime": 1780477668.9170177,
     "ast_hash": "521d21f019cb2f027087b5f03d3e993b",
-    "semantic_hash": "521d21f019cb2f027087b5f03d3e993b"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/sqlite/recovery_repo.go": {
-    "mtime": 1780802100.5958886,
+  "internal/repo/sqlite/recovery_repo.go": {
+    "mtime": 1780477668.9174504,
     "ast_hash": "36395b431536d5a964b06e28cf773175",
-    "semantic_hash": "36395b431536d5a964b06e28cf773175"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/sqlite/scheduled_task_repo.go": {
-    "mtime": 1780802100.5962057,
+  "internal/repo/sqlite/scheduled_task_repo.go": {
+    "mtime": 1780477668.9177682,
     "ast_hash": "c35cef63f11deb8d966f4db1084191fb",
-    "semantic_hash": "c35cef63f11deb8d966f4db1084191fb"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/sqlite/setting_repo.go": {
-    "mtime": 1780802100.5965402,
+  "internal/repo/sqlite/setting_repo.go": {
+    "mtime": 1780477668.918088,
     "ast_hash": "671337096e8f68dec3485378561e4293",
-    "semantic_hash": "671337096e8f68dec3485378561e4293"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/sqlite/sqlite.go": {
-    "mtime": 1780802100.59675,
+  "internal/repo/sqlite/sqlite.go": {
+    "mtime": 1780477668.9183006,
     "ast_hash": "4303be7749dac8836fd4e4d962d86878",
-    "semantic_hash": "4303be7749dac8836fd4e4d962d86878"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/sqlite/traffic_repo.go": {
-    "mtime": 1780802100.5969892,
+  "internal/repo/sqlite/traffic_repo.go": {
+    "mtime": 1780477668.9185069,
     "ast_hash": "f2fb3a53ddcb03439c7c0120c57bbdfd",
-    "semantic_hash": "f2fb3a53ddcb03439c7c0120c57bbdfd"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/repo/storage.go": {
-    "mtime": 1780802100.597439,
+  "internal/repo/storage.go": {
+    "mtime": 1780477668.9187915,
     "ast_hash": "ae467bfffee3fe36a88890ebf27147c2",
-    "semantic_hash": "ae467bfffee3fe36a88890ebf27147c2"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/apitoken/service.go": {
-    "mtime": 1780802100.5980508,
+  "internal/services/apitoken/service.go": {
+    "mtime": 1780477668.9192731,
     "ast_hash": "41fa8db2c91f0006bc93e2a8d3e88e59",
-    "semantic_hash": "41fa8db2c91f0006bc93e2a8d3e88e59"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/auth/auth.go": {
-    "mtime": 1780802100.598578,
+  "internal/services/auth/auth.go": {
+    "mtime": 1780477668.9196815,
     "ast_hash": "8e72f3c644642d58211110ce1da7b23b",
-    "semantic_hash": "8e72f3c644642d58211110ce1da7b23b"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/auth/errors.go": {
-    "mtime": 1780802100.5988927,
+  "internal/services/auth/errors.go": {
+    "mtime": 1780477668.9198616,
     "ast_hash": "5ed6c929d3e40baf90f82c9f09fb5b8e",
-    "semantic_hash": "5ed6c929d3e40baf90f82c9f09fb5b8e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/auth/otp_adapter.go": {
-    "mtime": 1780802100.5992854,
+  "internal/services/auth/otp_adapter.go": {
+    "mtime": 1780477668.9201543,
     "ast_hash": "cf3d11dd22627439b356ab6f09418b8e",
-    "semantic_hash": "cf3d11dd22627439b356ab6f09418b8e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/auth/time.go": {
-    "mtime": 1780802100.5997841,
+  "internal/services/auth/time.go": {
+    "mtime": 1780477668.9205036,
     "ast_hash": "77a0136a9ac411145370dcbc9fe6f778",
-    "semantic_hash": "77a0136a9ac411145370dcbc9fe6f778"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/client/service.go": {
-    "mtime": 1780802100.6002922,
+  "internal/services/client/service.go": {
+    "mtime": 1780818839.944974,
     "ast_hash": "2f1075cc8fa5be41f50cb6cf9ca6be0e",
-    "semantic_hash": "2f1075cc8fa5be41f50cb6cf9ca6be0e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/inbound/random.go": {
-    "mtime": 1780802100.6006072,
+  "internal/services/inbound/random.go": {
+    "mtime": 1780477668.9211829,
     "ast_hash": "fa49610fd41556db31afc6f08bce54d7",
-    "semantic_hash": "fa49610fd41556db31afc6f08bce54d7"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/inbound/service.go": {
-    "mtime": 1780802100.601085,
+  "internal/services/inbound/service.go": {
+    "mtime": 1780818839.945275,
     "ast_hash": "18cceb0bc9541c26f33b3172d3a3d1e7",
-    "semantic_hash": "18cceb0bc9541c26f33b3172d3a3d1e7"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/logbuf/logbuf.go": {
-    "mtime": 1780802100.601533,
+  "internal/services/logbuf/logbuf.go": {
+    "mtime": 1780818839.9455004,
     "ast_hash": "a8956eade4beb2ff6670e3540f4dd895",
-    "semantic_hash": "a8956eade4beb2ff6670e3540f4dd895"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/logbuf/tailer.go": {
-    "mtime": 1780802100.6018565,
+  "internal/services/logbuf/tailer.go": {
+    "mtime": 1780818839.9456205,
     "ast_hash": "1c770f1edbe49a58649da3ea337263bd",
-    "semantic_hash": "1c770f1edbe49a58649da3ea337263bd"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/node/client.go": {
-    "mtime": 1780802100.6024177,
+  "internal/services/node/client.go": {
+    "mtime": 1780818839.9458616,
     "ast_hash": "75d6b3ca574db5110fd1b1f81137ff78",
-    "semantic_hash": "75d6b3ca574db5110fd1b1f81137ff78"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/node/errors.go": {
-    "mtime": 1780802100.6027124,
+  "internal/services/node/errors.go": {
+    "mtime": 1780818839.94598,
     "ast_hash": "ee5cc8d4ad782619319434709f6f9d8a",
-    "semantic_hash": "ee5cc8d4ad782619319434709f6f9d8a"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/node/service.go": {
-    "mtime": 1780802100.6030595,
+  "internal/services/node/service.go": {
+    "mtime": 1780818839.9461727,
     "ast_hash": "963c54736e0577a8b7f2fe309fbfa869",
-    "semantic_hash": "963c54736e0577a8b7f2fe309fbfa869"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/node/types.go": {
-    "mtime": 1780802100.6034396,
+  "internal/services/node/types.go": {
+    "mtime": 1780818839.9464362,
     "ast_hash": "b693fafac34b933ca1b2ed86b6505880",
-    "semantic_hash": "b693fafac34b933ca1b2ed86b6505880"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/scheduler/service.go": {
-    "mtime": 1780802100.6039052,
+  "internal/services/scheduler/service.go": {
+    "mtime": 1780477668.923383,
     "ast_hash": "297d7a0b18573c7fc1f4a235efc86a58",
-    "semantic_hash": "297d7a0b18573c7fc1f4a235efc86a58"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/settings/service.go": {
-    "mtime": 1780802100.604342,
+  "internal/services/settings/service.go": {
+    "mtime": 1780477668.923918,
     "ast_hash": "981db4109ae25b9e07caedeba3c56889",
-    "semantic_hash": "981db4109ae25b9e07caedeba3c56889"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/singbox/apply.go": {
-    "mtime": 1780802100.6047673,
+  "internal/services/singbox/apply.go": {
+    "mtime": 1780477668.9244998,
     "ast_hash": "0bd1b38fd8709d0f6ee9b8e0d2c34b77",
-    "semantic_hash": "0bd1b38fd8709d0f6ee9b8e0d2c34b77"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/singbox/checker.go": {
-    "mtime": 1780802100.6050858,
+  "internal/services/singbox/checker.go": {
+    "mtime": 1780477668.9247565,
     "ast_hash": "278fe96980587748f82ff74d815ecb03",
-    "semantic_hash": "278fe96980587748f82ff74d815ecb03"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/singbox/generator.go": {
-    "mtime": 1780802100.605525,
+  "internal/services/singbox/generator.go": {
+    "mtime": 1780818839.9467037,
     "ast_hash": "c7d66adf9d765a8bf12635bff8a060ee",
-    "semantic_hash": "c7d66adf9d765a8bf12635bff8a060ee"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/singbox/process.go": {
-    "mtime": 1780802100.6058478,
+  "internal/services/singbox/process.go": {
+    "mtime": 1780477668.9255502,
     "ast_hash": "26a19f97d1457c66cd10b8a73cc5b262",
-    "semantic_hash": "26a19f97d1457c66cd10b8a73cc5b262"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/singbox/process_linux.go": {
-    "mtime": 1780802100.6061482,
+  "internal/services/singbox/process_linux.go": {
+    "mtime": 1780818839.9468915,
     "ast_hash": "1ae76fcacd5410670905d9e3c1c573a6",
-    "semantic_hash": "1ae76fcacd5410670905d9e3c1c573a6"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/singbox/process_other.go": {
-    "mtime": 1780802100.6064093,
+  "internal/services/singbox/process_other.go": {
+    "mtime": 1780477668.926204,
     "ast_hash": "b5e9ca627eb847e68c678a916fd5e778",
-    "semantic_hash": "b5e9ca627eb847e68c678a916fd5e778"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/singbox/schema.go": {
-    "mtime": 1780802100.6065466,
+  "internal/services/singbox/schema.go": {
+    "mtime": 1780477668.9263706,
     "ast_hash": "1fae247286d576e9ff5e2af2ce198135",
-    "semantic_hash": "1fae247286d576e9ff5e2af2ce198135"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/stats/clash.go": {
-    "mtime": 1780802100.6070364,
+  "internal/services/stats/clash.go": {
+    "mtime": 1780477668.9267247,
     "ast_hash": "c22890549e7f39fa1ec925f6ccc5924c",
-    "semantic_hash": "c22890549e7f39fa1ec925f6ccc5924c"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/stats/source.go": {
-    "mtime": 1780802100.6073203,
+  "internal/services/stats/source.go": {
+    "mtime": 1780477668.9269917,
     "ast_hash": "f13b75a2dacf6ff1302e43ed21f0ce1d",
-    "semantic_hash": "f13b75a2dacf6ff1302e43ed21f0ce1d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/stats/v2ray.go": {
-    "mtime": 1780802100.607461,
+  "internal/services/stats/v2ray.go": {
+    "mtime": 1780477668.9271328,
     "ast_hash": "e27095a18104d59fc5ffea517a2dfcb7",
-    "semantic_hash": "e27095a18104d59fc5ffea517a2dfcb7"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/stats/worker.go": {
-    "mtime": 1780802100.6079552,
+  "internal/services/stats/worker.go": {
+    "mtime": 1780818839.9470963,
     "ast_hash": "f511788bdbb16cbdf7b387b5793c0286",
-    "semantic_hash": "f511788bdbb16cbdf7b387b5793c0286"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/sublink/builder.go": {
-    "mtime": 1780802100.6083128,
+  "internal/services/sublink/builder.go": {
+    "mtime": 1780818839.9472687,
     "ast_hash": "30156ffc58f416a5f7a0056116ae874d",
-    "semantic_hash": "30156ffc58f416a5f7a0056116ae874d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/sublink/subscription.go": {
-    "mtime": 1780802100.6086223,
-    "ast_hash": "16ff307492a14cece3c4c9696c674613",
-    "semantic_hash": "16ff307492a14cece3c4c9696c674613"
+  "internal/services/sublink/subscription.go": {
+    "mtime": 1780820986.8159626,
+    "ast_hash": "7115da4bc7167d198b196475329e436b",
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/sysstat/sysstat.go": {
-    "mtime": 1780802100.6088958,
+  "internal/services/sysstat/sysstat.go": {
+    "mtime": 1780477668.9282894,
     "ast_hash": "cebe2f4aa33f69580b857e04f156787c",
-    "semantic_hash": "cebe2f4aa33f69580b857e04f156787c"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/sysstat/sysstat_linux.go": {
-    "mtime": 1780802100.6092446,
+  "internal/services/sysstat/sysstat_linux.go": {
+    "mtime": 1780477668.9286683,
     "ast_hash": "62a8e79c135e3153cc6f2d33fa944ecb",
-    "semantic_hash": "62a8e79c135e3153cc6f2d33fa944ecb"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/sysstat/sysstat_other.go": {
-    "mtime": 1780802100.609462,
+  "internal/services/sysstat/sysstat_other.go": {
+    "mtime": 1780477668.9289923,
     "ast_hash": "62f7bfbfa4c0283f65067350e6632993",
-    "semantic_hash": "62f7bfbfa4c0283f65067350e6632993"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/tlsmgr/tlsmgr.go": {
-    "mtime": 1780802100.6099553,
+  "internal/services/tlsmgr/tlsmgr.go": {
+    "mtime": 1780818839.947699,
     "ast_hash": "b66bfad1c95f8e80a5c2930d309b1919",
-    "semantic_hash": "b66bfad1c95f8e80a5c2930d309b1919"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/services/updater/service.go": {
-    "mtime": 1780802100.6103618,
+  "internal/services/updater/service.go": {
+    "mtime": 1780818839.947917,
     "ast_hash": "21589827ba39d5a87358e2e8c8b98a73",
-    "semantic_hash": "21589827ba39d5a87358e2e8c8b98a73"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/transport/handler/auth_handler.go": {
-    "mtime": 1780802100.6112483,
+  "internal/transport/handler/auth_handler.go": {
+    "mtime": 1780477668.9301891,
     "ast_hash": "89de77856c2f0f488e293863d1c5ab2b",
-    "semantic_hash": "89de77856c2f0f488e293863d1c5ab2b"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/transport/handler/client_handler.go": {
-    "mtime": 1780802100.6115727,
+  "internal/transport/handler/client_handler.go": {
+    "mtime": 1780818839.948149,
     "ast_hash": "e80a1bf03269edaa9da29ef956c79486",
-    "semantic_hash": "e80a1bf03269edaa9da29ef956c79486"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/transport/handler/common.go": {
-    "mtime": 1780802100.61185,
+  "internal/transport/handler/common.go": {
+    "mtime": 1780818839.9482977,
     "ast_hash": "a913158dc8718dea00bea262e858f1a8",
-    "semantic_hash": "a913158dc8718dea00bea262e858f1a8"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/transport/handler/core_handler.go": {
-    "mtime": 1780802100.61198,
+  "internal/transport/handler/core_handler.go": {
+    "mtime": 1780477668.9312398,
     "ast_hash": "80a82f8da7584a894e55bf64c8dbd537",
-    "semantic_hash": "80a82f8da7584a894e55bf64c8dbd537"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/transport/handler/dashboard_handler.go": {
-    "mtime": 1780802100.6121774,
+  "internal/transport/handler/dashboard_handler.go": {
+    "mtime": 1780477668.931586,
     "ast_hash": "d39f84aaad92f80d8300a8dbb4878bf4",
-    "semantic_hash": "d39f84aaad92f80d8300a8dbb4878bf4"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/transport/handler/frontend.go": {
-    "mtime": 1780802100.6124384,
+  "internal/transport/handler/frontend.go": {
+    "mtime": 1780477668.9319096,
     "ast_hash": "c5ffd9b0c6f81679334490de8fbd277f",
-    "semantic_hash": "c5ffd9b0c6f81679334490de8fbd277f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/transport/handler/health_handler.go": {
-    "mtime": 1780802100.6126823,
+  "internal/transport/handler/health_handler.go": {
+    "mtime": 1780477668.9321854,
     "ast_hash": "70e253ed227419885cedc29287c292c4",
-    "semantic_hash": "70e253ed227419885cedc29287c292c4"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/transport/handler/inbound_handler.go": {
-    "mtime": 1780802100.61301,
+  "internal/transport/handler/inbound_handler.go": {
+    "mtime": 1780818839.9485114,
     "ast_hash": "1cdde914e0f9530a763cac04942c901e",
-    "semantic_hash": "1cdde914e0f9530a763cac04942c901e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/transport/handler/logs_handler.go": {
-    "mtime": 1780802100.613295,
+  "internal/transport/handler/logs_handler.go": {
+    "mtime": 1780818839.9487221,
     "ast_hash": "3d2e067a01d07e363b85b773a99623d1",
-    "semantic_hash": "3d2e067a01d07e363b85b773a99623d1"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/transport/handler/node_handler.go": {
-    "mtime": 1780802100.6135561,
+  "internal/transport/handler/node_handler.go": {
+    "mtime": 1780477668.9331596,
     "ast_hash": "bb53e007f18720e0575b8375e1400bdc",
-    "semantic_hash": "bb53e007f18720e0575b8375e1400bdc"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/transport/handler/panel_handler.go": {
-    "mtime": 1780802100.6138475,
+  "internal/transport/handler/panel_handler.go": {
+    "mtime": 1780818839.9488797,
     "ast_hash": "6b5422bee05f60c03afa8c694a79e4b7",
-    "semantic_hash": "6b5422bee05f60c03afa8c694a79e4b7"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/transport/handler/scheduled_task_handler.go": {
-    "mtime": 1780802100.614224,
+  "internal/transport/handler/scheduled_task_handler.go": {
+    "mtime": 1780477668.9336429,
     "ast_hash": "ec9df6a1248ae70976a12100030e101e",
-    "semantic_hash": "ec9df6a1248ae70976a12100030e101e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/transport/handler/settings_handler.go": {
-    "mtime": 1780802100.614498,
+  "internal/transport/handler/settings_handler.go": {
+    "mtime": 1780477668.9338841,
     "ast_hash": "1941a72d69aac4e8c9f83c234a93a3e5",
-    "semantic_hash": "1941a72d69aac4e8c9f83c234a93a3e5"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/transport/handler/subscription_handler.go": {
-    "mtime": 1780802100.6147976,
-    "ast_hash": "eabfbe34bd0fc969a71b7ba0d4548e1b",
-    "semantic_hash": "eabfbe34bd0fc969a71b7ba0d4548e1b"
+  "internal/transport/handler/subscription_handler.go": {
+    "mtime": 1780820986.8180234,
+    "ast_hash": "ef8603e82f2cdea9ba706246570ec6bf",
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/transport/middleware/auth.go": {
-    "mtime": 1780802100.6151667,
+  "internal/transport/middleware/auth.go": {
+    "mtime": 1780477668.9344072,
     "ast_hash": "60601f539da521aca0a920f69219f2d9",
-    "semantic_hash": "60601f539da521aca0a920f69219f2d9"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/transport/middleware/cors.go": {
-    "mtime": 1780802100.6152768,
+  "internal/transport/middleware/cors.go": {
+    "mtime": 1780477668.934499,
     "ast_hash": "4ac01b55eff1a9f8d67fc34fc64c30b1",
-    "semantic_hash": "4ac01b55eff1a9f8d67fc34fc64c30b1"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/transport/middleware/logger.go": {
-    "mtime": 1780802100.6155424,
+  "internal/transport/middleware/logger.go": {
+    "mtime": 1780818839.9490583,
     "ast_hash": "073cff36488dc2b0823302e9a3cc8199",
-    "semantic_hash": "073cff36488dc2b0823302e9a3cc8199"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/transport/middleware/ratelimit.go": {
-    "mtime": 1780802100.6157365,
+  "internal/transport/middleware/ratelimit.go": {
+    "mtime": 1780477668.934966,
     "ast_hash": "4c75eb586c9dbb163bf361e8131faaea",
-    "semantic_hash": "4c75eb586c9dbb163bf361e8131faaea"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/internal/version/version.go": {
-    "mtime": 1780802100.6160893,
+  "internal/version/version.go": {
+    "mtime": 1780477668.935184,
     "ast_hash": "d2f2a634c4cedf322e0fc0c29e0ac84f",
-    "semantic_hash": "d2f2a634c4cedf322e0fc0c29e0ac84f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/opencode.json": {
-    "mtime": 1780802100.6161952,
+  "opencode.json": {
+    "mtime": 1780477668.935276,
     "ast_hash": "160d0d97813c8850fd41f7dd7707fcdc",
-    "semantic_hash": "160d0d97813c8850fd41f7dd7707fcdc"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/scripts/build-release-assets.sh": {
-    "mtime": 1780802100.6165526,
+  "scripts/build-release-assets.sh": {
+    "mtime": 1780818839.9491873,
     "ast_hash": "b615ec31a0a8a82487433fb42af3efe7",
-    "semantic_hash": "b615ec31a0a8a82487433fb42af3efe7"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/scripts/install.sh": {
-    "mtime": 1780802100.616867,
-    "ast_hash": "f8609ef798fa36b3be012fb074f4f685",
-    "semantic_hash": "f8609ef798fa36b3be012fb074f4f685"
+  "scripts/install.sh": {
+    "mtime": 1780820986.8186436,
+    "ast_hash": "3c3fa5ed79a996b0bedcf179f2947828",
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/scripts/uninstall.sh": {
-    "mtime": 1780802100.6171958,
+  "scripts/uninstall.sh": {
+    "mtime": 1780818839.949735,
     "ast_hash": "274d5f476f54a62cb5ae508b8ae87b36",
-    "semantic_hash": "274d5f476f54a62cb5ae508b8ae87b36"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/scripts/update.sh": {
-    "mtime": 1780802100.6175237,
+  "scripts/update.sh": {
+    "mtime": 1780818839.9499028,
     "ast_hash": "508c9b27b3f803279574b2d7f831a30b",
-    "semantic_hash": "508c9b27b3f803279574b2d7f831a30b"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/cmd/version_test.go": {
-    "mtime": 1780802100.618183,
+  "tests/cmd/version_test.go": {
+    "mtime": 1780818839.9500988,
     "ast_hash": "dd4aae40744787b35ac24473c40a8f55",
-    "semantic_hash": "dd4aae40744787b35ac24473c40a8f55"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/lib/auth/argon2_test.go": {
-    "mtime": 1780802100.618739,
+  "tests/lib/auth/argon2_test.go": {
+    "mtime": 1780477668.936441,
     "ast_hash": "b664d026eed6be5cf2ce507416efd850",
-    "semantic_hash": "b664d026eed6be5cf2ce507416efd850"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/lib/auth/jwt_test.go": {
-    "mtime": 1780802100.6190412,
+  "tests/lib/auth/jwt_test.go": {
+    "mtime": 1780477668.936714,
     "ast_hash": "e613f65eedcf494169e040a6bbb00a94",
-    "semantic_hash": "e613f65eedcf494169e040a6bbb00a94"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/lib/auth/totp_test.go": {
-    "mtime": 1780802100.6193364,
+  "tests/lib/auth/totp_test.go": {
+    "mtime": 1780477668.9370046,
     "ast_hash": "68236cdf4495e5b0d42a3b15a773f3e5",
-    "semantic_hash": "68236cdf4495e5b0d42a3b15a773f3e5"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/services/apitoken/service_test.go": {
-    "mtime": 1780802100.6197593,
+  "tests/services/apitoken/service_test.go": {
+    "mtime": 1780477668.937348,
     "ast_hash": "5bebb241226f3e3baf023a6ee4351d38",
-    "semantic_hash": "5bebb241226f3e3baf023a6ee4351d38"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/services/auth/auth_test.go": {
-    "mtime": 1780802100.6202404,
+  "tests/services/auth/auth_test.go": {
+    "mtime": 1780477668.9377258,
     "ast_hash": "cbaaa7dedcef0f818e38a7e06a6b3aa5",
-    "semantic_hash": "cbaaa7dedcef0f818e38a7e06a6b3aa5"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/services/inbound/service_test.go": {
-    "mtime": 1780802100.620777,
+  "tests/services/inbound/service_test.go": {
+    "mtime": 1780818839.9502976,
     "ast_hash": "b1b01759ec37f290e176bafc6722c43f",
-    "semantic_hash": "b1b01759ec37f290e176bafc6722c43f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/services/logbuf/logbuf_test.go": {
-    "mtime": 1780802100.6211538,
+  "tests/services/logbuf/logbuf_test.go": {
+    "mtime": 1780818839.9504752,
     "ast_hash": "fa2f9fd7ed4229cb0d86643dc0ac45e1",
-    "semantic_hash": "fa2f9fd7ed4229cb0d86643dc0ac45e1"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/services/logbuf/tailer_test.go": {
-    "mtime": 1780802100.6215653,
+  "tests/services/logbuf/tailer_test.go": {
+    "mtime": 1780818839.9506013,
     "ast_hash": "e44afbfdee896ecd2ca284b690540b05",
-    "semantic_hash": "e44afbfdee896ecd2ca284b690540b05"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/services/node/client_test.go": {
-    "mtime": 1780802100.6219888,
+  "tests/services/node/client_test.go": {
+    "mtime": 1780818839.9508398,
     "ast_hash": "58157dfb39eba77b15d0be310acacca6",
-    "semantic_hash": "58157dfb39eba77b15d0be310acacca6"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/services/node/service_remote_test.go": {
-    "mtime": 1780802100.6223774,
+  "tests/services/node/service_remote_test.go": {
+    "mtime": 1780818839.9510581,
     "ast_hash": "106521660aac66ec9dfbaa4714962e6f",
-    "semantic_hash": "106521660aac66ec9dfbaa4714962e6f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/services/settings/service_test.go": {
-    "mtime": 1780802100.6227703,
+  "tests/services/settings/service_test.go": {
+    "mtime": 1780477668.9386256,
     "ast_hash": "328dec1a9c1e18f417be7b5b49bbc8c8",
-    "semantic_hash": "328dec1a9c1e18f417be7b5b49bbc8c8"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/services/singbox/generator_test.go": {
-    "mtime": 1780802100.623225,
+  "tests/services/singbox/generator_test.go": {
+    "mtime": 1780477668.9390695,
     "ast_hash": "7db884764cb1cbc0c56ebb3999515082",
-    "semantic_hash": "7db884764cb1cbc0c56ebb3999515082"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/services/singbox/integration_test.go": {
-    "mtime": 1780802100.6234217,
+  "tests/services/singbox/integration_test.go": {
+    "mtime": 1780477668.9392264,
     "ast_hash": "2833746adafcecdac533487007c857a4",
-    "semantic_hash": "2833746adafcecdac533487007c857a4"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/services/singbox/process_linux_test.go": {
-    "mtime": 1780802100.623713,
+  "tests/services/singbox/process_linux_test.go": {
+    "mtime": 1780818839.9512234,
     "ast_hash": "f02ac1486ff6eaaccac03bbdd4ee7172",
-    "semantic_hash": "f02ac1486ff6eaaccac03bbdd4ee7172"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/services/stats/v2ray_codec_test.go": {
-    "mtime": 1780802100.6241078,
+  "tests/services/stats/v2ray_codec_test.go": {
+    "mtime": 1780477668.9396706,
     "ast_hash": "dce1a8a9340221e013dd470225514995",
-    "semantic_hash": "dce1a8a9340221e013dd470225514995"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/services/stats/v2ray_live_test.go": {
-    "mtime": 1780802100.6243951,
+  "tests/services/stats/v2ray_live_test.go": {
+    "mtime": 1780477668.9398937,
     "ast_hash": "e302324d0a82767136823338ac7785c7",
-    "semantic_hash": "e302324d0a82767136823338ac7785c7"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/services/sublink/builder_test.go": {
-    "mtime": 1780802100.6247635,
-    "ast_hash": "a4d1405689ed681c704f0e8f0ff05a21",
-    "semantic_hash": "a4d1405689ed681c704f0e8f0ff05a21"
+  "tests/services/sublink/builder_test.go": {
+    "mtime": 1780820986.8190472,
+    "ast_hash": "41e512d32cee75ec5b700d8333eedc6a",
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/services/updater/service_test.go": {
-    "mtime": 1780802100.625169,
+  "tests/services/updater/service_test.go": {
+    "mtime": 1780818839.9515975,
     "ast_hash": "0b39b89942da2fdbdadedbff743ad1bc",
-    "semantic_hash": "0b39b89942da2fdbdadedbff743ad1bc"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/transport/handler/auth_handler_test.go": {
-    "mtime": 1780802100.625597,
+  "tests/transport/handler/auth_handler_test.go": {
+    "mtime": 1780477668.94069,
     "ast_hash": "e7eaef374ff27f953f80c1a90b015d4c",
-    "semantic_hash": "e7eaef374ff27f953f80c1a90b015d4c"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/transport/handler/health_handler_test.go": {
-    "mtime": 1780802100.6258974,
+  "tests/transport/handler/health_handler_test.go": {
+    "mtime": 1780818839.9517539,
     "ast_hash": "4e79ae29e0673873255e188670c24144",
-    "semantic_hash": "4e79ae29e0673873255e188670c24144"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/transport/handler/inbound_handler_test.go": {
-    "mtime": 1780802100.6262705,
+  "tests/transport/handler/inbound_handler_test.go": {
+    "mtime": 1780818839.9519236,
     "ast_hash": "4057242e3e3b69e600e46073ed25feff",
-    "semantic_hash": "4057242e3e3b69e600e46073ed25feff"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/transport/handler/logs_handler_test.go": {
-    "mtime": 1780802100.6265936,
+  "tests/transport/handler/logs_handler_test.go": {
+    "mtime": 1780818839.9520886,
     "ast_hash": "95b3e3fc28f74b8e6fccfae67e587262",
-    "semantic_hash": "95b3e3fc28f74b8e6fccfae67e587262"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/transport/handler/node_handler_test.go": {
-    "mtime": 1780802100.6269286,
+  "tests/transport/handler/node_handler_test.go": {
+    "mtime": 1780818839.9522672,
     "ast_hash": "4f329f059ab701eb401833ddf33088db",
-    "semantic_hash": "4f329f059ab701eb401833ddf33088db"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/transport/handler/panel_handler_test.go": {
-    "mtime": 1780802100.627225,
+  "tests/transport/handler/panel_handler_test.go": {
+    "mtime": 1780818839.9523911,
     "ast_hash": "4718528892c7ccea1b02865bad3f1e81",
-    "semantic_hash": "4718528892c7ccea1b02865bad3f1e81"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/transport/handler/settings_handler_test.go": {
-    "mtime": 1780802100.6274655,
+  "tests/transport/handler/settings_handler_test.go": {
+    "mtime": 1780477668.9412482,
     "ast_hash": "7c3627f16802aef7be6be391be75d0cf",
-    "semantic_hash": "7c3627f16802aef7be6be391be75d0cf"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/transport/middleware/auth_test.go": {
-    "mtime": 1780802100.6276639,
+  "tests/transport/handler/subscription_handler_test.go": {
+    "mtime": 1780820986.8194158,
+    "ast_hash": "e9330ad80c64e0e2cec69c60fd16fa38",
+    "semantic_hash": ""
+  },
+  "tests/transport/middleware/auth_test.go": {
+    "mtime": 1780477668.941397,
     "ast_hash": "04baf1491b81f9912888350163d9931a",
-    "semantic_hash": "04baf1491b81f9912888350163d9931a"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/transport/middleware/cors_test.go": {
-    "mtime": 1780802100.6279385,
+  "tests/transport/middleware/cors_test.go": {
+    "mtime": 1780477668.9415565,
     "ast_hash": "c834bfd74e9edd419bcc127afd340d4a",
-    "semantic_hash": "c834bfd74e9edd419bcc127afd340d4a"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/transport/middleware/logger_test.go": {
-    "mtime": 1780802100.628203,
+  "tests/transport/middleware/logger_test.go": {
+    "mtime": 1780818839.9525533,
     "ast_hash": "994fc253c5cf7cb84810adafc2eab12d",
-    "semantic_hash": "994fc253c5cf7cb84810adafc2eab12d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tests/transport/middleware/ratelimit_test.go": {
-    "mtime": 1780802100.6283734,
+  "tests/transport/middleware/ratelimit_test.go": {
+    "mtime": 1780477668.9418633,
     "ast_hash": "d71f7905f14fe1ef6693ab0176581da3",
-    "semantic_hash": "d71f7905f14fe1ef6693ab0176581da3"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/tsconfig.json": {
-    "mtime": 1780802100.6286225,
+  "tsconfig.json": {
+    "mtime": 1780477668.9420862,
     "ast_hash": "4a98eb17882e9d61b9f06257883dcff4",
-    "semantic_hash": "4a98eb17882e9d61b9f06257883dcff4"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/SKILL.md": {
-    "mtime": 1780802100.4480212,
+  ".claude/skills/impeccable/SKILL.md": {
+    "mtime": 1780477668.7622204,
     "ast_hash": "ad2778d6dc1e1661b5e7e53a870e4d26",
-    "semantic_hash": "ad2778d6dc1e1661b5e7e53a870e4d26"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/adapt.md": {
-    "mtime": 1780802100.448562,
+  ".claude/skills/impeccable/reference/adapt.md": {
+    "mtime": 1780477668.762846,
     "ast_hash": "677c79a3dfdb092d711e5e59c46b41bb",
-    "semantic_hash": "677c79a3dfdb092d711e5e59c46b41bb"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/animate.md": {
-    "mtime": 1780802100.448922,
+  ".claude/skills/impeccable/reference/animate.md": {
+    "mtime": 1780477668.763256,
     "ast_hash": "87e75f869b8289acb616dce325e1d008",
-    "semantic_hash": "87e75f869b8289acb616dce325e1d008"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/audit.md": {
-    "mtime": 1780802100.4493015,
+  ".claude/skills/impeccable/reference/audit.md": {
+    "mtime": 1780477668.7637534,
     "ast_hash": "dc48853100d4e3b4017545dfe23ca93f",
-    "semantic_hash": "dc48853100d4e3b4017545dfe23ca93f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/bolder.md": {
-    "mtime": 1780802100.4495904,
+  ".claude/skills/impeccable/reference/bolder.md": {
+    "mtime": 1780477668.764185,
     "ast_hash": "60c92579e8c0b55945bac5f3fbdd7746",
-    "semantic_hash": "60c92579e8c0b55945bac5f3fbdd7746"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/brand.md": {
-    "mtime": 1780802100.4499967,
+  ".claude/skills/impeccable/reference/brand.md": {
+    "mtime": 1780477668.7645614,
     "ast_hash": "5e8f9b86533d7b855aa1b93bc0b9a311",
-    "semantic_hash": "5e8f9b86533d7b855aa1b93bc0b9a311"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/clarify.md": {
-    "mtime": 1780802100.4503186,
+  ".claude/skills/impeccable/reference/clarify.md": {
+    "mtime": 1780477668.764778,
     "ast_hash": "59f37b001528ffa685aa9fc8b815ac0c",
-    "semantic_hash": "59f37b001528ffa685aa9fc8b815ac0c"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/codex.md": {
-    "mtime": 1780802100.450654,
+  ".claude/skills/impeccable/reference/codex.md": {
+    "mtime": 1780477668.76507,
     "ast_hash": "6d97d559484916f05fa74f6b74f3da07",
-    "semantic_hash": "6d97d559484916f05fa74f6b74f3da07"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/colorize.md": {
-    "mtime": 1780802100.4509313,
+  ".claude/skills/impeccable/reference/colorize.md": {
+    "mtime": 1780477668.7654684,
     "ast_hash": "69f597448e78f518d64617c0137bc533",
-    "semantic_hash": "69f597448e78f518d64617c0137bc533"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/craft.md": {
-    "mtime": 1780802100.4512267,
+  ".claude/skills/impeccable/reference/craft.md": {
+    "mtime": 1780477668.76598,
     "ast_hash": "30b636d36ebb80efb147c409fbd56ef0",
-    "semantic_hash": "30b636d36ebb80efb147c409fbd56ef0"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/critique.md": {
-    "mtime": 1780802100.4516025,
+  ".claude/skills/impeccable/reference/critique.md": {
+    "mtime": 1780477668.7665153,
     "ast_hash": "8f6903ba0a98fff1c229bfd091bb56fa",
-    "semantic_hash": "8f6903ba0a98fff1c229bfd091bb56fa"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/delight.md": {
-    "mtime": 1780802100.45188,
+  ".claude/skills/impeccable/reference/delight.md": {
+    "mtime": 1780477668.7670076,
     "ast_hash": "994a24c88a90cd4497831f73ad50e92c",
-    "semantic_hash": "994a24c88a90cd4497831f73ad50e92c"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/distill.md": {
-    "mtime": 1780802100.4522138,
+  ".claude/skills/impeccable/reference/distill.md": {
+    "mtime": 1780477668.7673154,
     "ast_hash": "d47f1e82b6f7728ed0cad7e7ea0711b4",
-    "semantic_hash": "d47f1e82b6f7728ed0cad7e7ea0711b4"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/document.md": {
-    "mtime": 1780802100.4526036,
+  ".claude/skills/impeccable/reference/document.md": {
+    "mtime": 1780477668.7677605,
     "ast_hash": "0154c0924cde0025b7e1d70477bc7a86",
-    "semantic_hash": "0154c0924cde0025b7e1d70477bc7a86"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/extract.md": {
-    "mtime": 1780802100.4528704,
+  ".claude/skills/impeccable/reference/extract.md": {
+    "mtime": 1780477668.7680967,
     "ast_hash": "a138c27b668fdeccbaf35873c9e42397",
-    "semantic_hash": "a138c27b668fdeccbaf35873c9e42397"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/harden.md": {
-    "mtime": 1780802100.4531949,
+  ".claude/skills/impeccable/reference/harden.md": {
+    "mtime": 1780477668.7684336,
     "ast_hash": "f31cfe0bbc850cf2fd8b76a067c839e4",
-    "semantic_hash": "f31cfe0bbc850cf2fd8b76a067c839e4"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/init.md": {
-    "mtime": 1780802100.45352,
+  ".claude/skills/impeccable/reference/init.md": {
+    "mtime": 1780477668.7688289,
     "ast_hash": "77ef1cf6a45cfcc629b1be3bc9469ea4",
-    "semantic_hash": "77ef1cf6a45cfcc629b1be3bc9469ea4"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/interaction-design.md": {
-    "mtime": 1780802100.453786,
+  ".claude/skills/impeccable/reference/interaction-design.md": {
+    "mtime": 1780477668.7692597,
     "ast_hash": "1dd83bb8a96d7e250914064aa7389f8b",
-    "semantic_hash": "1dd83bb8a96d7e250914064aa7389f8b"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/layout.md": {
-    "mtime": 1780802100.4540637,
+  ".claude/skills/impeccable/reference/layout.md": {
+    "mtime": 1780477668.769602,
     "ast_hash": "0df4b2064cadee109afe865ce7d20d1e",
-    "semantic_hash": "0df4b2064cadee109afe865ce7d20d1e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/live.md": {
-    "mtime": 1780802100.4546423,
+  ".claude/skills/impeccable/reference/live.md": {
+    "mtime": 1780477668.7701535,
     "ast_hash": "6e4be1931ac0a93ccaf23a781f001ec0",
-    "semantic_hash": "6e4be1931ac0a93ccaf23a781f001ec0"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/onboard.md": {
-    "mtime": 1780802100.454961,
+  ".claude/skills/impeccable/reference/onboard.md": {
+    "mtime": 1780477668.7706156,
     "ast_hash": "7095aaea9e2994e37afb3cf1743bc092",
-    "semantic_hash": "7095aaea9e2994e37afb3cf1743bc092"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/optimize.md": {
-    "mtime": 1780802100.4552555,
+  ".claude/skills/impeccable/reference/optimize.md": {
+    "mtime": 1780477668.7710826,
     "ast_hash": "81b3a8c4f0d4f4cffa035aa9fda77e6e",
-    "semantic_hash": "81b3a8c4f0d4f4cffa035aa9fda77e6e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/overdrive.md": {
-    "mtime": 1780802100.4554946,
+  ".claude/skills/impeccable/reference/overdrive.md": {
+    "mtime": 1780477668.7713234,
     "ast_hash": "dadd48faf8bc6dbb63196215a7195abb",
-    "semantic_hash": "dadd48faf8bc6dbb63196215a7195abb"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/polish.md": {
-    "mtime": 1780802100.4556973,
+  ".claude/skills/impeccable/reference/polish.md": {
+    "mtime": 1780477668.7717502,
     "ast_hash": "fe186b5a0d88279bc0675d0ba1c5213f",
-    "semantic_hash": "fe186b5a0d88279bc0675d0ba1c5213f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/product.md": {
-    "mtime": 1780802100.4561315,
+  ".claude/skills/impeccable/reference/product.md": {
+    "mtime": 1780477668.7720826,
     "ast_hash": "6408a63ddbfe7003c732650381506860",
-    "semantic_hash": "6408a63ddbfe7003c732650381506860"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/quieter.md": {
-    "mtime": 1780802100.4564705,
+  ".claude/skills/impeccable/reference/quieter.md": {
+    "mtime": 1780477668.7724,
     "ast_hash": "2f534f1c782f998a78ef17b34eedb0ce",
-    "semantic_hash": "2f534f1c782f998a78ef17b34eedb0ce"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/shape.md": {
-    "mtime": 1780802100.4567437,
+  ".claude/skills/impeccable/reference/shape.md": {
+    "mtime": 1780477668.7726345,
     "ast_hash": "328ad4e06423eed564fa9391985f834c",
-    "semantic_hash": "328ad4e06423eed564fa9391985f834c"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.claude/skills/impeccable/reference/typeset.md": {
-    "mtime": 1780802100.4570036,
+  ".claude/skills/impeccable/reference/typeset.md": {
+    "mtime": 1780477668.773005,
     "ast_hash": "8e8e3a58858713ff62de8ffa1a740cc6",
-    "semantic_hash": "8e8e3a58858713ff62de8ffa1a740cc6"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/backend-implementation-2026-05-31.md": {
-    "mtime": 1780802100.5030518,
+  ".context/backend-implementation-2026-05-31.md": {
+    "mtime": 1780477668.8224292,
     "ast_hash": "4228cacd004051f81fd0be3d029c7a2a",
-    "semantic_hash": "4228cacd004051f81fd0be3d029c7a2a"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/backend-remote-mutations-2026-06-04.md": {
-    "mtime": 1780802100.5035093,
+  ".context/backend-naive-proxy-sin-68-2026-06-07.md": {
+    "mtime": 1780820986.727904,
+    "ast_hash": "7abb8087fe597a34cbfc8b9546530d58",
+    "semantic_hash": ""
+  },
+  ".context/backend-remote-mutations-2026-06-04.md": {
+    "mtime": 1780818839.9320078,
     "ast_hash": "0438855ca7a06f1488c2b57ffeee7d86",
-    "semantic_hash": "0438855ca7a06f1488c2b57ffeee7d86"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/backend-vps-smoke-followups-2026-06-03.md": {
-    "mtime": 1780802100.5038953,
+  ".context/backend-vps-smoke-followups-2026-06-03.md": {
+    "mtime": 1780477668.8229012,
     "ast_hash": "63058690d9e670d6dbcf095a9ff222d5",
-    "semantic_hash": "63058690d9e670d6dbcf095a9ff222d5"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/frontend-auth-login-2fa-2026-05-30.md": {
-    "mtime": 1780802100.5042846,
+  ".context/frontend-auth-login-2fa-2026-05-30.md": {
+    "mtime": 1780477668.8231933,
     "ast_hash": "bf768e6f3fffa50fcab221a28f62269f",
-    "semantic_hash": "bf768e6f3fffa50fcab221a28f62269f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/frontend-description.md": {
-    "mtime": 1780802100.5047004,
+  ".context/frontend-description.md": {
+    "mtime": 1780477668.8238614,
     "ast_hash": "f8e29225eb027ce92287a60c211ff1ad",
-    "semantic_hash": "f8e29225eb027ce92287a60c211ff1ad"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/frontend-fixes-2026-05-28.md": {
-    "mtime": 1780802100.5049918,
+  ".context/frontend-fixes-2026-05-28.md": {
+    "mtime": 1780477668.8241558,
     "ast_hash": "7d685e2f4aafe196db3d21f36ff18dce",
-    "semantic_hash": "7d685e2f4aafe196db3d21f36ff18dce"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/frontend-fixes-2026-05-29.md": {
-    "mtime": 1780802100.5053284,
+  ".context/frontend-fixes-2026-05-29.md": {
+    "mtime": 1780477668.8245525,
     "ast_hash": "588f883d9e72545d904ef137c102398a",
-    "semantic_hash": "588f883d9e72545d904ef137c102398a"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/frontend-mock-ui-2026-05-28.md": {
-    "mtime": 1780802100.5057395,
+  ".context/frontend-mock-ui-2026-05-28.md": {
+    "mtime": 1780477668.8249066,
     "ast_hash": "9742fc23bbbc7fc13098d1bde05145ae",
-    "semantic_hash": "9742fc23bbbc7fc13098d1bde05145ae"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/frontend-per-protocol-inbounds-2026-06-01.md": {
-    "mtime": 1780802100.5061822,
+  ".context/frontend-per-protocol-inbounds-2026-06-01.md": {
+    "mtime": 1780477668.825557,
     "ast_hash": "8c388f1de11707b40910e933c1c07793",
-    "semantic_hash": "8c388f1de11707b40910e933c1c07793"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/frontend-perf-optimization-2026-05-29.md": {
-    "mtime": 1780802100.5066183,
+  ".context/frontend-perf-optimization-2026-05-29.md": {
+    "mtime": 1780477668.8261397,
     "ast_hash": "057e2857ff2717261ea2ad43301460f6",
-    "semantic_hash": "057e2857ff2717261ea2ad43301460f6"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/frontend-redesign-2026-06-02.md": {
-    "mtime": 1780802100.5071208,
+  ".context/frontend-redesign-2026-06-02.md": {
+    "mtime": 1780477668.826831,
     "ast_hash": "d5c88579099204baeace4af436ec2e27",
-    "semantic_hash": "d5c88579099204baeace4af436ec2e27"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/frontend-rules.md": {
-    "mtime": 1780802100.5075667,
+  ".context/frontend-rules.md": {
+    "mtime": 1780477668.8274071,
     "ast_hash": "4e6dcfaf69c71f36b823987c331a2652",
-    "semantic_hash": "4e6dcfaf69c71f36b823987c331a2652"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/gitignore-refs-commit-merge-2026-06-03.md": {
-    "mtime": 1780802100.5080407,
+  ".context/gitignore-refs-commit-merge-2026-06-03.md": {
+    "mtime": 1780477668.8315318,
     "ast_hash": "09686ea7e61b50ce169b82f8eb5eeb87",
-    "semantic_hash": "09686ea7e61b50ce169b82f8eb5eeb87"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/installer-hardening-naive-fix-2026-06-02.md": {
-    "mtime": 1780802100.5096915,
+  ".context/installer-hardening-naive-fix-2026-06-02.md": {
+    "mtime": 1780477668.8330936,
     "ast_hash": "c59f327472c0abe085719c539a62042e",
-    "semantic_hash": "c59f327472c0abe085719c539a62042e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/installer-network-resilience-sin-54-2026-06-04.md": {
-    "mtime": 1780802100.5100393,
+  ".context/installer-network-resilience-sin-54-2026-06-04.md": {
+    "mtime": 1780818839.932259,
     "ast_hash": "18703ea9641feb49a484380e038eb439",
-    "semantic_hash": "18703ea9641feb49a484380e038eb439"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/logging-panel-update-2026-06-04.md": {
-    "mtime": 1780802100.510372,
+  ".context/logging-panel-update-2026-06-04.md": {
+    "mtime": 1780818839.932436,
     "ast_hash": "480186f03df9e5f6c96b13bb2fe19f92",
-    "semantic_hash": "480186f03df9e5f6c96b13bb2fe19f92"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/release-semantic-version-sin-51-2026-06-04.md": {
-    "mtime": 1780802100.5107052,
+  ".context/release-semantic-version-sin-51-2026-06-04.md": {
+    "mtime": 1780818839.9325929,
     "ast_hash": "d06a00b770c3c5f20bc55bbfda77f354",
-    "semantic_hash": "d06a00b770c3c5f20bc55bbfda77f354"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/sing-box-web-panel-plan.md": {
-    "mtime": 1780802100.510983,
+  ".context/sing-box-web-panel-plan.md": {
+    "mtime": 1780477668.833844,
     "ast_hash": "18f5aa38788e5166f64ef1949914361a",
-    "semantic_hash": "18f5aa38788e5166f64ef1949914361a"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/sublink-allow-insecure-2026-06-04.md": {
-    "mtime": 1780802100.5112925,
+  ".context/sublink-allow-insecure-2026-06-04.md": {
+    "mtime": 1780818839.9327455,
     "ast_hash": "55350fc0916aa527d6a2ea67dc257678",
-    "semantic_hash": "55350fc0916aa527d6a2ea67dc257678"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/superpanel-nodes-cli-installer-2026-06-02.md": {
-    "mtime": 1780802100.5161061,
+  ".context/superpanel-nodes-cli-installer-2026-06-02.md": {
+    "mtime": 1780477668.8341713,
     "ast_hash": "d61951683a08363da52f88a43443561e",
-    "semantic_hash": "d61951683a08363da52f88a43443561e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/vps-install-smoke-execution-2026-06-03.md": {
-    "mtime": 1780802100.5177295,
+  ".context/vps-install-smoke-execution-2026-06-03.md": {
+    "mtime": 1780477668.8344982,
     "ast_hash": "c99bcae817b1415be6f3240ae1db38ec",
-    "semantic_hash": "c99bcae817b1415be6f3240ae1db38ec"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.context/vps-install-smoke-plan-2026-06-02.md": {
-    "mtime": 1780802100.5180428,
+  ".context/vps-install-smoke-plan-2026-06-02.md": {
+    "mtime": 1780477668.8348753,
     "ast_hash": "a514503e35aa685ea38ceba44a90c5aa",
-    "semantic_hash": "a514503e35aa685ea38ceba44a90c5aa"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/SKILL.md": {
-    "mtime": 1780802100.5186455,
+  ".github/skills/impeccable/SKILL.md": {
+    "mtime": 1780477668.840226,
     "ast_hash": "7ca15707ccddf248f536c7c9f8e3ac37",
-    "semantic_hash": "7ca15707ccddf248f536c7c9f8e3ac37"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/adapt.md": {
-    "mtime": 1780802100.5189755,
+  ".github/skills/impeccable/reference/adapt.md": {
+    "mtime": 1780477668.8405735,
     "ast_hash": "677c79a3dfdb092d711e5e59c46b41bb",
-    "semantic_hash": "677c79a3dfdb092d711e5e59c46b41bb"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/animate.md": {
-    "mtime": 1780802100.5193338,
+  ".github/skills/impeccable/reference/animate.md": {
+    "mtime": 1780477668.8410451,
     "ast_hash": "225ce0e1461488f877d158f1b3ab900b",
-    "semantic_hash": "225ce0e1461488f877d158f1b3ab900b"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/audit.md": {
-    "mtime": 1780802100.5194843,
+  ".github/skills/impeccable/reference/audit.md": {
+    "mtime": 1780477668.8412526,
     "ast_hash": "dc48853100d4e3b4017545dfe23ca93f",
-    "semantic_hash": "dc48853100d4e3b4017545dfe23ca93f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/bolder.md": {
-    "mtime": 1780802100.519769,
+  ".github/skills/impeccable/reference/bolder.md": {
+    "mtime": 1780477668.8415806,
     "ast_hash": "468510aff0c1b3429d03030e0ae4753d",
-    "semantic_hash": "468510aff0c1b3429d03030e0ae4753d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/brand.md": {
-    "mtime": 1780802100.5200157,
+  ".github/skills/impeccable/reference/brand.md": {
+    "mtime": 1780477668.8418221,
     "ast_hash": "5e8f9b86533d7b855aa1b93bc0b9a311",
-    "semantic_hash": "5e8f9b86533d7b855aa1b93bc0b9a311"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/clarify.md": {
-    "mtime": 1780802100.520288,
+  ".github/skills/impeccable/reference/clarify.md": {
+    "mtime": 1780477668.8420703,
     "ast_hash": "59f37b001528ffa685aa9fc8b815ac0c",
-    "semantic_hash": "59f37b001528ffa685aa9fc8b815ac0c"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/codex.md": {
-    "mtime": 1780802100.5205045,
+  ".github/skills/impeccable/reference/codex.md": {
+    "mtime": 1780477668.8422763,
     "ast_hash": "6d97d559484916f05fa74f6b74f3da07",
-    "semantic_hash": "6d97d559484916f05fa74f6b74f3da07"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/colorize.md": {
-    "mtime": 1780802100.5208812,
+  ".github/skills/impeccable/reference/colorize.md": {
+    "mtime": 1780477668.8428247,
     "ast_hash": "5387c26ecec10e9bead735997da67f99",
-    "semantic_hash": "5387c26ecec10e9bead735997da67f99"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/craft.md": {
-    "mtime": 1780802100.521126,
+  ".github/skills/impeccable/reference/craft.md": {
+    "mtime": 1780477668.8430965,
     "ast_hash": "30b636d36ebb80efb147c409fbd56ef0",
-    "semantic_hash": "30b636d36ebb80efb147c409fbd56ef0"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/critique.md": {
-    "mtime": 1780802100.5215888,
+  ".github/skills/impeccable/reference/critique.md": {
+    "mtime": 1780477668.843592,
     "ast_hash": "e4ce6749bdab5ab6fd81e51c96a5513f",
-    "semantic_hash": "e4ce6749bdab5ab6fd81e51c96a5513f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/delight.md": {
-    "mtime": 1780802100.5221486,
+  ".github/skills/impeccable/reference/delight.md": {
+    "mtime": 1780477668.844221,
     "ast_hash": "2e70444af079164b12d970a619bd9ab9",
-    "semantic_hash": "2e70444af079164b12d970a619bd9ab9"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/distill.md": {
-    "mtime": 1780802100.5224826,
+  ".github/skills/impeccable/reference/distill.md": {
+    "mtime": 1780477668.8446085,
     "ast_hash": "2220616f91ee154c78020eceff2a3f15",
-    "semantic_hash": "2220616f91ee154c78020eceff2a3f15"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/document.md": {
-    "mtime": 1780802100.523085,
+  ".github/skills/impeccable/reference/document.md": {
+    "mtime": 1780477668.8451357,
     "ast_hash": "c86de9a4969bf29a32a3a8e53cf1635f",
-    "semantic_hash": "c86de9a4969bf29a32a3a8e53cf1635f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/extract.md": {
-    "mtime": 1780802100.5234077,
+  ".github/skills/impeccable/reference/extract.md": {
+    "mtime": 1780477668.845557,
     "ast_hash": "03d311ace5cd0591e99d32a9a0b18602",
-    "semantic_hash": "03d311ace5cd0591e99d32a9a0b18602"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/harden.md": {
-    "mtime": 1780802100.5236712,
+  ".github/skills/impeccable/reference/harden.md": {
+    "mtime": 1780477668.8458061,
     "ast_hash": "f31cfe0bbc850cf2fd8b76a067c839e4",
-    "semantic_hash": "f31cfe0bbc850cf2fd8b76a067c839e4"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/init.md": {
-    "mtime": 1780802100.5242422,
+  ".github/skills/impeccable/reference/init.md": {
+    "mtime": 1780477668.8462086,
     "ast_hash": "a23aed1eae40e232603caa5739eda40b",
-    "semantic_hash": "a23aed1eae40e232603caa5739eda40b"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/interaction-design.md": {
-    "mtime": 1780802100.5245178,
+  ".github/skills/impeccable/reference/interaction-design.md": {
+    "mtime": 1780477668.8464768,
     "ast_hash": "1dd83bb8a96d7e250914064aa7389f8b",
-    "semantic_hash": "1dd83bb8a96d7e250914064aa7389f8b"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/layout.md": {
-    "mtime": 1780802100.5249026,
+  ".github/skills/impeccable/reference/layout.md": {
+    "mtime": 1780477668.84675,
     "ast_hash": "0df4b2064cadee109afe865ce7d20d1e",
-    "semantic_hash": "0df4b2064cadee109afe865ce7d20d1e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/live.md": {
-    "mtime": 1780802100.5255687,
+  ".github/skills/impeccable/reference/live.md": {
+    "mtime": 1780477668.8474965,
     "ast_hash": "00046eae381a57b1f7824d00981f29ef",
-    "semantic_hash": "00046eae381a57b1f7824d00981f29ef"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/onboard.md": {
-    "mtime": 1780802100.5257623,
+  ".github/skills/impeccable/reference/onboard.md": {
+    "mtime": 1780477668.8478355,
     "ast_hash": "7095aaea9e2994e37afb3cf1743bc092",
-    "semantic_hash": "7095aaea9e2994e37afb3cf1743bc092"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/optimize.md": {
-    "mtime": 1780802100.5259862,
+  ".github/skills/impeccable/reference/optimize.md": {
+    "mtime": 1780477668.8481095,
     "ast_hash": "81b3a8c4f0d4f4cffa035aa9fda77e6e",
-    "semantic_hash": "81b3a8c4f0d4f4cffa035aa9fda77e6e"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/overdrive.md": {
-    "mtime": 1780802100.5263875,
+  ".github/skills/impeccable/reference/overdrive.md": {
+    "mtime": 1780477668.8485472,
     "ast_hash": "05efa45c595b4f5ff78f8a9918fa7663",
-    "semantic_hash": "05efa45c595b4f5ff78f8a9918fa7663"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/polish.md": {
-    "mtime": 1780802100.5269496,
+  ".github/skills/impeccable/reference/polish.md": {
+    "mtime": 1780477668.8490841,
     "ast_hash": "136a9e1fa67ebf1f31f32f6600827ffd",
-    "semantic_hash": "136a9e1fa67ebf1f31f32f6600827ffd"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/product.md": {
-    "mtime": 1780802100.527138,
+  ".github/skills/impeccable/reference/product.md": {
+    "mtime": 1780477668.8493254,
     "ast_hash": "6408a63ddbfe7003c732650381506860",
-    "semantic_hash": "6408a63ddbfe7003c732650381506860"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/quieter.md": {
-    "mtime": 1780802100.5274298,
+  ".github/skills/impeccable/reference/quieter.md": {
+    "mtime": 1780477668.8497863,
     "ast_hash": "c7804c62d7951f12a213704d68e64938",
-    "semantic_hash": "c7804c62d7951f12a213704d68e64938"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/shape.md": {
-    "mtime": 1780802100.527795,
+  ".github/skills/impeccable/reference/shape.md": {
+    "mtime": 1780477668.8501422,
     "ast_hash": "ced5c539736c914392c10fd96d10e38a",
-    "semantic_hash": "ced5c539736c914392c10fd96d10e38a"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/skills/impeccable/reference/typeset.md": {
-    "mtime": 1780802100.528012,
+  ".github/skills/impeccable/reference/typeset.md": {
+    "mtime": 1780477668.8504298,
     "ast_hash": "8e8e3a58858713ff62de8ffa1a740cc6",
-    "semantic_hash": "8e8e3a58858713ff62de8ffa1a740cc6"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/workflows/ci.yml": {
-    "mtime": 1780802100.542062,
+  ".github/workflows/ci.yml": {
+    "mtime": 1780818839.9330735,
     "ast_hash": "b20552eb2051e72fbd908c4dd037ec5d",
-    "semantic_hash": "b20552eb2051e72fbd908c4dd037ec5d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/.github/workflows/release.yml": {
-    "mtime": 1780802100.5424926,
+  ".github/workflows/release.yml": {
+    "mtime": 1780818839.9332478,
     "ast_hash": "8c5548d75499ac1016cc228b7b4a2812",
-    "semantic_hash": "8c5548d75499ac1016cc228b7b4a2812"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/AGENTS.md": {
-    "mtime": 1780802100.5435824,
+  "AGENTS.md": {
+    "mtime": 1780477668.866329,
     "ast_hash": "e0d4ceca0f351d8168929f6f5080ada6",
-    "semantic_hash": "e0d4ceca0f351d8168929f6f5080ada6"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/README.md": {
-    "mtime": 1780802100.5443382,
+  "README.md": {
+    "mtime": 1780818839.933978,
     "ast_hash": "4b7d04f5facd410de9df068da87e2dda",
-    "semantic_hash": "4b7d04f5facd410de9df068da87e2dda"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/README_RU.md": {
-    "mtime": 1780802100.5447068,
+  "README_RU.md": {
+    "mtime": 1780477668.8676445,
     "ast_hash": "f4c9885995cca56491244e9b0bf42fb9",
-    "semantic_hash": "f4c9885995cca56491244e9b0bf42fb9"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/config/dev.yaml": {
-    "mtime": 1780802100.546857,
+  "config/dev.yaml": {
+    "mtime": 1780818839.934864,
     "ast_hash": "387ba77bf0d1312412cc7da6a774781f",
-    "semantic_hash": "387ba77bf0d1312412cc7da6a774781f"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/config/prod.yaml": {
-    "mtime": 1780802100.5470889,
+  "config/prod.yaml": {
+    "mtime": 1780818839.935093,
     "ast_hash": "ef5b8ab8aeb92930547fcb5cab1cf043",
-    "semantic_hash": "ef5b8ab8aeb92930547fcb5cab1cf043"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/docs/swagger.yaml": {
-    "mtime": 1780802100.5485446,
+  "docs/swagger.yaml": {
+    "mtime": 1780818839.9361782,
     "ast_hash": "e8ed28de491423d6caae5f2b3b33cda2",
-    "semantic_hash": "e8ed28de491423d6caae5f2b3b33cda2"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/index.html": {
-    "mtime": 1780802100.5492346,
+  "frontend/index.html": {
+    "mtime": 1780477668.8721294,
     "ast_hash": "f26bf406f261c52619170827fa61135d",
-    "semantic_hash": "f26bf406f261c52619170827fa61135d"
+    "semantic_hash": ""
   },
-  "/Users/vadim_denisovich/Documents/Projects/web-panel-sing-box/.claude/worktrees/busy-joliot-6b4b7b/frontend/pnpm-workspace.yaml": {
-    "mtime": 1780802100.5514638,
+  "frontend/pnpm-workspace.yaml": {
+    "mtime": 1780477668.8747063,
     "ast_hash": "6ceaf4421f430d58373483177016c767",
-    "semantic_hash": "6ceaf4421f430d58373483177016c767"
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260607_080438_sin_68_naive_proxy_does_not_work.md": {
+    "mtime": 1780820986.8139668,
+    "ast_hash": "7551f35ed55dcacea6e6a3205cfba5d0",
+    "semantic_hash": ""
   }
 }
