@@ -91,6 +91,10 @@ func (h *SubscriptionHandler) Serve(w http.ResponseWriter, r *http.Request) {
 	format := r.URL.Query().Get("format")
 	result, err := sublink.Render(format, inbound, client, h.resolveHost(r.Context(), r))
 	if err != nil {
+		if errors.Is(err, sublink.ErrNaiveJSONRequiresTrustedTLS) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		h.log.Error("render subscription", slog.String("error", err.Error()))
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return

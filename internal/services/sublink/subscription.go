@@ -3,10 +3,16 @@ package sublink
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"strings"
 
 	"sing-box-web-panel/internal/domain"
 )
+
+// ErrNaiveJSONRequiresTrustedTLS is returned when a Naive sing-box JSON
+// subscription would need client-side insecure TLS. sing-box does not support
+// the insecure TLS option on naive outbounds.
+var ErrNaiveJSONRequiresTrustedTLS = errors.New("naive json subscription requires trusted TLS; use ACME/custom cert or plain/base64 link")
 
 // Supported subscription output formats.
 const (
@@ -107,7 +113,10 @@ type naiveOutbound struct {
 // BuildClientConfig renders a minimal sing-box client config whose proxy
 // outbound mirrors the inbound. Modern clients import this directly.
 func BuildClientConfig(ib *domain.Inbound, c *domain.Client, host string) ([]byte, error) {
-	proxy := buildProxyOutbound(ib, c, host)
+	proxy, err := buildProxyOutbound(ib, c, host)
+	if err != nil {
+		return nil, err
+	}
 	cfg := clientConfig{
 		Log: map[string]any{"level": "info"},
 		Outbounds: []any{
@@ -119,7 +128,7 @@ func BuildClientConfig(ib *domain.Inbound, c *domain.Client, host string) ([]byt
 	return json.MarshalIndent(cfg, "", "  ")
 }
 
-func buildProxyOutbound(ib *domain.Inbound, c *domain.Client, host string) any {
+func buildProxyOutbound(ib *domain.Inbound, c *domain.Client, host string) (any, error) {
 	switch ib.Protocol {
 	case domain.ProtocolVLESS:
 		out := vlessOutbound{
@@ -128,19 +137,22 @@ func buildProxyOutbound(ib *domain.Inbound, c *domain.Client, host string) any {
 			TLS:       clientTLS(ib),
 			Transport: clientTransport(ib),
 		}
-		return out
+		return out, nil
 	case domain.ProtocolHysteria2:
 		return hysteria2Outbound{
 			Type: "hysteria2", Tag: "proxy", Server: host, ServerPort: ib.Port,
 			Password: c.Password, TLS: clientTLS(ib),
-		}
+		}, nil
 	case domain.ProtocolNaive:
+		if ib.EffectiveAllowInsecure() {
+			return nil, ErrNaiveJSONRequiresTrustedTLS
+		}
 		return naiveOutbound{
 			Type: "naive", Tag: "proxy", Server: host, ServerPort: ib.Port,
-			Username: c.Name, Password: c.Password, TLS: clientTLS(ib),
-		}
+			Username: c.Name, Password: c.Password, TLS: naiveClientTLS(ib),
+		}, nil
 	default:
-		return map[string]any{"type": "direct", "tag": "proxy"}
+		return map[string]any{"type": "direct", "tag": "proxy"}, nil
 	}
 }
 
@@ -166,6 +178,13 @@ func clientTLS(ib *domain.Inbound) *clientOutTLS {
 	default:
 		return nil
 	}
+}
+
+func naiveClientTLS(ib *domain.Inbound) *clientOutTLS {
+	if ib.TLS != domain.TLSModeTLS {
+		return nil
+	}
+	return &clientOutTLS{Enabled: true, ServerName: ib.SNI}
 }
 
 func clientTransport(ib *domain.Inbound) *clientOutTransport {

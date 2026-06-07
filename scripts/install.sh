@@ -316,6 +316,9 @@ stage_binaries() {
   download_file "${sb_url}" "${STAGE_DIR}/${sb_asset}"
   tar -xzf "${STAGE_DIR}/${sb_asset}" -C "${STAGE_DIR}"
   cp "${STAGE_DIR}/sing-box-${sb_version}-linux-${arch}/sing-box" "${STAGE_DIR}/sing-box"
+  if [[ -f "${STAGE_DIR}/sing-box-${sb_version}-linux-${arch}/libcronet.so" ]]; then
+    cp "${STAGE_DIR}/sing-box-${sb_version}-linux-${arch}/libcronet.so" "${STAGE_DIR}/libcronet.so"
+  fi
 
   # Shilka panel — local file (SIN-59) or release download.
   if [[ -n "${PANEL_BINARY}" ]]; then
@@ -376,9 +379,24 @@ commit_binary() {
   COMMITTED_TARGETS+=("${dest}")
 }
 
+remove_committed_binary() {
+  local dest="$1"
+  if [[ ! -e "${dest}" ]]; then
+    return
+  fi
+  cp -a "${dest}" "${dest}.previous"
+  rm -f "${dest}"
+  COMMITTED_TARGETS+=("${dest}")
+}
+
 commit_binaries() {
   trap 'rollback_commit' ERR
   commit_binary "${STAGE_DIR}/sing-box" "${APP_HOME}/bin/sing-box"
+  if [[ -f "${STAGE_DIR}/libcronet.so" ]]; then
+    commit_binary "${STAGE_DIR}/libcronet.so" "${APP_HOME}/bin/libcronet.so"
+  else
+    remove_committed_binary "${APP_HOME}/bin/libcronet.so"
+  fi
   commit_binary "${STAGE_DIR}/shilka" "${APP_HOME}/bin/shilka"
   install -d -m 0755 "$(dirname "${UPDATE_SCRIPT_PATH}")"
   commit_binary "${STAGE_DIR}/shilka-update" "${UPDATE_SCRIPT_PATH}"
