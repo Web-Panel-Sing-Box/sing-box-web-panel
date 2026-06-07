@@ -88,8 +88,10 @@ func (g *Generator) Render(ctx context.Context) ([]byte, error) {
 	}
 
 	var (
-		built      []any
-		statsUsers []string
+		built            []any
+		statsUsers       []string
+		perUserOutbounds []sbOutbound
+		perUserRules     []sbRouteRule
 	)
 	for i := range inbounds {
 		ib := inbounds[i]
@@ -101,6 +103,9 @@ func (g *Generator) Render(ctx context.Context) ([]byte, error) {
 		built = append(built, entry)
 		for _, c := range members {
 			statsUsers = append(statsUsers, c.Name)
+			tag := ClientOutboundTag(c.ID)
+			perUserOutbounds = append(perUserOutbounds, sbOutbound{Type: "direct", Tag: tag})
+			perUserRules = append(perUserRules, sbRouteRule{AuthUser: []string{c.Name}, Outbound: tag})
 		}
 	}
 
@@ -119,16 +124,18 @@ func (g *Generator) Render(ctx context.Context) ([]byte, error) {
 	// across sing-box 1.11 (legacy only) and 1.14 (new format only), so the core
 	// default is used. Blocking uses the 1.11+ "reject" rule action rather than a
 	// block outbound (removed in 1.14).
+	// Bittorrent reject stays first so it can't be bypassed by a per-user route.
+	// Per-user rules pin every client's traffic to a unique direct outbound so
+	// /connections.chains[0] is a stable client identifier.
+	outbounds := append([]sbOutbound{{Type: "direct", Tag: "direct"}}, perUserOutbounds...)
+	routeRules := append([]sbRouteRule{{Protocol: "bittorrent", Action: "reject"}}, perUserRules...)
+
 	cfg := &sbConfig{
-		Log:      &sbLog{Level: logLevel, Timestamp: true, Output: g.cfg.CoreLogPath},
-		Inbounds: built,
-		Outbounds: []sbOutbound{
-			{Type: "direct", Tag: "direct"},
-		},
+		Log:       &sbLog{Level: logLevel, Timestamp: true, Output: g.cfg.CoreLogPath},
+		Inbounds:  built,
+		Outbounds: outbounds,
 		Route: &sbRoute{
-			Rules: []sbRouteRule{
-				{Protocol: "bittorrent", Action: "reject"},
-			},
+			Rules: routeRules,
 			Final: "direct",
 		},
 		Experimental: g.buildExperimental(statsUsers),

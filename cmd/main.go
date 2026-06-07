@@ -263,18 +263,36 @@ func runServer() {
 	trafficRepo := sqliterepo.NewTrafficRepo(storage)
 	sysReader := sysstat.New()
 
-	// Traffic stats + quota worker. Clash REST is the live dashboard source; the
-	// per-user source (V2Ray gRPC) stays nil unless explicitly enabled.
+	// Traffic stats + quota worker. Clash REST is the live dashboard source. The
+	// per-user source is V2Ray gRPC when the core was built with `with_v2ray_api`;
+	// otherwise we attribute clash /connections entries to clients via the
+	// per-user outbound tag the generator stamps on every active client
+	// (chains[0] == "user-{id}").
 	liveHolder := &stats.LiveHolder{}
 	clashSource := stats.NewClashSource(cfg.SingBox.APIAddress, cfg.SingBox.APISecret)
-	// Per-user accounting source: V2Ray gRPC stats, only when explicitly enabled
-	// (requires a with_v2ray_api binary). Otherwise quota is enforced by expiry.
-	var userSource stats.UserSource
+
+	nameByID := func(id int64) string {
+		c, err := clientRepo.GetByID(rootCtx, id)
+		if err != nil || c == nil {
+			return ""
+		}
+		return c.Name
+	}
+
+	var (
+		userSource stats.UserSource
+		heartbeat  stats.UserHeartbeat
+	)
 	if cfg.Stats.Source == "v2ray" {
 		userSource = stats.NewV2RaySource(cfg.Stats.V2RayAPIAddress)
 		log.Info("per-user stats via v2ray api", slog.String("addr", cfg.Stats.V2RayAPIAddress))
+	} else {
+		clashUserSource := stats.NewClashUserSource(cfg.SingBox.APIAddress, cfg.SingBox.APISecret, nameByID)
+		userSource = clashUserSource
+		heartbeat = clashUserSource
+		log.Info("per-user stats via clash api (chains-based attribution)")
 	}
-	statsWorker := stats.NewWorker(clashSource, userSource, clientRepo, trafficRepo, applier, liveHolder, stats.WorkerConfig{
+	statsWorker := stats.NewWorker(clashSource, userSource, heartbeat, clientRepo, trafficRepo, applier, liveHolder, stats.WorkerConfig{
 		SampleInterval: cfg.Metrics.TrafficInterval,
 		FlushInterval:  cfg.Metrics.BatchFlushInterval,
 	}, log)
@@ -400,7 +418,10 @@ func shutdown(storage interface{ Close() error }, log *slog.Logger, _ *config.Co
 }
 
 func bootCore(ctx context.Context, applier *singbox.Applier, pm singbox.ProcessManager, log *slog.Logger) error {
-	if err := applier.ApplyIfMissing(ctx); err != nil {
+	// Always regenerate on boot so a panel upgrade that changes the schema
+	// (new outbounds, new route rules, etc.) takes effect without a manual
+	// nudge. Applier is idempotent: same hash → no-op restart.
+	if err := applier.Apply(ctx); err != nil {
 		return fmt.Errorf("apply initial config: %w", err)
 	}
 	if err := pm.Start(ctx); err != nil {

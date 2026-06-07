@@ -27,6 +27,14 @@ type ConfigTrigger interface {
 	Trigger()
 }
 
+// UserHeartbeat reports the last time each tracked user produced any activity.
+// Worker mirrors those timestamps onto clients.last_used_at so the 5-min
+// online threshold in the handler decays naturally once the client goes
+// quiet.
+type UserHeartbeat interface {
+	UserSeen() map[string]time.Time
+}
+
 // WorkerConfig holds the worker's polling cadences.
 type WorkerConfig struct {
 	SampleInterval  time.Duration // live dashboard metrics
@@ -36,17 +44,18 @@ type WorkerConfig struct {
 
 // Worker polls the core for metrics and enforces client limits.
 type Worker struct {
-	live    LiveSource
-	users   UserSource // optional; nil disables per-user traffic accounting
-	clients ClientStore
-	rollup  RollupStore
-	trigger ConfigTrigger
-	holder  *LiveHolder
-	cfg     WorkerConfig
-	log     *slog.Logger
+	live      LiveSource
+	users     UserSource    // optional; nil disables per-user traffic accounting
+	heartbeat UserHeartbeat // optional; nil disables log-driven heartbeat
+	clients   ClientStore
+	rollup    RollupStore
+	trigger   ConfigTrigger
+	holder    *LiveHolder
+	cfg       WorkerConfig
+	log       *slog.Logger
 }
 
-func NewWorker(live LiveSource, users UserSource, clients ClientStore, rollup RollupStore, trigger ConfigTrigger, holder *LiveHolder, cfg WorkerConfig, log *slog.Logger) *Worker {
+func NewWorker(live LiveSource, users UserSource, heartbeat UserHeartbeat, clients ClientStore, rollup RollupStore, trigger ConfigTrigger, holder *LiveHolder, cfg WorkerConfig, log *slog.Logger) *Worker {
 	if cfg.SampleInterval <= 0 {
 		cfg.SampleInterval = 2 * time.Second
 	}
@@ -57,7 +66,8 @@ func NewWorker(live LiveSource, users UserSource, clients ClientStore, rollup Ro
 		cfg.FlushInterval = 5 * time.Second
 	}
 	return &Worker{
-		live: live, users: users, clients: clients, rollup: rollup,
+		live: live, users: users, heartbeat: heartbeat,
+		clients: clients, rollup: rollup,
 		trigger: trigger, holder: holder, cfg: cfg, log: log,
 	}
 }
@@ -66,7 +76,7 @@ func NewWorker(live LiveSource, users UserSource, clients ClientStore, rollup Ro
 func (w *Worker) Run(ctx context.Context) {
 	go w.liveLoop(ctx)
 	go w.enforceLoop(ctx)
-	if w.users != nil {
+	if w.users != nil || w.heartbeat != nil {
 		go w.accountingLoop(ctx)
 	}
 }
@@ -143,15 +153,26 @@ func (w *Worker) accountingLoop(ctx context.Context) {
 	}
 }
 
-// account pulls per-user deltas from the UserSource and writes them in one
-// batch, updates the daily rollup, then runs enforcement.
+// account pulls per-user deltas from the UserSource, batches them, refreshes
+// the heartbeat for active users that produced no measurable traffic this
+// tick, updates the daily rollup, then runs enforcement.
 func (w *Worker) account(ctx context.Context) {
-	deltas, err := w.users.UserDeltas(ctx)
-	if err != nil {
-		w.log.Debug("user deltas", slog.String("error", err.Error()))
-		return
+	var deltas []domain.UserTraffic
+	if w.users != nil {
+		var err error
+		deltas, err = w.users.UserDeltas(ctx)
+		if err != nil {
+			w.log.Debug("user deltas", slog.String("error", err.Error()))
+			deltas = nil
+		}
 	}
-	if len(deltas) == 0 {
+
+	var heartbeat map[string]time.Time
+	if w.heartbeat != nil {
+		heartbeat = w.heartbeat.UserSeen()
+	}
+
+	if len(deltas) == 0 && len(heartbeat) == 0 {
 		return
 	}
 
@@ -168,6 +189,7 @@ func (w *Worker) account(ctx context.Context) {
 		batch          []domain.TrafficDelta
 		dayUp, dayDown int64
 		now            = time.Now()
+		bumped         = make(map[int64]struct{}, len(deltas)+len(heartbeat))
 	)
 	for _, ut := range deltas {
 		c, ok := byName[ut.Name]
@@ -177,6 +199,7 @@ func (w *Worker) account(ctx context.Context) {
 		batch = append(batch, domain.TrafficDelta{ClientID: c.ID, Up: ut.Up, Down: ut.Down})
 		dayUp += ut.Up
 		dayDown += ut.Down
+		bumped[c.ID] = struct{}{}
 		if c.StartAfterFirstUse && c.FirstUsedAt == nil {
 			if err := w.clients.SetFirstUsed(ctx, c.ID, now); err != nil {
 				w.log.Debug("set first used", slog.Int64("id", c.ID), slog.String("error", err.Error()))
@@ -184,12 +207,30 @@ func (w *Worker) account(ctx context.Context) {
 		}
 	}
 
-	if err := w.clients.AddTraffic(ctx, batch); err != nil {
-		w.log.Warn("add traffic", slog.String("error", err.Error()))
-		return
+	if len(batch) > 0 {
+		if err := w.clients.AddTraffic(ctx, batch); err != nil {
+			w.log.Warn("add traffic", slog.String("error", err.Error()))
+			return
+		}
+		if err := w.rollup.AddDaily(ctx, now.UTC().Format("2006-01-02"), dayUp, dayDown); err != nil {
+			w.log.Debug("add daily rollup", slog.String("error", err.Error()))
+		}
 	}
-	if err := w.rollup.AddDaily(ctx, now.UTC().Format("2006-01-02"), dayUp, dayDown); err != nil {
-		w.log.Debug("add daily rollup", slog.String("error", err.Error()))
+
+	// Heartbeat refresh: set last_used_at to the user's last observed log
+	// timestamp (not now) so it freezes the moment the client goes quiet.
+	for name, seenAt := range heartbeat {
+		c, ok := byName[name]
+		if !ok {
+			continue
+		}
+		if _, already := bumped[c.ID]; already {
+			continue
+		}
+		if err := w.clients.SetLastUsedAt(ctx, c.ID, seenAt); err != nil {
+			w.log.Debug("set last used", slog.Int64("id", c.ID), slog.String("error", err.Error()))
+		}
 	}
+
 	w.enforce(ctx)
 }

@@ -19,6 +19,7 @@ type sysReader interface {
 
 type clientStats interface {
 	Count(ctx context.Context) (int, error)
+	CountOnline(ctx context.Context, since time.Time) (int, error)
 }
 
 type inboundStats interface {
@@ -97,6 +98,7 @@ func (h *DashboardHandler) Metrics(w http.ResponseWriter, r *http.Request) {
 	live := h.live.Get()
 
 	totalUsers, _ := h.clients.Count(ctx)
+	onlineNow, _ := h.clients.CountOnline(ctx, time.Now().Add(-onlineThreshold))
 	enabled, _ := h.inbounds.ListEnabled(ctx)
 
 	now := time.Now().UTC()
@@ -123,7 +125,7 @@ func (h *DashboardHandler) Metrics(w http.ResponseWriter, r *http.Request) {
 		DiskSegments:   diskSegments(sys.DiskSegments),
 		InboundsActive: len(enabled),
 		TotalUsers:     totalUsers,
-		OnlineNow:      live.Connections,
+		OnlineNow:      onlineNow,
 		CoreRunning:    st.Running,
 		CoreVersion:    st.Version,
 	}

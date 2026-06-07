@@ -1,11 +1,15 @@
 // Package stats collects traffic metrics from the sing-box core and enforces
 // per-client quota and expiry.
 //
-// Two source kinds are defined because the sing-box Clash API does not expose
-// per-user traffic attribution:
-//   - LiveSource (Clash REST) provides aggregate live metrics for the dashboard.
-//   - UserSource (V2Ray gRPC, opt-in) provides cumulative per-user counters for
-//     quota enforcement. It is only available with a `with_v2ray_api` binary.
+// Two source kinds are defined:
+//   - LiveSource yields aggregate live metrics for the dashboard.
+//   - UserSource yields per-user byte deltas for quota enforcement and the
+//     online/last-used heartbeat.
+//
+// Clash REST (ClashSource) implements both: /connections carries metadata.user
+// plus per-connection cumulative bytes, so per-user attribution works on a
+// stock sing-box binary. V2Ray gRPC (V2RaySource) is an alternative UserSource
+// for builds with `with_v2ray_api`.
 package stats
 
 import (
@@ -20,7 +24,7 @@ import (
 type Live struct {
 	UploadBps     int64
 	DownloadBps   int64
-	Connections   int
+	Connections   int   // raw active sockets reported by /connections
 	UploadTotal   int64 // cumulative bytes since core start
 	DownloadTotal int64
 }
@@ -30,8 +34,9 @@ type LiveSource interface {
 	Sample(ctx context.Context) (Live, error)
 }
 
-// UserSource yields per-user traffic deltas since the previous call (the V2Ray
-// stats query resets counters), keyed by client name.
+// UserSource yields per-user byte deltas since the previous call, keyed by
+// client name. Implementations are responsible for resetting their own
+// cumulative counters between calls.
 type UserSource interface {
 	UserDeltas(ctx context.Context) ([]domain.UserTraffic, error)
 }
