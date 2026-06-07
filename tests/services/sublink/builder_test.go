@@ -2,6 +2,7 @@ package sublink_test
 
 import (
 	"encoding/json"
+	"errors"
 	"net/url"
 	"strings"
 	"testing"
@@ -61,6 +62,25 @@ func TestBuildLinkHysteria2AllowInsecureFalse(t *testing.T) {
 	link := sublink.BuildLink(ib, c, "panel.example")
 	if got := queryValue(t, link, "insecure"); got != "0" {
 		t.Fatalf("insecure = %q, want 0\nlink: %s", got, link)
+	}
+}
+
+func TestBuildLinkHysteria2WithObfs(t *testing.T) {
+	ib := &domain.Inbound{
+		ID: 2, Protocol: domain.ProtocolHysteria2, Port: 51005,
+		TLS: domain.TLSModeTLS, SNI: "panel.example",
+		Settings: domain.InboundSettings{
+			Hy2ObfsPassword: "obfs-secret",
+		},
+	}
+	c := &domain.Client{Name: "bob", Password: "secret-pass"}
+
+	link := sublink.BuildLink(ib, c, "panel.example")
+	if got := queryValue(t, link, "obfs"); got != "salamander" {
+		t.Fatalf("obfs = %q, want salamander\nlink: %s", got, link)
+	}
+	if got := queryValue(t, link, "obfs-password"); got != "obfs-secret" {
+		t.Fatalf("obfs-password = %q, want obfs-secret\nlink: %s", got, link)
 	}
 }
 
@@ -141,6 +161,56 @@ func TestBuildClientConfigAllowInsecure(t *testing.T) {
 	}
 }
 
+func TestBuildClientConfigHysteria2MirrorsProtocolOptions(t *testing.T) {
+	ib := &domain.Inbound{
+		ID: 2, Protocol: domain.ProtocolHysteria2, Port: 51005,
+		TLS: domain.TLSModeTLS, SNI: "panel.example",
+		Settings: domain.InboundSettings{
+			Hy2UpMbps:            120,
+			Hy2DownMbps:          240,
+			Hy2ObfsPassword:      "obfs-secret",
+			Hy2ObfsMinPacketSize: 600,
+			Hy2ObfsMaxPacketSize: 1100,
+			Hy2Network:           "udp",
+			Hy2BbrProfile:        "aggressive",
+			Hy2BrutalDebug:       true,
+		},
+	}
+	c := &domain.Client{Name: "bob", Password: "secret-pass"}
+
+	body, err := sublink.BuildClientConfig(ib, c, "panel.example")
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := firstOutbound(t, body)
+	if out["up_mbps"] != float64(120) || out["down_mbps"] != float64(240) {
+		t.Fatalf("bandwidth = %#v/%#v, want 120/240\nconfig: %s", out["up_mbps"], out["down_mbps"], body)
+	}
+	if out["network"] != "udp" {
+		t.Fatalf("network = %#v, want udp\nconfig: %s", out["network"], body)
+	}
+	if out["bbr_profile"] != "aggressive" {
+		t.Fatalf("bbr_profile = %#v, want aggressive\nconfig: %s", out["bbr_profile"], body)
+	}
+	if out["brutal_debug"] != true {
+		t.Fatalf("brutal_debug = %#v, want true\nconfig: %s", out["brutal_debug"], body)
+	}
+	obfs, ok := out["obfs"].(map[string]any)
+	if !ok {
+		t.Fatalf("obfs missing or invalid: %#v\nconfig: %s", out["obfs"], body)
+	}
+	if obfs["type"] != "salamander" || obfs["password"] != "obfs-secret" {
+		t.Fatalf("obfs = %#v, want salamander/obfs-secret\nconfig: %s", obfs, body)
+	}
+	if obfs["min_packet_size"] != float64(600) || obfs["max_packet_size"] != float64(1100) {
+		t.Fatalf("obfs packet sizes = %#v/%#v, want 600/1100\nconfig: %s", obfs["min_packet_size"], obfs["max_packet_size"], body)
+	}
+	tls := firstOutboundTLS(t, body)
+	if tls["server_name"] != "panel.example" || tls["insecure"] != true {
+		t.Fatalf("tls = %#v, want server_name panel.example and insecure true\nconfig: %s", tls, body)
+	}
+}
+
 func TestBuildClientConfigTrustedTLSOmitsInsecure(t *testing.T) {
 	ib := &domain.Inbound{
 		ID: 2, Protocol: domain.ProtocolHysteria2, Port: 51005,
@@ -161,6 +231,42 @@ func TestBuildClientConfigTrustedTLSOmitsInsecure(t *testing.T) {
 	}
 }
 
+func TestBuildClientConfigNaiveSelfSignedReturnsClearError(t *testing.T) {
+	ib := &domain.Inbound{
+		ID: 3, Protocol: domain.ProtocolNaive, Port: 38119,
+		TLS: domain.TLSModeTLS, SNI: "panel.example",
+	}
+	c := &domain.Client{Name: "carol", Password: "pw"}
+
+	_, err := sublink.BuildClientConfig(ib, c, "panel.example")
+	if !errors.Is(err, sublink.ErrNaiveJSONRequiresTrustedTLS) {
+		t.Fatalf("error = %v, want ErrNaiveJSONRequiresTrustedTLS", err)
+	}
+}
+
+func TestBuildClientConfigNaiveTrustedTLSOmitsInsecure(t *testing.T) {
+	ib := &domain.Inbound{
+		ID: 3, Protocol: domain.ProtocolNaive, Port: 38119,
+		TLS: domain.TLSModeTLS, SNI: "panel.example",
+		Settings: domain.InboundSettings{
+			ACMEDomain: "panel.example",
+		},
+	}
+	c := &domain.Client{Name: "carol", Password: "pw"}
+
+	body, err := sublink.BuildClientConfig(ib, c, "panel.example")
+	if err != nil {
+		t.Fatal(err)
+	}
+	tls := firstOutboundTLS(t, body)
+	if _, ok := tls["insecure"]; ok {
+		t.Fatalf("naive tls.insecure should be omitted\nconfig: %s", body)
+	}
+	if tls["server_name"] != "panel.example" {
+		t.Fatalf("server_name = %#v, want panel.example\nconfig: %s", tls["server_name"], body)
+	}
+}
+
 func queryValue(t *testing.T, rawURL, key string) string {
 	t.Helper()
 	u, err := url.Parse(rawURL)
@@ -170,7 +276,7 @@ func queryValue(t *testing.T, rawURL, key string) string {
 	return u.Query().Get(key)
 }
 
-func firstOutboundTLS(t *testing.T, body []byte) map[string]any {
+func firstOutbound(t *testing.T, body []byte) map[string]any {
 	t.Helper()
 	var cfg struct {
 		Outbounds []map[string]any `json:"outbounds"`
@@ -181,9 +287,15 @@ func firstOutboundTLS(t *testing.T, body []byte) map[string]any {
 	if len(cfg.Outbounds) == 0 {
 		t.Fatal("expected at least one outbound")
 	}
-	tls, ok := cfg.Outbounds[0]["tls"].(map[string]any)
+	return cfg.Outbounds[0]
+}
+
+func firstOutboundTLS(t *testing.T, body []byte) map[string]any {
+	t.Helper()
+	out := firstOutbound(t, body)
+	tls, ok := out["tls"].(map[string]any)
 	if !ok {
-		t.Fatalf("first outbound tls is missing or invalid: %#v", cfg.Outbounds[0]["tls"])
+		t.Fatalf("first outbound tls is missing or invalid: %#v", out["tls"])
 	}
 	return tls
 }
