@@ -2,6 +2,7 @@
 set -Eeuo pipefail
 
 ORIGINAL_ARGS=("$@")
+ORIGINAL_ARG_COUNT="$#"
 
 APP_USER="${APP_USER:-shilka}"
 APP_HOME="${APP_HOME:-/opt/shilka}"
@@ -14,6 +15,7 @@ UPDATE_SUDOERS_PATH="${UPDATE_SUDOERS_PATH:-/etc/sudoers.d/shilka-update}"
 SING_BOX_VERSION="${SING_BOX_VERSION:-latest}"
 PANEL_VERSION="${PANEL_VERSION:-latest}"
 GITHUB_REPO="${GITHUB_REPO:-Web-Panel-Sing-Box/shilka-web-panel}"
+INSTALL_SOURCE_URL="${SHILKA_INSTALL_URL:-https://raw.githubusercontent.com/${GITHUB_REPO}/main/scripts/install.sh}"
 
 # Network resilience for flaky VPS links (SIN-54): retry + resume downloads.
 DOWNLOAD_RETRIES="${DOWNLOAD_RETRIES:-5}"
@@ -52,6 +54,36 @@ section() {
   printf '%s\n' "--------------------------------------------"
 }
 
+PROMPT_INPUT="/dev/stdin"
+PROMPT_OUTPUT="/dev/stdout"
+PROMPT_TTY_UNAVAILABLE=false
+if [[ ! -t 0 ]]; then
+  if { exec 3</dev/tty 4>/dev/tty; } 2>/dev/null; then
+    PROMPT_INPUT="/dev/fd/3"
+    PROMPT_OUTPUT="/dev/fd/4"
+  else
+    PROMPT_TTY_UNAVAILABLE=true
+  fi
+fi
+
+ensure_prompt_input() {
+  if [[ "${PROMPT_TTY_UNAVAILABLE}" == "true" ]]; then
+    die "Interactive install needs a terminal. Re-run with --yes and SHILKA_* env values for headless install."
+  fi
+}
+
+read_line() {
+  local __var="$1"
+  ensure_prompt_input
+  IFS= read -r "${__var?}" <"${PROMPT_INPUT}"
+}
+
+read_secret() {
+  local __var="$1"
+  ensure_prompt_input
+  IFS= read -rs "${__var?}" <"${PROMPT_INPUT}"
+}
+
 usage() {
   cat <<'USAGE'
 Usage: install.sh [--yes] [--panel-binary PATH] [--help]
@@ -69,6 +101,7 @@ Non-interactive env knobs (used with --yes; env always wins over prompts):
   SHILKA_ACME_EMAIL      Email for Let's Encrypt (required when letsencrypt).
   SHILKA_ADMIN_USER      Admin username (default: random).
   SHILKA_ADMIN_PASSWORD  Admin password (default: auto-generated).
+  SHILKA_INSTALL_URL     Installer URL for non-root piped sudo bootstrap.
   PANEL_BINARY=/path     Same as --panel-binary.
 USAGE
 }
@@ -115,8 +148,8 @@ ask() {
     return
   fi
   while true; do
-    printf '%b?%b %s [%s]: ' "${blue}" "${plain}" "${__prompt}" "${__default}"
-    if ! read -r __reply; then
+    printf '%b?%b %s [%s]: ' "${blue}" "${plain}" "${__prompt}" "${__default}" >"${PROMPT_OUTPUT}"
+    if ! read_line __reply; then
       die "Input aborted"
     fi
     __value="${__reply:-${__default}}"
@@ -135,11 +168,11 @@ confirm_prompt() {
   fi
   while true; do
     if [[ "${default,,}" == "y" || "${default,,}" == "yes" ]]; then
-      printf '%b?%b %s [Y/n]: ' "${blue}" "${plain}" "${prompt}"
+      printf '%b?%b %s [Y/n]: ' "${blue}" "${plain}" "${prompt}" >"${PROMPT_OUTPUT}"
     else
-      printf '%b?%b %s [y/N]: ' "${blue}" "${plain}" "${prompt}"
+      printf '%b?%b %s [y/N]: ' "${blue}" "${plain}" "${prompt}" >"${PROMPT_OUTPUT}"
     fi
-    if ! read -r reply; then
+    if ! read_line reply; then
       die "Input aborted"
     fi
     reply="${reply:-${default}}"
@@ -207,21 +240,21 @@ ask_password() {
     return
   fi
   while true; do
-    printf '%b?%b Admin password [auto-generate]: ' "${blue}" "${plain}"
-    if ! read -rs first; then
+    printf '%b?%b Admin password [auto-generate]: ' "${blue}" "${plain}" >"${PROMPT_OUTPUT}"
+    if ! read_secret first; then
       die "Input aborted"
     fi
-    echo
+    printf '\n' >"${PROMPT_OUTPUT}"
     if [[ -z "${first}" ]]; then
       printf -v "${__var}" '%s' "${__default}"
       log_info "Generated admin password."
       return
     fi
-    printf '%b?%b Confirm admin password: ' "${blue}" "${plain}"
-    if ! read -rs second; then
+    printf '%b?%b Confirm admin password: ' "${blue}" "${plain}" >"${PROMPT_OUTPUT}"
+    if ! read_secret second; then
       die "Input aborted"
     fi
-    echo
+    printf '\n' >"${PROMPT_OUTPUT}"
     if [[ "${first}" == "${second}" ]]; then
       printf -v "${__var}" '%s' "${first}"
       return
@@ -239,8 +272,9 @@ _curl_retry_flags() {
 
 # download_file <url> <output-path> — resumable, retried download.
 download_file() {
-  local url="$1" out="$2" extra=()
-  mapfile -t extra < <(_curl_retry_flags)
+  local url="$1" out="$2" retry_flag extra=()
+  retry_flag="$(_curl_retry_flags)"
+  [[ -n "${retry_flag}" ]] && extra+=("${retry_flag}")
   curl --fail --location --show-error \
     --connect-timeout "${DOWNLOAD_CONNECT_TIMEOUT}" \
     --retry "${DOWNLOAD_RETRIES}" --retry-delay "${DOWNLOAD_RETRY_DELAY}" \
@@ -250,8 +284,9 @@ download_file() {
 
 # fetch_url <url> — retried fetch to stdout (for GitHub API metadata).
 fetch_url() {
-  local url="$1" extra=()
-  mapfile -t extra < <(_curl_retry_flags)
+  local url="$1" retry_flag extra=()
+  retry_flag="$(_curl_retry_flags)"
+  [[ -n "${retry_flag}" ]] && extra+=("${retry_flag}")
   curl --fail --location --show-error \
     --connect-timeout "${DOWNLOAD_CONNECT_TIMEOUT}" \
     --retry "${DOWNLOAD_RETRIES}" --retry-delay "${DOWNLOAD_RETRY_DELAY}" \
@@ -262,9 +297,6 @@ require_root() {
   if [[ "${EUID}" -ne 0 ]]; then
     if ! command -v sudo &>/dev/null; then
       die "Root privileges are required and sudo is not installed. Re-run as root."
-    fi
-    if [[ ! -r "$0" || "$(basename "$0")" == "bash" ]]; then
-      die "Non-root bootstrap needs a readable script file. Re-run with sudo bash scripts/install.sh or pipe the installer into sudo bash."
     fi
     log_info "Root privileges required. Re-running installer through sudo..."
     local env_args=(
@@ -279,6 +311,7 @@ require_root() {
       "SING_BOX_VERSION=${SING_BOX_VERSION}"
       "PANEL_VERSION=${PANEL_VERSION}"
       "GITHUB_REPO=${GITHUB_REPO}"
+      "SHILKA_INSTALL_URL=${INSTALL_SOURCE_URL}"
       "DOWNLOAD_RETRIES=${DOWNLOAD_RETRIES}"
       "DOWNLOAD_RETRY_DELAY=${DOWNLOAD_RETRY_DELAY}"
       "DOWNLOAD_CONNECT_TIMEOUT=${DOWNLOAD_CONNECT_TIMEOUT}"
@@ -294,7 +327,19 @@ require_root() {
       "TLS_MODE=${TLS_MODE}"
       "CERT_TYPE=${CERT_TYPE}"
     )
-    exec sudo env "${env_args[@]}" bash "$0" "${ORIGINAL_ARGS[@]}"
+    if [[ ! -r "$0" || "$(basename "$0")" == "bash" ]]; then
+      log_info "Installer was started from stdin. Re-fetching through sudo..."
+      if (( ORIGINAL_ARG_COUNT > 0 )); then
+        fetch_url "${INSTALL_SOURCE_URL}" | sudo env "${env_args[@]}" bash -s -- "${ORIGINAL_ARGS[@]}"
+      else
+        fetch_url "${INSTALL_SOURCE_URL}" | sudo env "${env_args[@]}" bash -s --
+      fi
+      exit $?
+    fi
+    if (( ORIGINAL_ARG_COUNT > 0 )); then
+      exec sudo env "${env_args[@]}" bash "$0" "${ORIGINAL_ARGS[@]}"
+    fi
+    exec sudo env "${env_args[@]}" bash "$0"
   fi
 }
 
