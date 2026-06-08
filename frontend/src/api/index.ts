@@ -23,6 +23,8 @@ export type { APITokenDTO, CreatedAPITokenDTO } from "./apiTokens";
 export { listAPITokens, createAPIToken, setAPITokenEnabled, deleteAPIToken } from "./apiTokens";
 export type { NodeDTO, NodeRequest, NodeSyncResult, NodeStatus } from "./nodes";
 export { listNodes, createNode, updateNode, deleteNode, toggleNode, probeNode, syncNode } from "./nodes";
+export type { SubscriptionMeta, SubscriptionLink } from "./subscription";
+export { getSubscriptionMeta } from "./subscription";
 export type * from "./types";
 export {
   PROTOCOL_OPTIONS,

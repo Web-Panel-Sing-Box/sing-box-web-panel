@@ -25,7 +25,7 @@ export function InboundsActiveCard() {
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") navigate("/inbounds");
       }}
-      className="group cursor-pointer transition-colors duration-200 hover:bg-hover"
+      className="group flex flex-col cursor-pointer transition-colors duration-200 hover:bg-hover"
     >
       <CardHeader>
         <CardLabel className="inline-flex items-center gap-2">
@@ -34,18 +34,20 @@ export function InboundsActiveCard() {
         </CardLabel>
         <span className="text-xs text-ink-tertiary">{t("dashboard.total", { count: inbounds.length })}</span>
       </CardHeader>
-      <div className="text-5xl font-semibold leading-none tracking-tight text-ink-primary">
-        <AnimatedNumber value={active.length} />
-      </div>
-      <p className="mt-2 text-sm text-ink-secondary">{t("dashboard.acrossProtocols", { count: protocols.length })}</p>
-      <div className="mt-4 flex flex-wrap gap-2">
-        {protocols.map((p) => (
-          <ProtocolLink
-            key={p}
-            protocol={p}
-            onClick={(event) => event.stopPropagation()}
-          />
-        ))}
+      <div className="flex flex-1 flex-col justify-center">
+        <div className="text-5xl font-semibold leading-none tracking-tight text-ink-primary">
+          <AnimatedNumber value={active.length} />
+        </div>
+        <p className="mt-2 text-sm text-ink-secondary">{t("dashboard.acrossProtocols", { count: protocols.length })}</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {protocols.map((p) => (
+            <ProtocolLink
+              key={p}
+              protocol={p}
+              onClick={(event) => event.stopPropagation()}
+            />
+          ))}
+        </div>
       </div>
     </Card>
   );
@@ -64,7 +66,7 @@ export function ClientsTelemetryCard() {
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") navigate("/clients");
       }}
-      className="group cursor-pointer transition-colors duration-200 hover:bg-hover"
+      className="group flex flex-col cursor-pointer transition-colors duration-200 hover:bg-hover"
     >
       <CardHeader>
         <CardLabel className="inline-flex items-center gap-2">
@@ -73,18 +75,20 @@ export function ClientsTelemetryCard() {
         </CardLabel>
         <span className="text-xs text-ink-tertiary">{t("dashboard.realtime")}</span>
       </CardHeader>
-      <div className="flex items-baseline gap-2">
-        <span className="text-xs text-ink-secondary">{t("dashboard.totalUsers")}</span>
-      </div>
-      <div className="text-5xl font-semibold leading-none tracking-tight text-ink-primary">
-        <AnimatedNumber value={clients.length} />
-      </div>
-      <div className="mt-4 flex items-center gap-2 text-sm text-ink-secondary">
-        <StatusDot state="online" />
-        <span>{t("dashboard.onlineNow")}</span>
-        <span className="font-mono text-ink-primary">
-          <AnimatedNumber value={metrics.onlineNow} />
-        </span>
+      <div className="flex flex-1 flex-col justify-center">
+        <div className="flex items-baseline gap-2">
+          <span className="text-xs text-ink-secondary">{t("dashboard.totalUsers")}</span>
+        </div>
+        <div className="text-5xl font-semibold leading-none tracking-tight text-ink-primary">
+          <AnimatedNumber value={clients.length} />
+        </div>
+        <div className="mt-4 flex items-center gap-2 text-sm text-ink-secondary">
+          <StatusDot state="online" />
+          <span>{t("dashboard.onlineNow")}</span>
+          <span className="font-mono text-ink-primary">
+            <AnimatedNumber value={metrics.onlineNow} />
+          </span>
+        </div>
       </div>
     </Card>
   );

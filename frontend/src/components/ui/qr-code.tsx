@@ -17,7 +17,7 @@ type QrCodeProps = {
 export function QrCode({ payload, size = 180, className }: QrCodeProps) {
   return (
     <div className={cn("rounded-2xl bg-white p-4", className)}>
-      <QRCodeSVG value={payload} size={size} level="M" marginSize={0} />
+      <QRCodeSVG value={payload || " "} size={size} level="M" marginSize={4} />
     </div>
   );
 }

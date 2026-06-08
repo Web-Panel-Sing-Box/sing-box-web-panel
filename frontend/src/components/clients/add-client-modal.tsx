@@ -43,6 +43,9 @@ export function AddClientModal({ open, onClose, defaultInboundId, defaultNodeId 
   const [inboundId, setInboundId] = useState("");
   const [totalFlowGb, setTotalFlowGb] = useState("100");
   const [expiry, setExpiry] = useState("");
+  // Quota and expiry are opt-in: off by default → unlimited traffic / no expiry.
+  const [enableQuota, setEnableQuota] = useState(false);
+  const [enableExpiry, setEnableExpiry] = useState(false);
   const [startAfterFirstUse, setStartAfterFirstUse] = useState(false);
   const [saving, setSaving] = useState(false);
   const [nameError, setNameError] = useState<string | undefined>(undefined);
@@ -83,6 +86,8 @@ export function AddClientModal({ open, onClose, defaultInboundId, defaultNodeId 
     setInboundId(nextInbound);
     setTotalFlowGb("100");
     setExpiry(defaultExpiryIso().slice(0, 10));
+    setEnableQuota(false);
+    setEnableExpiry(false);
     setStartAfterFirstUse(false);
   }, [open, defaultInboundId, defaultNodeId]);
 
@@ -107,8 +112,8 @@ export function AddClientModal({ open, onClose, defaultInboundId, defaultNodeId 
         ...(nodeId !== "local" ? { nodeId } : {}),
         name: name.trim(),
         inboundId,
-        totalQuota: (Number(totalFlowGb) || 0) * GB,
-        expiry: expiry ? new Date(expiry).toISOString() : defaultExpiryIso(),
+        totalQuota: enableQuota ? (Number(totalFlowGb) || 0) * GB : 0,
+        expiry: enableExpiry && expiry ? new Date(expiry).toISOString() : "",
         startAfterFirstUse,
       });
       push(t("clients.created"), "success");
@@ -141,14 +146,16 @@ export function AddClientModal({ open, onClose, defaultInboundId, defaultNodeId 
             error={nameError}
           />
         </div>
-        <div>
-          <Label>{t("common.node")}</Label>
-          <Select
-            value={nodeId}
-            options={nodeOptions}
-            onChange={setNodeId}
-          />
-        </div>
+        {nodeOptions.length > 1 ? (
+          <div>
+            <Label>{t("common.node")}</Label>
+            <Select
+              value={nodeId}
+              options={nodeOptions}
+              onChange={setNodeId}
+            />
+          </div>
+        ) : null}
         <div>
           <Label>{t("clients.inbound")}</Label>
           <Select
@@ -158,13 +165,23 @@ export function AddClientModal({ open, onClose, defaultInboundId, defaultNodeId 
           />
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <Label>{t("inbounds.totalFlow")}</Label>
-            <NumberInput value={totalFlowGb} onChange={setTotalFlowGb} min={0} mono placeholder="0" />
+          <div className="space-y-2 rounded-lg border border-subtle bg-canvas/40 px-3 py-2.5">
+            <Toggle checked={enableQuota} onChange={setEnableQuota} label={t("clients.enableQuota")} />
+            {enableQuota ? (
+              <div>
+                <Label>{t("inbounds.totalFlow")}</Label>
+                <NumberInput value={totalFlowGb} onChange={setTotalFlowGb} min={0} mono placeholder="0" />
+              </div>
+            ) : null}
           </div>
-          <div>
-            <Label>{t("inbounds.expiryDate")}</Label>
-            <DateInput value={expiry} onChange={setExpiry} />
+          <div className="space-y-2 rounded-lg border border-subtle bg-canvas/40 px-3 py-2.5">
+            <Toggle checked={enableExpiry} onChange={setEnableExpiry} label={t("clients.enableExpiry")} />
+            {enableExpiry ? (
+              <div>
+                <Label>{t("inbounds.expiryDate")}</Label>
+                <DateInput value={expiry} onChange={setExpiry} />
+              </div>
+            ) : null}
           </div>
         </div>
         <div className="flex min-h-[72px] items-center justify-center rounded-lg rounded-lg border border-subtle bg-canvas/40 px-3 py-2">

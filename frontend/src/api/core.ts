@@ -7,6 +7,7 @@ export type CoreStatusDTO = {
   pid: number;
   version: string;
   uptimeSeconds: number;
+  lastError?: string;
 };
 
 export type MessageResponse = {

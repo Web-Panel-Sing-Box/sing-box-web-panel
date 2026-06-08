@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
 	"sing-box-web-panel/internal/domain"
 	"sing-box-web-panel/internal/repo"
@@ -49,9 +50,19 @@ func NewSubscriptionHandler(clients ClientByToken, inbounds InboundByID, setting
 }
 
 func (h *SubscriptionHandler) Register(mux *http.ServeMux) {
-	mux.HandleFunc("GET /sub/{token}", h.Serve)              // public
-	mux.HandleFunc("GET /api/subscription/{token}", h.Serve) // public
-	mux.HandleFunc("GET /api/clients/{id}/links", h.Links)   // authenticated
+	mux.HandleFunc("GET /sub/{token}", h.Serve)                   // public
+	mux.HandleFunc("GET /api/subscription/{token}", h.Serve)      // public
+	mux.HandleFunc("GET /api/subscription/{token}/meta", h.Meta)  // public (subscription page)
+	mux.HandleFunc("GET /api/clients/{id}/links", h.Links)        // authenticated
+}
+
+// wantsHTML reports whether the request comes from a browser navigation that
+// should see the human-facing subscription page instead of raw config.
+func wantsHTML(r *http.Request) bool {
+	if r.URL.Query().Get("format") != "" {
+		return false // explicit format → always return config
+	}
+	return strings.Contains(r.Header.Get("Accept"), "text/html")
 }
 
 // Serve godoc
@@ -67,6 +78,14 @@ func (h *SubscriptionHandler) Register(mux *http.ServeMux) {
 //	@Router		/subscription/{token} [get]
 func (h *SubscriptionHandler) Serve(w http.ResponseWriter, r *http.Request) {
 	token := r.PathValue("token")
+
+	// Browsers opening the subscription link get the human-facing page (SPA
+	// hash route); VPN clients (no text/html Accept) fall through to config.
+	if strings.HasPrefix(r.URL.Path, "/sub/") && wantsHTML(r) {
+		http.Redirect(w, r, "/#/sub/"+token, http.StatusFound)
+		return
+	}
+
 	client, err := h.clients.GetBySubToken(r.Context(), token)
 	if err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
@@ -104,6 +123,74 @@ func (h *SubscriptionHandler) Serve(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Profile-Update-Interval", "12")
 	w.WriteHeader(http.StatusOK)
 	w.Write(result.Body)
+}
+
+type subscriptionLinkDTO struct {
+	Label    string `json:"label"`
+	URL      string `json:"url"`
+	Protocol string `json:"protocol"`
+}
+
+type subscriptionMetaDTO struct {
+	Name            string                `json:"name"`
+	Used            int64                 `json:"used"`
+	Total           int64                 `json:"total"`
+	Expiry          string                `json:"expiry"`
+	Online          bool                  `json:"online"`
+	SubscriptionURL string                `json:"subscriptionUrl"`
+	Links           []subscriptionLinkDTO `json:"links"`
+}
+
+// Meta godoc
+//
+//	@Summary	Subscription metadata for the public subscription page (public)
+//	@Tags		subscription
+//	@Produce	json
+//	@Param		token	path	string	true	"Subscription token"
+//	@Success	200	{object}	subscriptionMetaDTO
+//	@Failure	404	{object}	map[string]string
+//	@Router		/subscription/{token}/meta [get]
+func (h *SubscriptionHandler) Meta(w http.ResponseWriter, r *http.Request) {
+	token := r.PathValue("token")
+	client, err := h.clients.GetBySubToken(r.Context(), token)
+	if err != nil {
+		if errors.Is(err, repo.ErrNotFound) {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+		h.log.Error("subscription meta lookup", slog.String("error", err.Error()))
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	if !client.Enabled || client.Status != domain.ClientStatusActive {
+		http.Error(w, "subscription disabled", http.StatusForbidden)
+		return
+	}
+	inbound, err := h.inbounds.GetByID(r.Context(), client.InboundID)
+	if err != nil {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+	link := sublink.BuildLink(inbound, client, h.resolveHost(r.Context(), r))
+	sub := "/sub/" + client.SubToken
+	if h.subBaseURL != "" {
+		sub = h.subBaseURL + "/sub/" + client.SubToken
+	}
+	expiry := ""
+	if client.Expiry != nil {
+		expiry = client.Expiry.UTC().Format(time.RFC3339)
+	}
+	writeJSON(w, http.StatusOK, subscriptionMetaDTO{
+		Name:            client.Name,
+		Used:            client.UsedUp + client.UsedDown,
+		Total:           client.TotalQuota,
+		Expiry:          expiry,
+		Online:          isOnline(client.LastUsedAt),
+		SubscriptionURL: sub,
+		Links: []subscriptionLinkDTO{
+			{Label: inbound.Remark, URL: link, Protocol: string(inbound.Protocol)},
+		},
+	})
 }
 
 type clientLinksDTO struct {
