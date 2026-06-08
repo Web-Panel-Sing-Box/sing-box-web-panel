@@ -60,16 +60,17 @@ test("keeps typed fields when a polling refresh delivers a new inbounds array", 
   const nameInput = screen.getByPlaceholderText(/vadim_denisych/i);
   await user.type(nameInput, "alice");
 
+  // Quota is opt-in now: enable the toggle, then the GB input appears.
+  const quotaToggle = screen.getByRole("switch", { name: "clients.enableQuota" });
+  await user.click(quotaToggle);
+
   const quotaInput = screen.getByPlaceholderText("0");
   await user.clear(quotaInput);
   await user.type(quotaInput, "250");
 
-  const toggle = screen.getByRole("switch");
-  await user.click(toggle);
-
   expect(nameInput).toHaveValue("alice");
   expect(quotaInput).toHaveValue("250");
-  expect(toggle).toHaveAttribute("aria-checked", "true");
+  expect(quotaToggle).toHaveAttribute("aria-checked", "true");
 
   // Simulate the next poll: a brand-new array with new object references.
   mockInbounds = [{ ...IB_A }];
@@ -77,7 +78,7 @@ test("keeps typed fields when a polling refresh delivers a new inbounds array", 
 
   expect(screen.getByPlaceholderText(/vadim_denisych/i)).toHaveValue("alice");
   expect(screen.getByPlaceholderText("0")).toHaveValue("250");
-  expect(screen.getByRole("switch")).toHaveAttribute("aria-checked", "true");
+  expect(screen.getByRole("switch", { name: "clients.enableQuota" })).toHaveAttribute("aria-checked", "true");
 });
 
 test("when the selected inbound disappears, only the inbound selection changes", async () => {

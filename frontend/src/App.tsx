@@ -30,6 +30,9 @@ const SettingsPage = lazy(() =>
 const LogsPage = lazy(() =>
   import("@/pages/LogsPage").then((m) => ({ default: m.LogsPage })),
 );
+const SubscriptionPage = lazy(() =>
+  import("@/pages/SubscriptionPage").then((m) => ({ default: m.SubscriptionPage })),
+);
 
 export function App() {
   return (
@@ -46,6 +49,7 @@ export function App() {
                 <Routes>
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   <Route path="/login" element={<LoginPage />} />
+                  <Route path="/sub/:token" element={<SubscriptionPage />} />
                   <Route element={<RequireAuth />}>
                     <Route element={<PanelLayout />}>
                       <Route index element={<Navigate to="/dashboard" replace />} />

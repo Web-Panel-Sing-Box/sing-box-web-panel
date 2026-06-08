@@ -5,7 +5,7 @@ import { Copy, Dices, RefreshCw, ShieldCheck, Trash2 } from "lucide-react";
 
 import { Accordion } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { DateInput, Input, Label, NumberInput, Textarea } from "@/components/ui/input";
+import { Input, Label, NumberInput, Textarea } from "@/components/ui/input";
 import { Modal, ModalBody, ModalFooter, ModalHeader } from "@/components/ui/modal";
 import { Segmented } from "@/components/ui/tabs";
 import { Select } from "@/components/ui/select";
@@ -54,6 +54,9 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
     if (!inbound?.nodeId) return t("common.local");
     return f.nodes.find((node) => node.id === inbound.nodeId)?.name ?? `node:${inbound.nodeId}`;
   }, [f.nodes, inbound?.nodeId, t]);
+  // Hide the node picker on create when only the local server exists. Always
+  // show it when editing (read-only label) or when remote nodes are available.
+  const showNode = isEdit || nodeOptions.length > 1;
 
   // Transport-specific extra fields — VLESS only (naive/hysteria2 have no v2ray transport).
   const transportFields = useMemo(() => {
@@ -139,15 +142,17 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
                 className={mode === "clone" ? "selection:bg-brand/40" : undefined}
               />
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div>
-                <Label>{t("common.node")}</Label>
-                {isEdit ? (
-                  <Input value={currentNodeLabel} readOnly />
-                ) : (
-                  <Select value={f.nodeId} options={nodeOptions} onChange={f.setNodeId} />
-                )}
-              </div>
+            <div className={`grid grid-cols-1 gap-3 ${showNode ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+              {showNode ? (
+                <div>
+                  <Label>{t("common.node")}</Label>
+                  {isEdit ? (
+                    <Input value={currentNodeLabel} readOnly />
+                  ) : (
+                    <Select value={f.nodeId} options={nodeOptions} onChange={f.setNodeId} />
+                  )}
+                </div>
+              ) : null}
               <div>
                 <Label>{t("common.protocol")}</Label>
                 <Select value={f.protocol} options={PROTOCOL_OPTIONS} onChange={f.setProtocol} />
@@ -383,56 +388,6 @@ export function InboundFormModal({ open, mode = "create", inbound, onClose, onCl
           </div>
         </Accordion>
 
-        <Accordion title={t("inbounds.userTemplate")}>
-          <div className="space-y-3">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <Label>{t("inbounds.userId")}</Label>
-                <Input value={f.userId} onChange={(e) => f.setUserId(e.target.value)} />
-              </div>
-              <div>
-                <Label>UUID</Label>
-                <Input
-                  value={f.uuid}
-                  mono
-                  readOnly
-                  trailing={
-                    <button
-                      type="button"
-                      onClick={f.regenerateUuid}
-                      className="grid size-7 place-items-center rounded-md text-ink-secondary transition-colors duration-150 hover:bg-hover hover:text-ink-primary"
-                      title="Regenerate"
-                    >
-                      <RefreshCw size={14} />
-                    </button>
-                  }
-                />
-              </div>
-            </div>
-            <div>
-              <Label>{t("inbounds.subscription")}</Label>
-              <Input value={f.subscription} onChange={(e) => f.setSubscription(e.target.value)} placeholder="https://panel.example/sub/your-key" mono />
-            </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <Label>{t("inbounds.totalFlow")}</Label>
-                <NumberInput value={f.totalFlowGb} onChange={f.setTotalFlowGb} min={0} mono placeholder="0" />
-              </div>
-              <div>
-                <Label>{t("inbounds.expiryDate")}</Label>
-                <DateInput value={f.expiry} onChange={f.setExpiry} />
-              </div>
-            </div>
-            <div className="flex min-h-[72px] items-center justify-center rounded-lg border border-subtle bg-canvas/40 px-3 py-2">
-              <Toggle
-                size="lg"
-                checked={f.startAfterFirstUse}
-                onChange={f.setStartAfterFirstUse}
-                label={t("inbounds.startAfterFirstUse")}
-              />
-            </div>
-          </div>
-        </Accordion>
       </ModalBody>
       <ModalFooter>
         {mode === "edit" && inbound ? (

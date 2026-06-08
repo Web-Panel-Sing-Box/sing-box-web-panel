@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
-import { getSettings, saveSettings } from "@/api";
+import { getMe, getSettings, saveSettings } from "@/api";
+import { ChangePasswordModal } from "@/components/auth/change-password-modal";
 import { TwoFactorDisableModal } from "@/components/auth/two-factor-disable-modal";
 import { TwoFactorSetupModal } from "@/components/auth/two-factor-setup-modal";
 import { ScheduledTaskList } from "@/components/settings/scheduled-task-list";
@@ -32,6 +33,8 @@ export function SettingsPage() {
   const { twoFactorEnabled, setTwoFactorEnabled } = useAuth();
   const twoFactorSetup = useDisclosure();
   const twoFactorDisable = useDisclosure();
+  const changePassword = useDisclosure();
+  const [username, setUsername] = useState("admin");
   const [panelName, setPanelName] = useState("Shilka");
   const [binaryPath, setBinaryPath] = useState("/usr/local/bin/sing-box");
   const [logLevel, setLogLevel] = useState("info");
@@ -50,6 +53,11 @@ export function SettingsPage() {
       .catch(() => {
         push(t("settings.loadError"), "error");
       });
+    getMe()
+      .then((me) => {
+        if (me.username) setUsername(me.username);
+      })
+      .catch(() => {});
   }, []);
 
   const save = async () => {
@@ -104,7 +112,7 @@ export function SettingsPage() {
 
       <Section title={t("settings.security")}>
         <Row label={t("settings.adminUsername")} hint={t("settings.readOnly")}>
-          <Input value="admin" readOnly mono />
+          <Input value={username} readOnly mono />
         </Row>
         <Row label={t("settings.twoFactor")} hint={t("settings.twoFactorHint")}>
           <Toggle checked={twoFactorEnabled} onChange={handleTwoFactorToggle} />
@@ -113,7 +121,7 @@ export function SettingsPage() {
           label={t("settings.changePassword")}
           hint={t("settings.changePasswordHint")}
         >
-          <Button disabled variant="secondary">
+          <Button variant="secondary" onClick={changePassword.open}>
             {t("settings.changePassword")}
           </Button>
         </Row>
@@ -176,6 +184,8 @@ export function SettingsPage() {
         onClose={twoFactorDisable.close}
         onDisabled={() => setTwoFactorEnabled(false)}
       />
+
+      <ChangePasswordModal open={changePassword.isOpen} onClose={changePassword.close} />
     </div>
   );
 }

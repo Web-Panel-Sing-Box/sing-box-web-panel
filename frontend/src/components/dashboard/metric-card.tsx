@@ -68,8 +68,11 @@ export function RamCard() {
 export function DiskCard() {
   const { metrics } = useMetrics();
   const { t } = useI18n();
-  const total = metrics.diskSegments.reduce((acc, s) => acc + s.totalBytes, 0);
-  const used = metrics.diskSegments.reduce((acc, s) => acc + s.usedBytes, 0);
+  // Backend emits used/free segments that both carry the full disk capacity in
+  // totalBytes, so the disk total is the segment maximum (not the sum), and the
+  // used bytes come from the "used" segment. Summing would double-count → 50%.
+  const total = metrics.diskSegments.reduce((acc, s) => Math.max(acc, s.totalBytes), 0);
+  const used = metrics.diskSegments.find((s) => s.label === "used")?.usedBytes ?? 0;
   const usedPercent = total > 0 ? (used / total) * 100 : 0;
   return (
     <Card>
@@ -85,7 +88,7 @@ export function DiskCard() {
           <div
             key={seg.label}
             className="h-full transition-all duration-500"
-            style={{ width: total > 0 ? `${(seg.totalBytes / total) * 100}%` : "0%", background: seg.color }}
+            style={{ width: total > 0 ? `${(seg.usedBytes / total) * 100}%` : "0%", background: seg.color }}
           />
         ))}
       </div>
@@ -110,11 +113,12 @@ export function TrafficSplitCard() {
     [history]
   );
   return (
-    <Card>
+    <Card className="flex flex-col">
       <CardHeader>
         <CardLabel>{t("dashboard.traffic")}</CardLabel>
         <Network size={16} className="text-ink-tertiary" />
       </CardHeader>
+      <div className="flex flex-1 flex-col justify-center">
       <div className="grid grid-cols-2 gap-4">
         <div>
           <div className="text-xs text-ink-tertiary">{t("dashboard.today")}</div>
@@ -137,6 +141,7 @@ export function TrafficSplitCard() {
             <Area type="monotone" dataKey="v" stroke="#22d3ee" strokeWidth={1.5} fill="url(#spark)" isAnimationActive={false} />
           </AreaChart>
         </ResponsiveContainer>
+      </div>
       </div>
     </Card>
   );

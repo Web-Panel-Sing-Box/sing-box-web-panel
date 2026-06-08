@@ -21,7 +21,7 @@ import type {
   TlsMode,
   Transmission,
 } from "@/lib/store";
-import { makeUuid, randomHex, randomPort } from "@/lib/random";
+import { randomHex, randomPort } from "@/lib/random";
 
 export type InboundFormMode = "create" | "edit" | "clone";
 
@@ -99,14 +99,6 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
   const [upMbps, setUpMbps] = useState<string>("100");
   const [downMbps, setDownMbps] = useState<string>("100");
 
-  // vless user template (starter client)
-  const [userId, setUserId] = useState("user-001");
-  const [uuid, setUuid] = useState(makeUuid());
-  const [subscription, setSubscription] = useState("");
-  const [totalFlowGb, setTotalFlowGb] = useState("100");
-  const [expiry, setExpiry] = useState("");
-  const [startAfterFirstUse, setStartAfterFirstUse] = useState(false);
-
   const [diceSpin, setDiceSpin] = useState(0);
   const [saving, setSaving] = useState(false);
 
@@ -138,15 +130,9 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
     setObfsPassword(s?.hy2ObfsPassword ?? randomHex(12));
     setUpMbps(s?.hy2UpMbps != null ? String(s.hy2UpMbps) : "100");
     setDownMbps(s?.hy2DownMbps != null ? String(s.hy2DownMbps) : "100");
-    setUuid(makeUuid());
-    setUserId("user-001");
-    setSubscription("");
-    setTotalFlowGb("100");
-    setExpiry("");
     setPrivateKey("");
     setPublicKey(s?.publicKey ?? "");
     setShortIds(s?.shortId ?? "");
-    setStartAfterFirstUse(false);
     setConfirmDelete(false);
     if (mode === "clone") {
       window.setTimeout(() => {
@@ -165,10 +151,6 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
   const randomizePort = useCallback(() => {
     setDiceSpin((v) => v + 360);
     setPort(randomPort());
-  }, []);
-
-  const regenerateUuid = useCallback(() => {
-    setUuid(makeUuid());
   }, []);
 
   const regenerateObfsPassword = useCallback(() => {
@@ -340,12 +322,6 @@ export function useInboundForm({ open, mode, inbound, onClose }: Params) {
     obfsPassword, setObfsPassword, regenerateObfsPassword,
     upMbps, setUpMbps,
     downMbps, setDownMbps,
-    userId, setUserId,
-    uuid, regenerateUuid,
-    subscription, setSubscription,
-    totalFlowGb, setTotalFlowGb,
-    expiry, setExpiry,
-    startAfterFirstUse, setStartAfterFirstUse,
     diceSpin, randomizePort,
     saving, handleSave, handleDelete,
   };
