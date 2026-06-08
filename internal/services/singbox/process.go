@@ -19,6 +19,9 @@ type Status struct {
 	PID     int
 	Version string
 	Uptime  time.Duration
+	// LastError is a short diagnostic for the most recent failed start or
+	// unexpected exit. It is intentionally human-readable for API/CLI display.
+	LastError string
 }
 
 type externalProcess struct {
@@ -100,6 +103,9 @@ func systemdAvailable(service string) bool {
 type systemdManager struct {
 	service string
 	binary  string
+
+	mu        sync.Mutex
+	lastError string
 }
 
 func (m *systemdManager) systemctl(ctx context.Context, args ...string) error {
@@ -111,10 +117,34 @@ func (m *systemdManager) systemctl(ctx context.Context, args ...string) error {
 	return nil
 }
 
-func (m *systemdManager) Start(ctx context.Context) error   { return m.systemctl(ctx, "start") }
-func (m *systemdManager) Stop(ctx context.Context) error    { return m.systemctl(ctx, "stop") }
-func (m *systemdManager) Restart(ctx context.Context) error { return m.systemctl(ctx, "restart") }
-func (m *systemdManager) Reload(ctx context.Context) error  { return m.systemctl(ctx, "reload") }
+func (m *systemdManager) Start(ctx context.Context) error {
+	if err := m.systemctl(ctx, "start"); err != nil {
+		return m.recordSystemdError(ctx, err)
+	}
+	return m.waitActive(ctx, "start")
+}
+
+func (m *systemdManager) Stop(ctx context.Context) error {
+	if err := m.systemctl(ctx, "stop"); err != nil {
+		return m.recordSystemdError(ctx, err)
+	}
+	m.setLastError("")
+	return nil
+}
+
+func (m *systemdManager) Restart(ctx context.Context) error {
+	if err := m.systemctl(ctx, "restart"); err != nil {
+		return m.recordSystemdError(ctx, err)
+	}
+	return m.waitActive(ctx, "restart")
+}
+
+func (m *systemdManager) Reload(ctx context.Context) error {
+	if err := m.systemctl(ctx, "reload"); err != nil {
+		return m.recordSystemdError(ctx, err)
+	}
+	return m.waitActive(ctx, "reload")
+}
 
 func (m *systemdManager) Status(ctx context.Context) (Status, error) {
 	st := Status{Version: coreVersion(ctx, m.binary)}
@@ -139,7 +169,99 @@ func (m *systemdManager) Status(ctx context.Context) (Status, error) {
 			}
 		}
 	}
+	if !st.Running {
+		st.LastError = m.getLastError()
+		if st.LastError == "" {
+			st.LastError = m.systemdFailureDetails(ctx)
+		}
+	}
 	return st, nil
+}
+
+func (m *systemdManager) waitActive(ctx context.Context, op string) error {
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		active, _ := exec.CommandContext(ctx, "systemctl", "is-active", m.service).Output()
+		switch strings.TrimSpace(string(active)) {
+		case "active":
+			m.setLastError("")
+			return nil
+		case "failed":
+			msg := m.systemdFailureDetails(ctx)
+			if msg == "" {
+				msg = "systemd service failed"
+			}
+			m.setLastError(msg)
+			return fmt.Errorf("%s sing-box: %s", op, msg)
+		}
+		if time.Now().After(deadline) {
+			msg := m.systemdFailureDetails(ctx)
+			if msg == "" {
+				msg = fmt.Sprintf("systemd service is %s", strings.TrimSpace(string(active)))
+			}
+			m.setLastError(msg)
+			return fmt.Errorf("%s sing-box: %s", op, msg)
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+}
+
+func (m *systemdManager) recordSystemdError(ctx context.Context, err error) error {
+	msg := err.Error()
+	if details := m.systemdFailureDetails(ctx); details != "" {
+		msg = strings.TrimSpace(msg + ": " + details)
+	}
+	msg = trimDiagnostic(msg)
+	m.setLastError(msg)
+	return fmt.Errorf("%s", msg)
+}
+
+func (m *systemdManager) systemdFailureDetails(ctx context.Context) string {
+	var parts []string
+	if props, err := exec.CommandContext(ctx, "systemctl", "show", m.service,
+		"--property=ActiveState,SubState,Result,ExecMainStatus,ExecMainCode").Output(); err == nil {
+		propsText := strings.TrimSpace(string(props))
+		if propsText != "" && !systemdPropsAreClean(propsText) {
+			parts = append(parts, propsText)
+		}
+	}
+	if len(parts) > 0 {
+		journal, err := exec.CommandContext(ctx, "journalctl", "-u", m.service, "-n", "20", "--no-pager", "--output=cat").CombinedOutput()
+		if err != nil {
+			return trimDiagnostic(strings.Join(parts, "\n"))
+		}
+		journalText := strings.TrimSpace(string(journal))
+		if journalText != "" {
+			parts = append(parts, journalText)
+		}
+	}
+	return trimDiagnostic(strings.Join(parts, "\n"))
+}
+
+func systemdPropsAreClean(props string) bool {
+	values := map[string]string{}
+	for _, line := range strings.Split(props, "\n") {
+		key, val, ok := strings.Cut(strings.TrimSpace(line), "=")
+		if ok {
+			values[key] = val
+		}
+	}
+	return values["ActiveState"] == "inactive" &&
+		values["SubState"] == "dead" &&
+		(values["Result"] == "" || values["Result"] == "success") &&
+		(values["ExecMainStatus"] == "" || values["ExecMainStatus"] == "0")
+}
+
+func (m *systemdManager) setLastError(msg string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.lastError = trimDiagnostic(msg)
+}
+
+func (m *systemdManager) getLastError() string {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.lastError
 }
 
 // --- subprocess ---
@@ -152,6 +274,7 @@ type subprocessManager struct {
 	mu        sync.Mutex
 	cmd       *exec.Cmd
 	startedAt time.Time
+	lastError string
 }
 
 func newSubprocessManager(cfg ProcessConfig, logSink io.Writer, log *slog.Logger) *subprocessManager {
@@ -168,22 +291,37 @@ func (m *subprocessManager) Start(_ context.Context) error {
 	if m.cfg.WorkingDir != "" {
 		cmd.Dir = m.cfg.WorkingDir
 	}
-	cmd.Stdout = m.logSink
-	cmd.Stderr = m.logSink
+	tail := newBoundedLogWriter(m.logSink, 8192)
+	cmd.Stdout = tail
+	cmd.Stderr = tail
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("start sing-box: %w", err)
+		msg := fmt.Sprintf("start sing-box: %v", err)
+		m.lastError = msg
+		return fmt.Errorf("%s", msg)
 	}
 	m.cmd = cmd
 	m.startedAt = time.Now()
+	m.lastError = ""
 
+	waitCh := make(chan error, 1)
 	go func() {
-		_ = cmd.Wait()
-		m.mu.Lock()
-		if m.cmd == cmd {
-			m.cmd = nil
-		}
-		m.mu.Unlock()
+		waitCh <- cmd.Wait()
 	}()
+
+	timer := time.NewTimer(time.Second)
+	defer timer.Stop()
+	select {
+	case err := <-waitCh:
+		msg := subprocessExitMessage(err, tail.String())
+		m.cmd = nil
+		m.lastError = msg
+		if m.log != nil {
+			m.log.Error("core exited during start", slog.String("error", msg))
+		}
+		return fmt.Errorf("start sing-box: %s", msg)
+	case <-timer.C:
+		go m.reap(cmd, waitCh, tail)
+	}
 	return nil
 }
 
@@ -197,6 +335,7 @@ func (m *subprocessManager) Stop(_ context.Context) error {
 		return fmt.Errorf("signal sing-box: %w", err)
 	}
 	m.cmd = nil
+	m.lastError = ""
 	return nil
 }
 
@@ -224,20 +363,89 @@ func (m *subprocessManager) Status(ctx context.Context) (Status, error) {
 		st.PID = m.cmd.Process.Pid
 		st.Uptime = time.Since(m.startedAt)
 	}
+	st.LastError = m.lastError
 	m.mu.Unlock()
 	if !st.Running {
 		if external, ok := externalProcessStatus(ctx, m.cfg); ok {
 			st.Running = true
 			st.PID = external.PID
 			st.Uptime = external.Uptime
+			st.LastError = ""
 		}
 	}
 	st.Version = coreVersion(ctx, m.cfg.Binary)
 	return st, nil
 }
 
+func (m *subprocessManager) reap(cmd *exec.Cmd, waitCh <-chan error, tail *boundedLogWriter) {
+	err := <-waitCh
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.cmd != cmd {
+		return
+	}
+	msg := subprocessExitMessage(err, tail.String())
+	m.cmd = nil
+	m.lastError = msg
+	if m.log != nil {
+		m.log.Error("core exited", slog.String("error", msg))
+	}
+}
+
 // running reports whether a managed process is currently tracked. Callers must
 // hold m.mu.
 func (m *subprocessManager) running() bool {
 	return m.cmd != nil && m.cmd.Process != nil
+}
+
+type boundedLogWriter struct {
+	mu  sync.Mutex
+	dst io.Writer
+	max int
+	buf []byte
+}
+
+func newBoundedLogWriter(dst io.Writer, max int) *boundedLogWriter {
+	if max <= 0 {
+		max = 8192
+	}
+	return &boundedLogWriter{dst: dst, max: max}
+}
+
+func (w *boundedLogWriter) Write(p []byte) (int, error) {
+	if w.dst != nil {
+		_, _ = w.dst.Write(p)
+	}
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	w.buf = append(w.buf, p...)
+	if len(w.buf) > w.max {
+		w.buf = append([]byte(nil), w.buf[len(w.buf)-w.max:]...)
+	}
+	return len(p), nil
+}
+
+func (w *boundedLogWriter) String() string {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	return trimDiagnostic(string(w.buf))
+}
+
+func subprocessExitMessage(err error, output string) string {
+	msg := "sing-box exited"
+	if err != nil {
+		msg = fmt.Sprintf("sing-box exited: %v", err)
+	}
+	if output != "" {
+		msg += ": " + output
+	}
+	return trimDiagnostic(msg)
+}
+
+func trimDiagnostic(s string) string {
+	s = strings.TrimSpace(s)
+	if len(s) <= 4096 {
+		return s
+	}
+	return strings.TrimSpace(s[len(s)-4096:])
 }

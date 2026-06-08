@@ -272,6 +272,7 @@ type cliCoreStatusDTO struct {
 	PID           int    `json:"pid"`
 	Version       string `json:"version"`
 	UptimeSeconds int64  `json:"uptimeSeconds"`
+	LastError     string `json:"lastError,omitempty"`
 }
 
 func cliCore(args []string) error {
@@ -307,6 +308,7 @@ func cliCore(args []string) error {
 			PID:           st.PID,
 			Version:       st.Version,
 			UptimeSeconds: int64(st.Uptime.Seconds()),
+			LastError:     st.LastError,
 		})
 	case "config-check":
 		return singbox.NewChecker(cfg.SingBox.BinaryPath, cfg.SingBox.CheckTimeout).Check(ctx, cfg.SingBox.ConfigPath)

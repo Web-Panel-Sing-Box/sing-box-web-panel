@@ -37,6 +37,7 @@ type coreStatusDTO struct {
 	PID           int    `json:"pid"`
 	Version       string `json:"version"`
 	UptimeSeconds int64  `json:"uptimeSeconds"`
+	LastError     string `json:"lastError,omitempty"`
 }
 
 // Status godoc
@@ -59,6 +60,7 @@ func (h *CoreHandler) Status(w http.ResponseWriter, r *http.Request) {
 		PID:           st.PID,
 		Version:       st.Version,
 		UptimeSeconds: int64(st.Uptime.Seconds()),
+		LastError:     st.LastError,
 	})
 }
 

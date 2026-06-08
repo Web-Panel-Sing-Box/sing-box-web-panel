@@ -63,7 +63,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.changePasswordRequest"
+                            "$ref": "#/definitions/handler.changePasswordRequest"
                         }
                     }
                 ],
@@ -109,7 +109,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.loginRequest"
+                            "$ref": "#/definitions/handler.loginRequest"
                         }
                     }
                 ],
@@ -171,7 +171,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.loginRecoveryRequest"
+                            "$ref": "#/definitions/handler.loginRecoveryRequest"
                         }
                     }
                 ],
@@ -226,7 +226,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.loginTOTPRequest"
+                            "$ref": "#/definitions/handler.loginTOTPRequest"
                         }
                     }
                 ],
@@ -303,7 +303,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.meResponse"
+                            "$ref": "#/definitions/handler.meResponse"
                         }
                     },
                     "401": {
@@ -343,7 +343,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.confirmTOTPRequest"
+                            "$ref": "#/definitions/handler.confirmTOTPRequest"
                         }
                     }
                 ],
@@ -392,7 +392,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.disableTOTPRequest"
+                            "$ref": "#/definitions/handler.disableTOTPRequest"
                         }
                     }
                 ],
@@ -517,7 +517,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internal_transport_handler.clientDTO"
+                                "$ref": "#/definitions/handler.clientDTO"
                             }
                         }
                     }
@@ -546,7 +546,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.createClientRequest"
+                            "$ref": "#/definitions/handler.createClientRequest"
                         }
                     }
                 ],
@@ -554,7 +554,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.clientDTO"
+                            "$ref": "#/definitions/handler.clientDTO"
                         }
                     }
                 }
@@ -587,7 +587,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.clientDTO"
+                            "$ref": "#/definitions/handler.clientDTO"
                         }
                     }
                 }
@@ -622,7 +622,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.updateClientRequest"
+                            "$ref": "#/definitions/handler.updateClientRequest"
                         }
                     }
                 ],
@@ -630,7 +630,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.clientDTO"
+                            "$ref": "#/definitions/handler.clientDTO"
                         }
                     }
                 }
@@ -697,7 +697,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.clientLinksDTO"
+                            "$ref": "#/definitions/handler.clientLinksDTO"
                         }
                     }
                 }
@@ -730,7 +730,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.clientDTO"
+                            "$ref": "#/definitions/handler.clientDTO"
                         }
                     }
                 }
@@ -767,7 +767,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.setStatusRequest"
+                            "$ref": "#/definitions/handler.setStatusRequest"
                         }
                     }
                 ],
@@ -775,7 +775,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.clientDTO"
+                            "$ref": "#/definitions/handler.clientDTO"
                         }
                     }
                 }
@@ -841,7 +841,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.coreLogsResponse"
+                            "$ref": "#/definitions/handler.coreLogsResponse"
                         }
                     }
                 }
@@ -957,7 +957,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.coreStatusDTO"
+                            "$ref": "#/definitions/handler.coreStatusDTO"
                         }
                     }
                 }
@@ -1035,7 +1035,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.metricsDTO"
+                            "$ref": "#/definitions/handler.metricsDTO"
                         }
                     }
                 }
@@ -1061,7 +1061,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internal_transport_handler.trafficPointDTO"
+                                "$ref": "#/definitions/handler.trafficPointDTO"
                             }
                         }
                     }
@@ -1111,7 +1111,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internal_transport_handler.inboundDTO"
+                                "$ref": "#/definitions/handler.inboundDTO"
                             }
                         }
                     }
@@ -1140,7 +1140,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.inboundRequest"
+                            "$ref": "#/definitions/handler.inboundRequest"
                         }
                     }
                 ],
@@ -1148,7 +1148,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.inboundDTO"
+                            "$ref": "#/definitions/handler.inboundDTO"
                         }
                     }
                 }
@@ -1181,7 +1181,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.inboundDTO"
+                            "$ref": "#/definitions/handler.inboundDTO"
                         }
                     }
                 }
@@ -1216,7 +1216,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.inboundRequest"
+                            "$ref": "#/definitions/handler.inboundRequest"
                         }
                     }
                 ],
@@ -1224,7 +1224,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.inboundDTO"
+                            "$ref": "#/definitions/handler.inboundDTO"
                         }
                     }
                 }
@@ -1291,7 +1291,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.inboundDTO"
+                            "$ref": "#/definitions/handler.inboundDTO"
                         }
                     }
                 }
@@ -1324,7 +1324,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.inboundDTO"
+                            "$ref": "#/definitions/handler.inboundDTO"
                         }
                     }
                 }
@@ -1377,7 +1377,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internal_transport_handler.logEntryDTO"
+                                "$ref": "#/definitions/handler.logEntryDTO"
                             }
                         }
                     }
@@ -1409,7 +1409,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.frontendLogRequest"
+                            "$ref": "#/definitions/handler.frontendLogRequest"
                         }
                     }
                 ],
@@ -1454,7 +1454,7 @@ const docTemplate = `{
                     "202": {
                         "description": "Accepted",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.panelVersionDTO"
+                            "$ref": "#/definitions/handler.panelVersionDTO"
                         }
                     },
                     "409": {
@@ -1496,7 +1496,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.panelVersionDTO"
+                            "$ref": "#/definitions/handler.panelVersionDTO"
                         }
                     }
                 }
@@ -1548,7 +1548,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "internal_transport_handler.changePasswordRequest": {
+        "handler.changePasswordRequest": {
             "type": "object",
             "properties": {
                 "current_password": {
@@ -1561,7 +1561,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.clientDTO": {
+        "handler.clientDTO": {
             "type": "object",
             "properties": {
                 "enabled": {
@@ -1614,7 +1614,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.clientLinksDTO": {
+        "handler.clientLinksDTO": {
             "type": "object",
             "properties": {
                 "link": {
@@ -1628,7 +1628,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.confirmTOTPRequest": {
+        "handler.confirmTOTPRequest": {
             "type": "object",
             "properties": {
                 "code": {
@@ -1637,7 +1637,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.coreLogsResponse": {
+        "handler.coreLogsResponse": {
             "type": "object",
             "properties": {
                 "hasMore": {
@@ -1654,9 +1654,12 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.coreStatusDTO": {
+        "handler.coreStatusDTO": {
             "type": "object",
             "properties": {
+                "lastError": {
+                    "type": "string"
+                },
                 "pid": {
                     "type": "integer"
                 },
@@ -1671,7 +1674,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.createClientRequest": {
+        "handler.createClientRequest": {
             "type": "object",
             "properties": {
                 "expiry": {
@@ -1683,6 +1686,9 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "nodeId": {
+                    "type": "string"
+                },
                 "startAfterFirstUse": {
                     "type": "boolean"
                 },
@@ -1691,7 +1697,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.disableTOTPRequest": {
+        "handler.disableTOTPRequest": {
             "type": "object",
             "properties": {
                 "code": {
@@ -1700,7 +1706,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.diskSegmentDTO": {
+        "handler.diskSegmentDTO": {
             "type": "object",
             "properties": {
                 "color": {
@@ -1717,7 +1723,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.frontendLogRequest": {
+        "handler.frontendLogRequest": {
             "type": "object",
             "properties": {
                 "fields": {
@@ -1734,7 +1740,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.inboundDTO": {
+        "handler.inboundDTO": {
             "type": "object",
             "properties": {
                 "clientCount": {
@@ -1768,7 +1774,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "settings": {
-                    "$ref": "#/definitions/internal_transport_handler.inboundSettingsDTO"
+                    "$ref": "#/definitions/handler.inboundSettingsDTO"
                 },
                 "sni": {
                     "type": "string"
@@ -1784,7 +1790,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.inboundRequest": {
+        "handler.inboundRequest": {
             "type": "object",
             "properties": {
                 "acmeDomain": {
@@ -1847,6 +1853,9 @@ const docTemplate = `{
                 "naiveQuicCongestionCtrl": {
                     "type": "string"
                 },
+                "nodeId": {
+                    "type": "string"
+                },
                 "port": {
                     "type": "integer"
                 },
@@ -1867,12 +1876,22 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.inboundSettingsDTO": {
+        "handler.inboundSettingsDTO": {
             "type": "object",
             "properties": {
+                "acmeDomain": {
+                    "description": "TLS certificate source (tls mode). Empty cert/acme means the panel falls\nback to a self-signed cert (SIN-52).",
+                    "type": "string"
+                },
+                "acmeEmail": {
+                    "type": "string"
+                },
                 "allowInsecure": {
                     "description": "Client subscription TLS verification.",
                     "type": "boolean"
+                },
+                "certPath": {
+                    "type": "string"
                 },
                 "flow": {
                     "type": "string"
@@ -1911,6 +1930,9 @@ const docTemplate = `{
                     "description": "Hysteria2.",
                     "type": "integer"
                 },
+                "keyPath": {
+                    "type": "string"
+                },
                 "multiplexEnabled": {
                     "description": "VLESS multiplex.",
                     "type": "boolean"
@@ -1933,7 +1955,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.logEntryDTO": {
+        "handler.logEntryDTO": {
             "type": "object",
             "properties": {
                 "fields": {
@@ -1962,7 +1984,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.loginRecoveryRequest": {
+        "handler.loginRecoveryRequest": {
             "type": "object",
             "properties": {
                 "code": {
@@ -1975,7 +1997,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.loginRequest": {
+        "handler.loginRequest": {
             "type": "object",
             "properties": {
                 "password": {
@@ -1988,7 +2010,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.loginTOTPRequest": {
+        "handler.loginTOTPRequest": {
             "type": "object",
             "properties": {
                 "code": {
@@ -2001,7 +2023,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.meResponse": {
+        "handler.meResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -2021,7 +2043,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.metricsDTO": {
+        "handler.metricsDTO": {
             "type": "object",
             "properties": {
                 "coreRunning": {
@@ -2036,7 +2058,7 @@ const docTemplate = `{
                 "diskSegments": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/internal_transport_handler.diskSegmentDTO"
+                        "$ref": "#/definitions/handler.diskSegmentDTO"
                     }
                 },
                 "downloadBps": {
@@ -2089,7 +2111,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.panelVersionDTO": {
+        "handler.panelVersionDTO": {
             "type": "object",
             "properties": {
                 "checkedAt": {
@@ -2112,7 +2134,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.setStatusRequest": {
+        "handler.setStatusRequest": {
             "type": "object",
             "properties": {
                 "status": {
@@ -2120,7 +2142,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.trafficPointDTO": {
+        "handler.trafficPointDTO": {
             "type": "object",
             "properties": {
                 "down": {
@@ -2134,7 +2156,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_transport_handler.updateClientRequest": {
+        "handler.updateClientRequest": {
             "type": "object",
             "properties": {
                 "expiry": {
@@ -2144,6 +2166,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "nodeId": {
                     "type": "string"
                 },
                 "startAfterFirstUse": {
