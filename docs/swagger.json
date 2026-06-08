@@ -57,7 +57,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.changePasswordRequest"
+                            "$ref": "#/definitions/handler.changePasswordRequest"
                         }
                     }
                 ],
@@ -103,7 +103,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.loginRequest"
+                            "$ref": "#/definitions/handler.loginRequest"
                         }
                     }
                 ],
@@ -165,7 +165,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.loginRecoveryRequest"
+                            "$ref": "#/definitions/handler.loginRecoveryRequest"
                         }
                     }
                 ],
@@ -220,7 +220,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.loginTOTPRequest"
+                            "$ref": "#/definitions/handler.loginTOTPRequest"
                         }
                     }
                 ],
@@ -297,7 +297,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.meResponse"
+                            "$ref": "#/definitions/handler.meResponse"
                         }
                     },
                     "401": {
@@ -337,7 +337,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.confirmTOTPRequest"
+                            "$ref": "#/definitions/handler.confirmTOTPRequest"
                         }
                     }
                 ],
@@ -386,7 +386,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.disableTOTPRequest"
+                            "$ref": "#/definitions/handler.disableTOTPRequest"
                         }
                     }
                 ],
@@ -511,7 +511,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internal_transport_handler.clientDTO"
+                                "$ref": "#/definitions/handler.clientDTO"
                             }
                         }
                     }
@@ -540,7 +540,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.createClientRequest"
+                            "$ref": "#/definitions/handler.createClientRequest"
                         }
                     }
                 ],
@@ -548,7 +548,7 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.clientDTO"
+                            "$ref": "#/definitions/handler.clientDTO"
                         }
                     }
                 }
@@ -581,7 +581,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.clientDTO"
+                            "$ref": "#/definitions/handler.clientDTO"
                         }
                     }
                 }
@@ -616,7 +616,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.updateClientRequest"
+                            "$ref": "#/definitions/handler.updateClientRequest"
                         }
                     }
                 ],
@@ -624,7 +624,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.clientDTO"
+                            "$ref": "#/definitions/handler.clientDTO"
                         }
                     }
                 }
@@ -691,7 +691,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.clientLinksDTO"
+                            "$ref": "#/definitions/handler.clientLinksDTO"
                         }
                     }
                 }
@@ -724,7 +724,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.clientDTO"
+                            "$ref": "#/definitions/handler.clientDTO"
                         }
                     }
                 }
@@ -761,7 +761,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.setStatusRequest"
+                            "$ref": "#/definitions/handler.setStatusRequest"
                         }
                     }
                 ],
@@ -769,7 +769,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.clientDTO"
+                            "$ref": "#/definitions/handler.clientDTO"
                         }
                     }
                 }
@@ -835,7 +835,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.coreLogsResponse"
+                            "$ref": "#/definitions/handler.coreLogsResponse"
                         }
                     }
                 }
@@ -951,7 +951,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.coreStatusDTO"
+                            "$ref": "#/definitions/handler.coreStatusDTO"
                         }
                     }
                 }
@@ -1029,7 +1029,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.metricsDTO"
+                            "$ref": "#/definitions/handler.metricsDTO"
                         }
                     }
                 }
@@ -1055,7 +1055,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internal_transport_handler.trafficPointDTO"
+                                "$ref": "#/definitions/handler.trafficPointDTO"
                             }
                         }
                     }
@@ -1105,7 +1105,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internal_transport_handler.inboundDTO"
+                                "$ref": "#/definitions/handler.inboundDTO"
                             }
                         }
                     }
@@ -1134,7 +1134,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.inboundRequest"
+                            "$ref": "#/definitions/handler.inboundRequest"
                         }
                     }
                 ],
@@ -1142,7 +1142,7 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.inboundDTO"
+                            "$ref": "#/definitions/handler.inboundDTO"
                         }
                     }
                 }
@@ -1175,7 +1175,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.inboundDTO"
+                            "$ref": "#/definitions/handler.inboundDTO"
                         }
                     }
                 }
@@ -1210,7 +1210,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.inboundRequest"
+                            "$ref": "#/definitions/handler.inboundRequest"
                         }
                     }
                 ],
@@ -1218,7 +1218,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.inboundDTO"
+                            "$ref": "#/definitions/handler.inboundDTO"
                         }
                     }
                 }
@@ -1285,7 +1285,7 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.inboundDTO"
+                            "$ref": "#/definitions/handler.inboundDTO"
                         }
                     }
                 }
@@ -1318,7 +1318,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.inboundDTO"
+                            "$ref": "#/definitions/handler.inboundDTO"
                         }
                     }
                 }
@@ -1371,7 +1371,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internal_transport_handler.logEntryDTO"
+                                "$ref": "#/definitions/handler.logEntryDTO"
                             }
                         }
                     }
@@ -1403,7 +1403,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.frontendLogRequest"
+                            "$ref": "#/definitions/handler.frontendLogRequest"
                         }
                     }
                 ],
@@ -1448,7 +1448,7 @@
                     "202": {
                         "description": "Accepted",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.panelVersionDTO"
+                            "$ref": "#/definitions/handler.panelVersionDTO"
                         }
                     },
                     "409": {
@@ -1490,7 +1490,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_transport_handler.panelVersionDTO"
+                            "$ref": "#/definitions/handler.panelVersionDTO"
                         }
                     }
                 }
@@ -1542,7 +1542,7 @@
         }
     },
     "definitions": {
-        "internal_transport_handler.changePasswordRequest": {
+        "handler.changePasswordRequest": {
             "type": "object",
             "properties": {
                 "current_password": {
@@ -1555,7 +1555,7 @@
                 }
             }
         },
-        "internal_transport_handler.clientDTO": {
+        "handler.clientDTO": {
             "type": "object",
             "properties": {
                 "enabled": {
@@ -1608,7 +1608,7 @@
                 }
             }
         },
-        "internal_transport_handler.clientLinksDTO": {
+        "handler.clientLinksDTO": {
             "type": "object",
             "properties": {
                 "link": {
@@ -1622,7 +1622,7 @@
                 }
             }
         },
-        "internal_transport_handler.confirmTOTPRequest": {
+        "handler.confirmTOTPRequest": {
             "type": "object",
             "properties": {
                 "code": {
@@ -1631,7 +1631,7 @@
                 }
             }
         },
-        "internal_transport_handler.coreLogsResponse": {
+        "handler.coreLogsResponse": {
             "type": "object",
             "properties": {
                 "hasMore": {
@@ -1648,9 +1648,12 @@
                 }
             }
         },
-        "internal_transport_handler.coreStatusDTO": {
+        "handler.coreStatusDTO": {
             "type": "object",
             "properties": {
+                "lastError": {
+                    "type": "string"
+                },
                 "pid": {
                     "type": "integer"
                 },
@@ -1665,7 +1668,7 @@
                 }
             }
         },
-        "internal_transport_handler.createClientRequest": {
+        "handler.createClientRequest": {
             "type": "object",
             "properties": {
                 "expiry": {
@@ -1677,6 +1680,9 @@
                 "name": {
                     "type": "string"
                 },
+                "nodeId": {
+                    "type": "string"
+                },
                 "startAfterFirstUse": {
                     "type": "boolean"
                 },
@@ -1685,7 +1691,7 @@
                 }
             }
         },
-        "internal_transport_handler.disableTOTPRequest": {
+        "handler.disableTOTPRequest": {
             "type": "object",
             "properties": {
                 "code": {
@@ -1694,7 +1700,7 @@
                 }
             }
         },
-        "internal_transport_handler.diskSegmentDTO": {
+        "handler.diskSegmentDTO": {
             "type": "object",
             "properties": {
                 "color": {
@@ -1711,7 +1717,7 @@
                 }
             }
         },
-        "internal_transport_handler.frontendLogRequest": {
+        "handler.frontendLogRequest": {
             "type": "object",
             "properties": {
                 "fields": {
@@ -1728,7 +1734,7 @@
                 }
             }
         },
-        "internal_transport_handler.inboundDTO": {
+        "handler.inboundDTO": {
             "type": "object",
             "properties": {
                 "clientCount": {
@@ -1762,7 +1768,7 @@
                     "type": "string"
                 },
                 "settings": {
-                    "$ref": "#/definitions/internal_transport_handler.inboundSettingsDTO"
+                    "$ref": "#/definitions/handler.inboundSettingsDTO"
                 },
                 "sni": {
                     "type": "string"
@@ -1778,7 +1784,7 @@
                 }
             }
         },
-        "internal_transport_handler.inboundRequest": {
+        "handler.inboundRequest": {
             "type": "object",
             "properties": {
                 "acmeDomain": {
@@ -1841,6 +1847,9 @@
                 "naiveQuicCongestionCtrl": {
                     "type": "string"
                 },
+                "nodeId": {
+                    "type": "string"
+                },
                 "port": {
                     "type": "integer"
                 },
@@ -1861,12 +1870,22 @@
                 }
             }
         },
-        "internal_transport_handler.inboundSettingsDTO": {
+        "handler.inboundSettingsDTO": {
             "type": "object",
             "properties": {
+                "acmeDomain": {
+                    "description": "TLS certificate source (tls mode). Empty cert/acme means the panel falls\nback to a self-signed cert (SIN-52).",
+                    "type": "string"
+                },
+                "acmeEmail": {
+                    "type": "string"
+                },
                 "allowInsecure": {
                     "description": "Client subscription TLS verification.",
                     "type": "boolean"
+                },
+                "certPath": {
+                    "type": "string"
                 },
                 "flow": {
                     "type": "string"
@@ -1905,6 +1924,9 @@
                     "description": "Hysteria2.",
                     "type": "integer"
                 },
+                "keyPath": {
+                    "type": "string"
+                },
                 "multiplexEnabled": {
                     "description": "VLESS multiplex.",
                     "type": "boolean"
@@ -1927,7 +1949,7 @@
                 }
             }
         },
-        "internal_transport_handler.logEntryDTO": {
+        "handler.logEntryDTO": {
             "type": "object",
             "properties": {
                 "fields": {
@@ -1956,7 +1978,7 @@
                 }
             }
         },
-        "internal_transport_handler.loginRecoveryRequest": {
+        "handler.loginRecoveryRequest": {
             "type": "object",
             "properties": {
                 "code": {
@@ -1969,7 +1991,7 @@
                 }
             }
         },
-        "internal_transport_handler.loginRequest": {
+        "handler.loginRequest": {
             "type": "object",
             "properties": {
                 "password": {
@@ -1982,7 +2004,7 @@
                 }
             }
         },
-        "internal_transport_handler.loginTOTPRequest": {
+        "handler.loginTOTPRequest": {
             "type": "object",
             "properties": {
                 "code": {
@@ -1995,7 +2017,7 @@
                 }
             }
         },
-        "internal_transport_handler.meResponse": {
+        "handler.meResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -2015,7 +2037,7 @@
                 }
             }
         },
-        "internal_transport_handler.metricsDTO": {
+        "handler.metricsDTO": {
             "type": "object",
             "properties": {
                 "coreRunning": {
@@ -2030,7 +2052,7 @@
                 "diskSegments": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/internal_transport_handler.diskSegmentDTO"
+                        "$ref": "#/definitions/handler.diskSegmentDTO"
                     }
                 },
                 "downloadBps": {
@@ -2083,7 +2105,7 @@
                 }
             }
         },
-        "internal_transport_handler.panelVersionDTO": {
+        "handler.panelVersionDTO": {
             "type": "object",
             "properties": {
                 "checkedAt": {
@@ -2106,7 +2128,7 @@
                 }
             }
         },
-        "internal_transport_handler.setStatusRequest": {
+        "handler.setStatusRequest": {
             "type": "object",
             "properties": {
                 "status": {
@@ -2114,7 +2136,7 @@
                 }
             }
         },
-        "internal_transport_handler.trafficPointDTO": {
+        "handler.trafficPointDTO": {
             "type": "object",
             "properties": {
                 "down": {
@@ -2128,7 +2150,7 @@
                 }
             }
         },
-        "internal_transport_handler.updateClientRequest": {
+        "handler.updateClientRequest": {
             "type": "object",
             "properties": {
                 "expiry": {
@@ -2138,6 +2160,9 @@
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "nodeId": {
                     "type": "string"
                 },
                 "startAfterFirstUse": {

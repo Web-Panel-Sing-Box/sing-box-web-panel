@@ -86,10 +86,12 @@ read_secret() {
 
 usage() {
   cat <<'USAGE'
-Usage: install.sh [--yes] [--panel-binary PATH] [--help]
+Usage: install.sh [--yes] [--panel-binary PATH] [--clash-api-addr ADDR] [--help]
 
   --yes, -y            Non-interactive: skip all prompts, use env/defaults.
   --panel-binary PATH  Install the panel from a local file (skip GitHub download).
+  --clash-api-addr ADDR
+                       Local sing-box Clash API address (default: 127.0.0.1:9090 if free).
   --help, -h           Show this help.
 
 Non-interactive env knobs (used with --yes; env always wins over prompts):
@@ -101,6 +103,7 @@ Non-interactive env knobs (used with --yes; env always wins over prompts):
   SHILKA_ACME_EMAIL      Email for Let's Encrypt (required when letsencrypt).
   SHILKA_ADMIN_USER      Admin username (default: random).
   SHILKA_ADMIN_PASSWORD  Admin password (default: auto-generated).
+  SHILKA_CLASH_API_ADDR  Local Clash API address (127.0.0.1:PORT).
   SHILKA_INSTALL_URL     Installer URL for non-root piped sudo bootstrap.
   PANEL_BINARY=/path     Same as --panel-binary.
 USAGE
@@ -109,8 +112,18 @@ USAGE
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -y | --yes) ASSUME_YES=true ;;
-    --panel-binary) PANEL_BINARY="${2:-}"; shift ;;
+    --panel-binary)
+      [[ $# -ge 2 ]] || die "--panel-binary requires a path"
+      PANEL_BINARY="$2"
+      shift
+      ;;
     --panel-binary=*) PANEL_BINARY="${1#*=}" ;;
+    --clash-api-addr)
+      [[ $# -ge 2 ]] || die "--clash-api-addr requires 127.0.0.1:<port>"
+      CLASH_API_ADDR="$2"
+      shift
+      ;;
+    --clash-api-addr=*) CLASH_API_ADDR="${1#*=}" ;;
     -h | --help) usage; exit 0 ;;
     *) echo "unknown argument: $1" >&2; usage; exit 1 ;;
   esac
@@ -127,6 +140,7 @@ ADMIN_USER="${ADMIN_USER:-${SHILKA_ADMIN_USER:-}}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-${SHILKA_ADMIN_PASSWORD:-}}"
 ACME_EMAIL="${ACME_EMAIL:-${SHILKA_ACME_EMAIL:-}}"
 TLS_MODE="${TLS_MODE:-${SHILKA_TLS_MODE:-}}" # letsencrypt | self_signed | off
+CLASH_API_ADDR="${CLASH_API_ADDR:-${SHILKA_CLASH_API_ADDR:-${SHILKA_SING_BOX_API_ADDRESS:-}}}"
 CERT_TYPE="${CERT_TYPE:-}"
 
 # ask <varname> <prompt> <default> [validator]: keep an existing (env) value;
@@ -205,6 +219,27 @@ validate_port() {
   fi
   if port_in_use "$1"; then
     log_warn "Port $1 is already in use."
+    return 1
+  fi
+}
+
+validate_clash_api_addr() {
+  local addr="$1" port
+  if [[ -z "${addr}" || ! "${addr}" =~ ^127\.0\.0\.1:[0-9]+$ ]]; then
+    log_warn "Clash API address must be 127.0.0.1:<port>."
+    return 1
+  fi
+  port="${addr##*:}"
+  if ! [[ "${port}" =~ ^[0-9]+$ ]] || (( 10#${port} < 1 || 10#${port} > 65535 )); then
+    log_warn "Clash API port must be from 1 to 65535."
+    return 1
+  fi
+  if [[ -n "${PANEL_PORT:-}" && "${port}" == "${PANEL_PORT}" ]]; then
+    log_warn "Clash API port ${port} conflicts with the panel port."
+    return 1
+  fi
+  if port_in_use "${port}"; then
+    log_warn "Clash API port ${port} is already in use."
     return 1
   fi
 }
@@ -378,11 +413,19 @@ random_port() {
   local port
   while true; do
     port=$(( (RANDOM % 55535) + 10000 ))
-    if ! port_in_use "${port}"; then
+    if [[ "${port}" != "${PANEL_PORT:-}" ]] && ! port_in_use "${port}"; then
       echo "${port}"
       return
     fi
   done
+}
+
+default_clash_api_addr() {
+  if [[ "${PANEL_PORT:-}" != "9090" ]] && ! port_in_use 9090; then
+    echo "127.0.0.1:9090"
+    return
+  fi
+  echo "127.0.0.1:$(random_port)"
 }
 
 random_hex() {
@@ -829,6 +872,12 @@ gather_input() {
     PANEL_LISTEN_ADDRESS=":${PANEL_PORT}"
   fi
 
+  if [[ -z "${CLASH_API_ADDR}" ]]; then
+    CLASH_API_ADDR="$(default_clash_api_addr)"
+  fi
+  validate_clash_api_addr "${CLASH_API_ADDR}" || die "Invalid Clash API address: ${CLASH_API_ADDR}"
+  log_info "Clash API will bind to ${CLASH_API_ADDR}."
+
   # Base path
   log_info "Web panel path prefix for obscurity."
   ask PANEL_PATH "Path" "$(random_base_path)" validate_panel_path
@@ -948,7 +997,7 @@ sing_box:
   binary_path: "${APP_HOME}/bin/sing-box"
   config_path: "${CONFIG_DIR}/config.json"
   working_dir: "${CONFIG_DIR}"
-  api_address: "127.0.0.1:9090"
+  api_address: "${CLASH_API_ADDR}"
   api_secret: "${clash_secret}"
   check_timeout: "10s"
   restart_delay: "3s"

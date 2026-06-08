@@ -189,7 +189,7 @@ func TestApplier_ApplyIfMissing(t *testing.T) {
 			},
 		}},
 		fakeClients{},
-		singbox.GeneratorConfig{ClashAPIAddress: "127.0.0.1:9090"},
+		singbox.GeneratorConfig{ClashAPIAddress: fmt.Sprintf("127.0.0.1:%d", freeTCPPort(t))},
 	)
 
 	configPath := filepath.Join(dir, "config.json")
